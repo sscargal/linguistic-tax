@@ -16,10 +16,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Noise Generation
 
-- [ ] **NOISE-01**: Generate Type A character-level noise at 5%, 10%, and 20% error rates with fixed random seeds
-- [ ] **NOISE-02**: Protect technical keywords (function names, variable names, operators) from character mutation
-- [ ] **NOISE-03**: Generate Type B ESL syntactic noise patterns based on L1 transfer errors (Mandarin, Spanish, Japanese, mixed)
-- [ ] **NOISE-04**: Verify noise generator determinism — same seed produces identical output across runs
+- [x] **NOISE-01**: Generate Type A character-level noise at 5%, 10%, and 20% error rates with fixed random seeds
+- [x] **NOISE-02**: Protect technical keywords (function names, variable names, operators) from character mutation
+- [x] **NOISE-03**: Generate Type B ESL syntactic noise patterns based on L1 transfer errors (Mandarin, Spanish, Japanese, mixed)
+- [x] **NOISE-04**: Verify noise generator determinism — same seed produces identical output across runs
 
 ### Prompt Interventions
 
@@ -113,10 +113,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DATA-02 | Phase 1: Foundation and Data Infrastructure | Complete |
 | DATA-03 | Phase 1: Foundation and Data Infrastructure | Complete |
 | DATA-04 | Phase 1: Foundation and Data Infrastructure | Complete |
-| NOISE-01 | Phase 1: Foundation and Data Infrastructure | Pending |
-| NOISE-02 | Phase 1: Foundation and Data Infrastructure | Pending |
-| NOISE-03 | Phase 1: Foundation and Data Infrastructure | Pending |
-| NOISE-04 | Phase 1: Foundation and Data Infrastructure | Pending |
+| NOISE-01 | Phase 1: Foundation and Data Infrastructure | Complete |
+| NOISE-02 | Phase 1: Foundation and Data Infrastructure | Complete |
+| NOISE-03 | Phase 1: Foundation and Data Infrastructure | Complete |
+| NOISE-04 | Phase 1: Foundation and Data Infrastructure | Complete |
 | GRAD-01 | Phase 2: Grading Pipeline | Pending |
 | GRAD-02 | Phase 2: Grading Pipeline | Pending |
 | GRAD-03 | Phase 2: Grading Pipeline | Pending |

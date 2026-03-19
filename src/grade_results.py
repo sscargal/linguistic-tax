@@ -9,7 +9,9 @@ RLIMIT_NPROC (50), and RLIMIT_CPU (15s) to contain infinite loops,
 memory bombs, and fork bombs.
 """
 
+import argparse
 import ast
+import json
 import logging
 import os
 import re
@@ -47,6 +49,40 @@ class GradeResult:
     stderr: str
     execution_time_ms: float
     extraction_method: str | None
+
+
+@dataclass
+class ExtractionResult:
+    """Intermediate result from GSM8K number extraction.
+
+    Attributes:
+        value: The extracted numerical value.
+        method: Which extraction pattern matched.
+        raw_match: The raw matched string before normalization.
+    """
+
+    value: float
+    method: str
+    raw_match: str
+
+
+# ---------------------------------------------------------------------------
+# Compiled regex patterns for GSM8K number extraction
+# ---------------------------------------------------------------------------
+
+_RE_LATEX_BOXED = re.compile(r'\\boxed\{([^}]+)\}')
+_RE_COMMA_SEP = re.compile(r'-?\d{1,3}(?:,\d{3})+(?:\.\d+)?')
+_RE_FRACTION = re.compile(r'-?\d+/\d+')
+_RE_PERCENTAGE = re.compile(r'-?\d+\.?\d*\s*%')
+_RE_PAREN_NEG = re.compile(r'\((\d+\.?\d*)\)')
+_RE_DECIMAL = re.compile(r'-?\d+\.\d+')
+_RE_INTEGER = re.compile(r'-?\d+')
+
+# Unit suffixes to strip during normalization
+_UNIT_PATTERN = re.compile(
+    r'\s*(dollars?|meters?|hours?|minutes?|seconds?|kg|lbs?|miles?|feet|cm|mm|m)\s*$',
+    re.IGNORECASE,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -288,3 +324,355 @@ def grade_code(raw_output: str, prompt_record: dict) -> GradeResult:
         stdout=result.stdout, stderr=stderr,
         execution_time_ms=elapsed, extraction_method=None,
     )
+
+
+# ---------------------------------------------------------------------------
+# GSM8K number extraction and math grading
+# ---------------------------------------------------------------------------
+
+def _normalize_number(raw: str) -> float:
+    """Normalize a raw number string to float.
+
+    Handles: commas (1,234), currency ($42), units (42 meters),
+    parenthetical negatives (42), fractions (3/4), percentages (50%).
+
+    Args:
+        raw: Raw number string to normalize.
+
+    Returns:
+        Normalized float value.
+
+    Raises:
+        ValueError: If the string cannot be converted to float.
+    """
+    s = raw.strip()
+
+    # Handle parenthetical negative: (42) -> -42
+    paren_match = re.match(r'^\((\d+\.?\d*)\)$', s)
+    if paren_match:
+        return -float(paren_match.group(1))
+
+    # Handle fraction: 3/4 -> 0.75
+    frac_match = re.match(r'^(-?\d+)/(\d+)$', s)
+    if frac_match:
+        return float(frac_match.group(1)) / float(frac_match.group(2))
+
+    # Handle percentage: 50% -> 50 (GSM8K convention: keep as-is)
+    if s.endswith('%'):
+        s = s[:-1].strip()
+
+    # Strip currency prefix
+    s = re.sub(r'^\$', '', s)
+
+    # Strip unit suffixes
+    s = _UNIT_PATTERN.sub('', s)
+
+    # Strip commas
+    s = s.replace(',', '')
+
+    return float(s.strip())
+
+
+def _extract_number(text: str) -> ExtractionResult | None:
+    """Extract the last numerical answer from LLM response text.
+
+    Strategy: Check for LaTeX boxed first (explicit answer marker),
+    then find all number-like patterns and take the LAST one by position.
+
+    Args:
+        text: Raw LLM response text.
+
+    Returns:
+        ExtractionResult with value, method, and raw match; or None if
+        no number found.
+    """
+    if not text or not text.strip():
+        return None
+
+    # 1. Check for LaTeX \boxed{answer} (highest priority)
+    boxed_matches = _RE_LATEX_BOXED.findall(text)
+    if boxed_matches:
+        raw = boxed_matches[-1]
+        try:
+            value = _normalize_number(raw)
+            return ExtractionResult(value=value, method="latex_boxed", raw_match=raw)
+        except ValueError:
+            pass
+
+    # 2. Find all number-like patterns with their positions
+    patterns = [
+        (_RE_COMMA_SEP, "comma_separated"),
+        (_RE_FRACTION, "fraction"),
+        (_RE_PERCENTAGE, "percentage"),
+        (_RE_PAREN_NEG, "paren_negative"),
+        (_RE_DECIMAL, "decimal"),
+        (_RE_INTEGER, "integer"),
+    ]
+
+    # (start_pos, end_pos, raw, method)
+    all_matches: list[tuple[int, int, str, str]] = []
+
+    for regex, method in patterns:
+        for match in regex.finditer(text):
+            raw = match.group(0)
+            all_matches.append((match.start(), match.end(), raw, method))
+
+    if not all_matches:
+        return None
+
+    # Remove matches that are fully contained within a longer match
+    all_matches.sort(key=lambda x: (x[0], -(x[1] - x[0])))
+    filtered: list[tuple[int, int, str, str]] = []
+    for m in all_matches:
+        # Check if this match is subsumed by any already-kept match
+        subsumed = False
+        for kept in filtered:
+            if m[0] >= kept[0] and m[1] <= kept[1]:
+                subsumed = True
+                break
+        if not subsumed:
+            filtered.append(m)
+
+    if not filtered:
+        return None
+
+    # Take the LAST match by start position
+    filtered.sort(key=lambda x: x[0])
+    _, _, raw, method = filtered[-1]
+
+    try:
+        value = _normalize_number(raw)
+        return ExtractionResult(value=value, method=method, raw_match=raw)
+    except ValueError:
+        return None
+
+
+def grade_math(raw_output: str, prompt_record: dict) -> GradeResult:
+    """Grade GSM8K math answer by extracting and comparing numerical values.
+
+    Extracts the last number from the LLM output, normalizes it,
+    and compares against the canonical answer within epsilon (1e-6).
+
+    Args:
+        raw_output: Raw LLM response text.
+        prompt_record: Dictionary with canonical_answer field.
+
+    Returns:
+        GradeResult with pass/fail status and extraction metadata.
+    """
+    start = time.monotonic()
+
+    # Empty response check
+    if not raw_output or not raw_output.strip():
+        elapsed = (time.monotonic() - start) * 1000
+        return GradeResult(
+            passed=False, fail_reason="no_output",
+            stdout="", stderr="", execution_time_ms=elapsed,
+            extraction_method=None,
+        )
+
+    # Extract number
+    extraction = _extract_number(raw_output)
+    if extraction is None:
+        elapsed = (time.monotonic() - start) * 1000
+        return GradeResult(
+            passed=False, fail_reason="extraction_failed",
+            stdout="", stderr="No number found in output",
+            execution_time_ms=elapsed, extraction_method=None,
+        )
+
+    # Parse canonical answer
+    canonical = float(prompt_record["canonical_answer"])
+
+    # Compare with epsilon
+    elapsed = (time.monotonic() - start) * 1000
+    if abs(extraction.value - canonical) < 1e-6:
+        return GradeResult(
+            passed=True, fail_reason=None,
+            stdout=f"Extracted: {extraction.value} (canonical: {canonical})",
+            stderr="", execution_time_ms=elapsed,
+            extraction_method=extraction.method,
+        )
+
+    return GradeResult(
+        passed=False, fail_reason="wrong_answer",
+        stdout=f"Extracted: {extraction.value} (canonical: {canonical})",
+        stderr="", execution_time_ms=elapsed,
+        extraction_method=extraction.method,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Routing and batch grading
+# ---------------------------------------------------------------------------
+
+def grade_run(raw_output: str, prompt_record: dict) -> GradeResult:
+    """Route grading to the appropriate function based on benchmark type.
+
+    Args:
+        raw_output: Raw LLM response text.
+        prompt_record: Dictionary with benchmark_source and other fields.
+
+    Returns:
+        GradeResult from the appropriate grading function.
+    """
+    benchmark = prompt_record["benchmark_source"]
+    if benchmark in ("humaneval", "mbpp"):
+        return grade_code(raw_output, prompt_record)
+    elif benchmark == "gsm8k":
+        return grade_math(raw_output, prompt_record)
+    else:
+        return GradeResult(
+            passed=False, fail_reason="unsupported_benchmark",
+            stdout="", stderr=f"Unknown benchmark: {benchmark}",
+            execution_time_ms=0.0, extraction_method=None,
+        )
+
+
+def batch_grade(
+    db_path: str,
+    run_id: str | None = None,
+    force: bool = False,
+    prompts_path: str = "data/prompts.json",
+) -> dict:
+    """Grade experiment runs in batch, writing results to SQLite.
+
+    Args:
+        db_path: Path to the SQLite database.
+        run_id: If specified, grade only this run. Otherwise grade all
+            ungraded runs (or all runs if force=True).
+        force: If True, re-grade already-graded runs.
+        prompts_path: Path to prompts.json file.
+
+    Returns:
+        Summary dictionary with total, passed, failed, errors counts.
+    """
+    from src.db import init_database, query_runs, save_grade_result
+
+    conn = init_database(db_path)
+
+    # Load prompts
+    with open(prompts_path) as f:
+        prompts_list = json.load(f)
+    prompts_by_id = {p["problem_id"]: p for p in prompts_list}
+
+    # Query runs to grade
+    if run_id is not None:
+        runs = query_runs(conn, run_id=run_id)
+    elif force:
+        runs = query_runs(conn)
+    else:
+        # Only ungraded runs (pass_fail IS NULL)
+        conn.row_factory = None  # Reset for raw query
+        import sqlite3
+        conn.row_factory = sqlite3.Row
+        cursor = conn.execute(
+            "SELECT * FROM experiment_runs WHERE pass_fail IS NULL"
+        )
+        runs = [dict(row) for row in cursor.fetchall()]
+
+    summary = {"total": 0, "passed": 0, "failed": 0, "errors": 0}
+
+    for run in runs:
+        prompt_id = run["prompt_id"]
+        prompt_record = prompts_by_id.get(prompt_id)
+        if prompt_record is None:
+            logger.warning("No prompt record found for %s, skipping", prompt_id)
+            summary["errors"] += 1
+            continue
+
+        raw_output = run.get("raw_output", "") or ""
+
+        try:
+            result = grade_run(raw_output, prompt_record)
+            save_grade_result(
+                conn, run["run_id"], result.passed, result.fail_reason,
+                result.stdout, result.stderr, result.execution_time_ms,
+                result.extraction_method,
+            )
+            summary["total"] += 1
+            if result.passed:
+                summary["passed"] += 1
+            else:
+                summary["failed"] += 1
+        except Exception:
+            logger.exception("Error grading run %s", run["run_id"])
+            summary["errors"] += 1
+
+    conn.close()
+    return summary
+
+
+# ---------------------------------------------------------------------------
+# CLI
+# ---------------------------------------------------------------------------
+
+def _build_parser() -> argparse.ArgumentParser:
+    """Build the argument parser for the grading CLI.
+
+    Returns:
+        Configured ArgumentParser instance.
+    """
+    parser = argparse.ArgumentParser(
+        description="Grade experiment results for the Linguistic Tax research toolkit.",
+    )
+    parser.add_argument(
+        "--db", type=str, default=None,
+        help="Path to results database (default: from ExperimentConfig)",
+    )
+    parser.add_argument(
+        "--run-id", type=str, default=None,
+        help="Grade a single run by ID",
+    )
+    parser.add_argument(
+        "--force", action="store_true",
+        help="Re-grade already graded runs",
+    )
+    parser.add_argument(
+        "--format", choices=["summary", "json", "table"], default="summary",
+        help="Output format (default: summary)",
+    )
+    parser.add_argument(
+        "--prompts", type=str, default="data/prompts.json",
+        help="Path to prompts JSON file (default: data/prompts.json)",
+    )
+    return parser
+
+
+def main() -> None:
+    """CLI entry point for grading experiment results."""
+    parser = _build_parser()
+    args = parser.parse_args()
+
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+
+    # Resolve DB path
+    db_path = args.db
+    if db_path is None:
+        from src.config import ExperimentConfig
+        db_path = ExperimentConfig().results_db_path
+
+    summary = batch_grade(
+        db_path=db_path,
+        run_id=args.run_id,
+        force=args.force,
+        prompts_path=args.prompts,
+    )
+
+    if args.format == "summary":
+        logger.info(
+            "Graded: %d | Passed: %d | Failed: %d | Errors: %d",
+            summary["total"], summary["passed"],
+            summary["failed"], summary["errors"],
+        )
+    elif args.format == "json":
+        print(json.dumps(summary, indent=2))
+    elif args.format == "table":
+        print(f"{'Metric':<12} {'Count':>6}")
+        print("-" * 20)
+        for key, val in summary.items():
+            print(f"{key:<12} {val:>6}")
+
+
+if __name__ == "__main__":
+    main()

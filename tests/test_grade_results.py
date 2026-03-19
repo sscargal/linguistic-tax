@@ -1,22 +1,32 @@
 """Tests for the grading pipeline module.
 
 Covers code execution sandbox (HumanEval/MBPP), code extraction,
-harness assembly, GradeResult dataclass, and database integration.
+harness assembly, GradeResult dataclass, database integration,
+GSM8K math grading with multi-pattern number extraction, batch
+grading, and CLI interface.
 Includes adversarial sandbox tests for security (infinite loops,
 memory bombs, fork bombs).
 """
 
+import json
 import sqlite3
 
 import pytest
 
 from src.grade_results import (
+    ExtractionResult,
     GradeResult,
     extract_code,
     grade_code,
+    grade_math,
+    grade_run,
+    batch_grade,
     _build_humaneval_harness,
     _build_mbpp_harness,
+    _build_parser,
     _extract_entry_point,
+    _extract_number,
+    _normalize_number,
     _run_sandbox,
     _set_limits,
 )
@@ -326,3 +336,343 @@ class TestDBSchema:
         ).fetchone()
         assert detail is not None
         conn.close()
+
+
+# ---------------------------------------------------------------------------
+# GSM8K number extraction
+# ---------------------------------------------------------------------------
+
+class TestNormalizeNumber:
+    """Tests for _normalize_number helper."""
+
+    def test_plain_integer(self):
+        assert _normalize_number("42") == 42.0
+
+    def test_currency_prefix(self):
+        assert _normalize_number("$1,234") == 1234.0
+
+    def test_unit_suffix(self):
+        assert _normalize_number("42 dollars") == 42.0
+
+    def test_parenthetical_negative(self):
+        assert _normalize_number("(42)") == -42.0
+
+    def test_fraction(self):
+        assert _normalize_number("3/4") == 0.75
+
+    def test_percentage(self):
+        assert _normalize_number("50%") == 50.0
+
+    def test_comma_separated(self):
+        assert _normalize_number("1,234,567") == 1234567.0
+
+
+class TestExtractNumber:
+    """Tests for _extract_number multi-pattern extractor."""
+
+    def test_gsm8k_integer(self):
+        """Plain integer extraction."""
+        result = _extract_number("The answer is 42")
+        assert result is not None
+        assert result.value == 42.0
+        assert result.method == "integer"
+
+    def test_gsm8k_commas(self):
+        """Comma-separated number extraction."""
+        result = _extract_number("Total cost is $1,234.56")
+        assert result is not None
+        assert result.value == 1234.56
+        assert result.method == "comma_separated"
+
+    def test_gsm8k_fractions(self):
+        """Fraction extraction and conversion."""
+        result = _extract_number("3/4 of the pie")
+        assert result is not None
+        assert result.value == 0.75
+        assert result.method == "fraction"
+
+    def test_gsm8k_percentage(self):
+        """Percentage extraction."""
+        result = _extract_number("50% of students")
+        assert result is not None
+        assert result.value == 50.0
+        assert result.method == "percentage"
+
+    def test_gsm8k_latex(self):
+        r"""LaTeX \boxed extraction."""
+        result = _extract_number("\\boxed{42}")
+        assert result is not None
+        assert result.value == 42.0
+        assert result.method == "latex_boxed"
+
+    def test_gsm8k_paren_negative(self):
+        """Parenthetical negative extraction."""
+        result = _extract_number("The loss was (42) dollars")
+        assert result is not None
+        assert result.value == -42.0
+        assert result.method == "paren_negative"
+
+    def test_gsm8k_negatives(self):
+        """Negative integer extraction."""
+        result = _extract_number("-17 degrees")
+        assert result is not None
+        assert result.value == -17.0
+
+    def test_gsm8k_decimal(self):
+        """Decimal extraction."""
+        result = _extract_number("3.14 meters")
+        assert result is not None
+        assert result.value == 3.14
+        assert result.method == "decimal"
+
+    def test_gsm8k_chain_of_thought_last_number(self):
+        """Chain of thought: extracts LAST number."""
+        result = _extract_number("She calculated 10 + 20 + 12 = 42")
+        assert result is not None
+        assert result.value == 42.0
+
+    def test_gsm8k_empty_string(self):
+        """Empty string returns None."""
+        assert _extract_number("") is None
+
+    def test_gsm8k_no_numbers(self):
+        """No numbers returns None."""
+        assert _extract_number("no numbers here") is None
+
+    def test_gsm8k_extraction_failed(self):
+        """Whitespace-only returns None."""
+        assert _extract_number("   ") is None
+
+    def test_gsm8k_units(self):
+        """Number with units extracts correctly."""
+        result = _extract_number("The distance is 42 miles")
+        assert result is not None
+        assert result.value == 42.0
+
+    def test_gsm8k_latex_with_comma(self):
+        r"""LaTeX \boxed with comma-formatted number."""
+        result = _extract_number("\\boxed{1,234}")
+        assert result is not None
+        assert result.value == 1234.0
+        assert result.method == "latex_boxed"
+
+    def test_gsm8k_negative_decimal(self):
+        """Negative decimal."""
+        result = _extract_number("temperature is -3.5 degrees")
+        assert result is not None
+        assert result.value == -3.5
+
+
+# ---------------------------------------------------------------------------
+# grade_math
+# ---------------------------------------------------------------------------
+
+class TestGradeMath:
+    """Tests for grade_math function."""
+
+    def test_correct_answer(self):
+        """grade_math with correct answer returns passed=True."""
+        prompt_record = {
+            "benchmark_source": "gsm8k",
+            "canonical_answer": "42",
+        }
+        result = grade_math("The answer is 42", prompt_record)
+        assert result.passed is True
+        assert result.extraction_method == "integer"
+
+    def test_wrong_answer(self):
+        """grade_math with wrong answer returns passed=False."""
+        prompt_record = {
+            "benchmark_source": "gsm8k",
+            "canonical_answer": "42",
+        }
+        result = grade_math("The answer is 43", prompt_record)
+        assert result.passed is False
+        assert result.fail_reason == "wrong_answer"
+
+    def test_empty_response(self):
+        """grade_math with empty response returns no_output."""
+        prompt_record = {
+            "benchmark_source": "gsm8k",
+            "canonical_answer": "42",
+        }
+        result = grade_math("", prompt_record)
+        assert result.passed is False
+        assert result.fail_reason == "no_output"
+
+    def test_extraction_failed(self):
+        """grade_math with no numbers returns extraction_failed."""
+        prompt_record = {
+            "benchmark_source": "gsm8k",
+            "canonical_answer": "42",
+        }
+        result = grade_math("no numbers", prompt_record)
+        assert result.passed is False
+        assert result.fail_reason == "extraction_failed"
+
+    def test_epsilon_comparison(self):
+        """grade_math with near-equal answer passes within epsilon."""
+        prompt_record = {
+            "benchmark_source": "gsm8k",
+            "canonical_answer": "42",
+        }
+        result = grade_math("answer is 42.0000001", prompt_record)
+        assert result.passed is True
+
+
+# ---------------------------------------------------------------------------
+# grade_run router
+# ---------------------------------------------------------------------------
+
+class TestGradeRun:
+    """Tests for grade_run auto-routing."""
+
+    def test_routes_humaneval(self):
+        """grade_run routes humaneval to grade_code."""
+        prompt_record = {
+            "benchmark_source": "humaneval",
+            "prompt_text": "def foo():\n    pass",
+            "test_code": "def check(candidate):\n    assert candidate() is None",
+        }
+        result = grade_run("def foo():\n    pass\n", prompt_record)
+        assert isinstance(result, GradeResult)
+
+    def test_routes_gsm8k(self):
+        """grade_run routes gsm8k to grade_math."""
+        prompt_record = {
+            "benchmark_source": "gsm8k",
+            "canonical_answer": "42",
+        }
+        result = grade_run("The answer is 42", prompt_record)
+        assert result.passed is True
+
+
+# ---------------------------------------------------------------------------
+# Batch grading
+# ---------------------------------------------------------------------------
+
+class TestBatchGrading:
+    """Tests for batch_grade function."""
+
+    def test_batch_grading(self, tmp_db_path, tmp_path):
+        """batch_grade grades all NULL pass_fail runs and writes results."""
+        conn = init_database(tmp_db_path)
+
+        # Create a prompts file with a simple GSM8K problem
+        prompts = [
+            {
+                "benchmark_source": "gsm8k",
+                "problem_id": "gsm8k_test_1",
+                "prompt_text": "What is 2 + 2?",
+                "canonical_answer": "4",
+                "answer_type": "numeric",
+                "test_code": None,
+            },
+        ]
+        prompts_path = str(tmp_path / "prompts.json")
+        with open(prompts_path, "w") as f:
+            json.dump(prompts, f)
+
+        # Insert a run with raw_output but no grade
+        insert_run(conn, {
+            "run_id": "batch-001",
+            "prompt_id": "gsm8k_test_1",
+            "benchmark": "gsm8k",
+            "noise_type": "clean",
+            "intervention": "raw",
+            "model": "test-model",
+            "repetition": 1,
+            "raw_output": "The answer is 4",
+            "status": "completed",
+        })
+        conn.close()
+
+        # Run batch grading
+        summary = batch_grade(tmp_db_path, prompts_path=prompts_path)
+        assert summary["total"] == 1
+        assert summary["passed"] == 1
+
+        # Verify DB was updated
+        conn = init_database(tmp_db_path)
+        row = conn.execute(
+            "SELECT pass_fail FROM experiment_runs WHERE run_id='batch-001'"
+        ).fetchone()
+        assert row[0] == 1
+        conn.close()
+
+    def test_batch_force_regrading(self, tmp_db_path, tmp_path):
+        """batch_grade with force=True re-grades already-graded runs."""
+        conn = init_database(tmp_db_path)
+
+        prompts = [
+            {
+                "benchmark_source": "gsm8k",
+                "problem_id": "gsm8k_test_1",
+                "prompt_text": "What is 2 + 2?",
+                "canonical_answer": "4",
+                "answer_type": "numeric",
+                "test_code": None,
+            },
+        ]
+        prompts_path = str(tmp_path / "prompts.json")
+        with open(prompts_path, "w") as f:
+            json.dump(prompts, f)
+
+        # Insert already-graded run
+        insert_run(conn, {
+            "run_id": "batch-002",
+            "prompt_id": "gsm8k_test_1",
+            "benchmark": "gsm8k",
+            "noise_type": "clean",
+            "intervention": "raw",
+            "model": "test-model",
+            "repetition": 1,
+            "raw_output": "The answer is 4",
+            "pass_fail": 0,
+            "status": "completed",
+        })
+        conn.close()
+
+        # Without force: should skip (already graded)
+        summary = batch_grade(tmp_db_path, prompts_path=prompts_path)
+        assert summary["total"] == 0
+
+        # With force: should re-grade
+        summary = batch_grade(tmp_db_path, prompts_path=prompts_path, force=True)
+        assert summary["total"] == 1
+        assert summary["passed"] == 1
+
+
+# ---------------------------------------------------------------------------
+# CLI
+# ---------------------------------------------------------------------------
+
+class TestCLI:
+    """Tests for CLI argument parsing."""
+
+    def test_parser_defaults(self):
+        """_build_parser produces correct defaults."""
+        parser = _build_parser()
+        args = parser.parse_args([])
+        assert args.run_id is None
+        assert args.force is False
+        assert args.format == "summary"
+
+    def test_parser_force_flag(self):
+        """--force flag works."""
+        parser = _build_parser()
+        args = parser.parse_args(["--force"])
+        assert args.force is True
+
+    def test_parser_format_choices(self):
+        """--format accepts summary, json, table."""
+        parser = _build_parser()
+        for fmt in ("summary", "json", "table"):
+            args = parser.parse_args(["--format", fmt])
+            assert args.format == fmt
+
+    def test_parser_run_id(self):
+        """--run-id accepts string."""
+        parser = _build_parser()
+        args = parser.parse_args(["--run-id", "test-001"])
+        assert args.run_id == "test-001"

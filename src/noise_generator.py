@@ -279,3 +279,307 @@ def inject_type_a_noise(
                 result.append(char)
 
     return "".join(result)
+
+
+# ---------------------------------------------------------------------------
+# Type B: ESL Syntactic Noise
+# ---------------------------------------------------------------------------
+
+@dataclass
+class ESLPattern:
+    """A rule-based ESL transformation template.
+
+    Each pattern represents a documented L1 transfer error from
+    second-language acquisition research.
+
+    Attributes:
+        name: Short identifier for the pattern.
+        l1_source: Source language ("mandarin", "spanish", "japanese").
+        description: Linguistic explanation of the transfer error.
+        pattern: Regex pattern to match in text.
+        replacement: Replacement string (may include backreferences).
+    """
+
+    name: str
+    l1_source: str
+    description: str
+    pattern: str
+    replacement: str
+
+
+# Mandarin L1 transfer patterns (5-8 entries)
+# Based on documented L1 transfer phenomena: Mandarin Chinese has no article
+# system, no tense morphology, optional copula, and topic-comment structure.
+MANDARIN_PATTERNS: list[ESLPattern] = [
+    ESLPattern(
+        name="article_omission",
+        l1_source="mandarin",
+        description="Drop articles (a, an, the) - Mandarin has no article system",
+        pattern=r"\b(a|an|the)\s+",
+        replacement="",
+    ),
+    ESLPattern(
+        name="tense_removal",
+        l1_source="mandarin",
+        description="Remove progressive aspect markers - Mandarin uses aspect particles, not tense",
+        pattern=r"\b(was|were)\s+(\w+ing)\b",
+        replacement=r"\2",
+    ),
+    ESLPattern(
+        name="copula_omission",
+        l1_source="mandarin",
+        description="Drop copula (is/are) before predicates - copula often omitted in Mandarin",
+        pattern=r"\b(is|are)\s+(?=\w)",
+        replacement="",
+    ),
+    ESLPattern(
+        name="preposition_simplification",
+        l1_source="mandarin",
+        description="Simplify prepositions - Mandarin preposition system is simpler",
+        pattern=r"\binto\b",
+        replacement="to",
+    ),
+    ESLPattern(
+        name="plural_omission",
+        l1_source="mandarin",
+        description="Drop plural markers - Mandarin nouns do not inflect for number",
+        pattern=r"\b(\w{3,})s\b(?!\s+(is|are|was|were|has))",
+        replacement=r"\1",
+    ),
+    ESLPattern(
+        name="third_person_s_omission",
+        l1_source="mandarin",
+        description="Drop third-person singular -s - Mandarin verbs do not conjugate",
+        pattern=r"\b(sort|return|compute|find|give|take|make)s\b",
+        replacement=r"\1",
+    ),
+]
+
+# Spanish L1 transfer patterns (5-8 entries)
+# Based on documented L1 transfer phenomena: preposition confusion from
+# direct translation, double negatives, adjective-noun order, ser/estar
+# distinction, and grammatical gender interference.
+SPANISH_PATTERNS: list[ESLPattern] = [
+    ESLPattern(
+        name="preposition_confusion",
+        l1_source="spanish",
+        description="Confuse 'on' with 'of' - Spanish 'depender de' transfers as 'depend of'",
+        pattern=r"\bdepend(?:s)?\s+on\b",
+        replacement="depend of",
+    ),
+    ESLPattern(
+        name="double_negative",
+        l1_source="spanish",
+        description="Use double negatives - standard in Spanish grammar",
+        pattern=r"\bdon't\s+have\s+any\b",
+        replacement="don't have no",
+    ),
+    ESLPattern(
+        name="adjective_placement",
+        l1_source="spanish",
+        description="Place adjective after noun - Spanish adjective-noun order",
+        pattern=r"\b(large|small|big|empty|sorted|new|old)\s+(\w+)\b",
+        replacement=r"\2 \1",
+    ),
+    ESLPattern(
+        name="ser_estar_confusion",
+        l1_source="spanish",
+        description="Confuse permanent/temporary states - ser/estar distinction",
+        pattern=r"\b(is|are)\s+(happy|sad|tired|ready|equal|empty|full)\b",
+        replacement=r"is being \2",
+    ),
+    ESLPattern(
+        name="gender_article",
+        l1_source="spanish",
+        description="Apply grammatical gender to English nouns - interference from Spanish gender system",
+        pattern=r"\bthe\s+problem\b",
+        replacement="the problema",
+    ),
+    ESLPattern(
+        name="reflexive_overuse",
+        l1_source="spanish",
+        description="Add reflexive where not needed - Spanish uses reflexives more broadly",
+        pattern=r"\breturn\s+(the\s+)?(\w+)\b",
+        replacement=r"return itself \2",
+    ),
+]
+
+# Japanese L1 transfer patterns (5-8 entries)
+# Based on documented L1 transfer phenomena: topic-comment structure (wa/ga),
+# article omission (no article system), subject omission (pro-drop), and
+# relative clause prenominal placement.
+JAPANESE_PATTERNS: list[ESLPattern] = [
+    ESLPattern(
+        name="article_omission",
+        l1_source="japanese",
+        description="Drop articles - Japanese has no article system (like Mandarin)",
+        pattern=r"\b(a|an|the)\s+",
+        replacement="",
+    ),
+    ESLPattern(
+        name="topic_comment",
+        l1_source="japanese",
+        description="Add topic marker 'As for X' - Japanese topic-comment (wa) structure",
+        pattern=r"^(\w+)\s+",
+        replacement=r"As for \1, ",
+    ),
+    ESLPattern(
+        name="subject_omission",
+        l1_source="japanese",
+        description="Drop subject pronoun - Japanese is a pro-drop language",
+        pattern=r"\b(you|it)\s+should\b",
+        replacement="should",
+    ),
+    ESLPattern(
+        name="plural_confusion",
+        l1_source="japanese",
+        description="Drop plural markers - Japanese nouns do not inflect for number",
+        pattern=r"\b(\w{3,})s\b(?!\s+(is|are|was|were|has))",
+        replacement=r"\1",
+    ),
+    ESLPattern(
+        name="preposition_confusion",
+        l1_source="japanese",
+        description="Confuse prepositions - Japanese uses postpositions, causing transfer errors",
+        pattern=r"\bfrom\s+(\w+)\s+to\b",
+        replacement=r"to \1 from",
+    ),
+]
+
+# L1 source to pattern list mapping
+_L1_PATTERN_MAP: dict[str, list[ESLPattern]] = {
+    "mandarin": MANDARIN_PATTERNS,
+    "spanish": SPANISH_PATTERNS,
+    "japanese": JAPANESE_PATTERNS,
+}
+
+
+def inject_type_b_noise(
+    text: str,
+    l1_source: str,
+    seed: int | None = None,
+) -> str:
+    """Inject ESL syntactic noise based on L1 transfer patterns.
+
+    Applies rule-based transformation templates that simulate common
+    errors made by non-native English speakers based on their first
+    language (L1) interference patterns.
+
+    This function is deterministic by design: the same input text and
+    L1 source always produce the same output. The seed parameter is
+    accepted for interface consistency but does not affect the output.
+
+    Args:
+        text: The input text to transform.
+        l1_source: Source language for patterns ("mandarin", "spanish",
+            "japanese", or "mixed" for all combined).
+        seed: Unused; accepted for interface consistency.
+
+    Returns:
+        The text with ESL syntactic noise applied.
+
+    Raises:
+        ValueError: If l1_source is not a recognized value.
+    """
+    if l1_source == "mixed":
+        patterns = MANDARIN_PATTERNS + SPANISH_PATTERNS + JAPANESE_PATTERNS
+    elif l1_source in _L1_PATTERN_MAP:
+        patterns = _L1_PATTERN_MAP[l1_source]
+    else:
+        raise ValueError(
+            f"Unknown l1_source: {l1_source!r}. "
+            f"Expected one of: mandarin, spanish, japanese, mixed"
+        )
+
+    result = text
+    for pattern in patterns:
+        result = re.sub(pattern.pattern, pattern.replacement, result, flags=re.IGNORECASE)
+
+    return result
+
+
+# ---------------------------------------------------------------------------
+# CLI Interface
+# ---------------------------------------------------------------------------
+
+def _build_parser() -> argparse.ArgumentParser:
+    """Build the argument parser for the noise generator CLI.
+
+    Returns:
+        Configured ArgumentParser instance.
+    """
+    parser = argparse.ArgumentParser(
+        description="Noise generator for the Linguistic Tax research toolkit.",
+    )
+    parser.add_argument(
+        "--input", required=True, type=str,
+        help="Path to JSON file with prompt records",
+    )
+    parser.add_argument(
+        "--type", required=True, choices=["char", "esl"],
+        help="Noise type: 'char' for Type A character-level, 'esl' for Type B ESL",
+    )
+    parser.add_argument(
+        "--rate", type=float, default=0.10,
+        help="Error rate for char type (default: 0.10)",
+    )
+    parser.add_argument(
+        "--l1", type=str, choices=["mandarin", "spanish", "japanese", "mixed"],
+        help="L1 source for ESL type",
+    )
+    parser.add_argument(
+        "--seed", type=int, default=42,
+        help="Random seed (default: 42)",
+    )
+    parser.add_argument(
+        "--output", type=str, default=None,
+        help="Output file path (default: stdout)",
+    )
+    return parser
+
+
+def main() -> None:
+    """CLI entry point for noise generation."""
+    parser = _build_parser()
+    args = parser.parse_args()
+
+    # Load input
+    input_path = Path(args.input)
+    with input_path.open() as f:
+        prompts = json.load(f)
+
+    logger.info("Processing %d prompts with type=%s", len(prompts), args.type)
+
+    results = []
+    for prompt in prompts:
+        text = prompt["prompt_text"]
+        answer_type = prompt.get("answer_type", "code")
+
+        if args.type == "char":
+            noisy = inject_type_a_noise(
+                text,
+                error_rate=args.rate,
+                seed=args.seed,
+                answer_type=answer_type,
+            )
+        else:
+            if not args.l1:
+                parser.error("--l1 is required when --type is 'esl'")
+            noisy = inject_type_b_noise(text, l1_source=args.l1, seed=args.seed)
+
+        result = dict(prompt)
+        result["noisy_text"] = noisy
+        results.append(result)
+
+    # Write output
+    output_json = json.dumps(results, indent=2)
+    if args.output:
+        output_path = Path(args.output)
+        output_path.write_text(output_json)
+        logger.info("Wrote %d results to %s", len(results), output_path)
+    else:
+        print(output_json)
+
+
+if __name__ == "__main__":
+    main()

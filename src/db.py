@@ -79,6 +79,16 @@ CREATE TABLE IF NOT EXISTS derived_metrics (
     std_latency_ms REAL,
     PRIMARY KEY (prompt_id, condition, model)
 );
+
+CREATE TABLE IF NOT EXISTS grading_details (
+    run_id TEXT PRIMARY KEY REFERENCES experiment_runs(run_id),
+    fail_reason TEXT,
+    extraction_method TEXT,
+    stdout TEXT,
+    stderr TEXT,
+    execution_time_ms REAL,
+    graded_at TEXT
+);
 """
 
 # Column names for experiment_runs, used by insert_run
@@ -138,6 +148,50 @@ def insert_run(conn: sqlite3.Connection, run_data: dict) -> None:
     )
     conn.commit()
     logger.debug("Inserted run %s", run_data.get("run_id", "unknown"))
+
+
+def save_grade_result(
+    conn: sqlite3.Connection,
+    run_id: str,
+    passed: bool,
+    fail_reason: str | None,
+    stdout: str,
+    stderr: str,
+    execution_time_ms: float,
+    extraction_method: str | None,
+) -> None:
+    """Save grading result to experiment_runs and grading_details tables.
+
+    Updates the pass_fail column in experiment_runs and inserts (or replaces)
+    a row in the grading_details table with diagnostic metadata.
+
+    Args:
+        conn: An open database connection.
+        run_id: The experiment run identifier.
+        passed: Whether the run passed grading.
+        fail_reason: Reason code if failed (None if passed).
+        stdout: Captured stdout from sandbox execution.
+        stderr: Captured stderr from sandbox execution.
+        execution_time_ms: Wall-clock execution time in milliseconds.
+        extraction_method: GSM8K extraction method used (None for code).
+    """
+    from datetime import datetime, timezone
+
+    pass_fail = 1 if passed else 0
+    conn.execute(
+        "UPDATE experiment_runs SET pass_fail = ? WHERE run_id = ?",
+        (pass_fail, run_id),
+    )
+    graded_at = datetime.now(timezone.utc).isoformat()
+    conn.execute(
+        "INSERT OR REPLACE INTO grading_details "
+        "(run_id, fail_reason, extraction_method, stdout, stderr, "
+        "execution_time_ms, graded_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (run_id, fail_reason, extraction_method, stdout, stderr,
+         execution_time_ms, graded_at),
+    )
+    conn.commit()
+    logger.debug("Saved grade result for run %s: passed=%s", run_id, passed)
 
 
 def query_runs(conn: sqlite3.Connection, **filters: object) -> list[dict]:

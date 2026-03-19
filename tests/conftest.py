@@ -27,3 +27,19 @@ def sample_prompt_record():
         "test_code": "assert is_prime(2) == True\nassert is_prime(4) == False",
         "answer_type": "code",
     }
+
+
+@pytest.fixture
+def sample_run_record():
+    """Return a sample experiment run record for grading tests."""
+    return {
+        "run_id": "test-run-001",
+        "prompt_id": "HumanEval/1",
+        "benchmark": "humaneval",
+        "noise_type": "clean",
+        "intervention": "raw",
+        "model": "test-model",
+        "repetition": 1,
+        "raw_output": "def separate_paren_groups(paren_string):\n    ...",
+        "status": "completed",
+    }

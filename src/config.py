@@ -1,0 +1,89 @@
+"""Configuration module for the Linguistic Tax research toolkit.
+
+Provides pinned model versions, experiment parameters, noise settings,
+file paths, and deterministic seed derivation for reproducible experiments.
+"""
+
+import hashlib
+import logging
+from dataclasses import dataclass
+
+logger = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True)
+class ExperimentConfig:
+    """Immutable experiment configuration with all pinned values.
+
+    All experimental parameters are defined here as defaults.
+    The frozen constraint ensures no accidental mutation during runs.
+    """
+
+    # Model versions (pinned)
+    claude_model: str = "claude-sonnet-4-20250514"
+    gemini_model: str = "gemini-1.5-pro"
+
+    # Seeds
+    base_seed: int = 42
+
+    # Noise parameters
+    type_a_rates: tuple[float, ...] = (0.05, 0.10, 0.20)
+    type_a_weights: tuple[float, ...] = (0.40, 0.25, 0.20, 0.15)
+
+    # Experiment parameters
+    repetitions: int = 5
+    temperature: float = 0.0
+
+    # Paths
+    prompts_path: str = "data/prompts.json"
+    matrix_path: str = "data/experiment_matrix.json"
+    results_db_path: str = "results/results.db"
+
+
+def derive_seed(
+    base_seed: int, prompt_id: str, noise_type: str, noise_level: str
+) -> int:
+    """Derive a deterministic seed from experimental parameters.
+
+    Uses SHA-256 hashing to produce a uniformly distributed seed
+    from the combination of base seed and experimental condition.
+    This avoids global random state contamination.
+
+    Args:
+        base_seed: The base random seed (typically 42).
+        prompt_id: Unique identifier for the prompt.
+        noise_type: Type of noise (e.g., "type_a", "type_b").
+        noise_level: Level of noise (e.g., "5", "10", "20").
+
+    Returns:
+        A deterministic integer seed derived from the inputs.
+    """
+    key = f"{base_seed}:{prompt_id}:{noise_type}:{noise_level}"
+    return int(hashlib.sha256(key.encode()).hexdigest()[:8], 16)
+
+
+# Module-level constants enumerating all experimental conditions
+
+NOISE_TYPES: tuple[str, ...] = (
+    "clean",
+    "type_a_5pct",
+    "type_a_10pct",
+    "type_a_20pct",
+    "type_b_mandarin",
+    "type_b_spanish",
+    "type_b_japanese",
+    "type_b_mixed",
+)
+
+INTERVENTIONS: tuple[str, ...] = (
+    "raw",
+    "self_correct",
+    "pre_proc_sanitize",
+    "pre_proc_sanitize_compress",
+    "prompt_repetition",
+)
+
+MODELS: tuple[str, ...] = (
+    "claude-sonnet-4-20250514",
+    "gemini-1.5-pro",
+)

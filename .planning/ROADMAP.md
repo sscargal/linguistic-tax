@@ -46,11 +46,10 @@ Plans:
   1. HumanEval/MBPP code outputs are executed in a subprocess sandbox with timeout and resource limits -- infinite loops and fork bombs do not hang or crash the host
   2. GSM8K grading correctly extracts and compares numerical answers across format variants (prose, LaTeX, units, comma-separated)
   3. Every grading result (pass/fail) is written to the SQLite results database with the corresponding run ID
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 02-01: TBD
-- [ ] 02-02: TBD
+- [ ] 02-01-PLAN.md -- Subprocess sandbox code grader (HumanEval/MBPP), regex math grader (GSM8K), CLI with batch mode, grading_details DB table
 
 ### Phase 3: Interventions and Execution Engine
 **Goal**: Researcher can execute any experiment matrix work item end-to-end -- the intervention router dispatches to the correct strategy, the API client calls Claude or Gemini with full instrumentation, and the engine manages resumability and rate limiting
@@ -121,7 +120,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation and Data Infrastructure | 0/3 | Planning complete | - |
-| 2. Grading Pipeline | 0/2 | Not started | - |
+| 2. Grading Pipeline | 0/1 | Planning complete | - |
 | 3. Interventions and Execution Engine | 0/3 | Not started | - |
 | 4. Pilot Validation | 0/1 | Not started | - |
 | 5. Statistical Analysis and Derived Metrics | 0/2 | Not started | - |

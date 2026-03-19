@@ -3,20 +3,31 @@
 Covers:
 - NOISE-01: Type A character-level noise at 5%, 10%, 20% error rates
 - NOISE-02: Keyword protection for Python keywords, function names, operators, numbers
-- NOISE-04: Determinism (same seed = identical output)
+- NOISE-03: Type B ESL syntactic noise for Mandarin, Spanish, Japanese, Mixed
+- NOISE-04: Determinism (same seed = identical output) for both noise types
+- CLI: Command-line interface for both char and esl modes
 - Integration: derive_seed imported from config
 """
 
+import json
+import subprocess
 import sys
+import tempfile
+from pathlib import Path
 
 import pytest
 
 sys.path.insert(0, "src")
 
 from noise_generator import (
+    ESLPattern,
+    JAPANESE_PATTERNS,
+    MANDARIN_PATTERNS,
+    SPANISH_PATTERNS,
     build_adjacency_map,
     identify_protected_spans,
     inject_type_a_noise,
+    inject_type_b_noise,
 )
 from config import derive_seed
 
@@ -149,3 +160,181 @@ class TestDeriveSeedIntegration:
         s1 = derive_seed(42, "HumanEval/1", "type_a", "10")
         s2 = derive_seed(42, "HumanEval/2", "type_a", "10")
         assert s1 != s2
+
+
+# ---------------------------------------------------------------------------
+# ESLPattern dataclass tests
+# ---------------------------------------------------------------------------
+class TestESLPatternDataclass:
+    """Tests for ESLPattern dataclass structure."""
+
+    def test_esl_pattern_has_required_fields(self) -> None:
+        p = ESLPattern(
+            name="test",
+            l1_source="mandarin",
+            description="test pattern",
+            pattern=r"\bthe\b",
+            replacement="",
+        )
+        assert p.name == "test"
+        assert p.l1_source == "mandarin"
+        assert p.description == "test pattern"
+        assert p.pattern == r"\bthe\b"
+        assert p.replacement == ""
+
+
+# ---------------------------------------------------------------------------
+# ESL pattern list tests (NOISE-03)
+# ---------------------------------------------------------------------------
+class TestESLPatternLists:
+    """Tests for ESL pattern collections."""
+
+    def test_mandarin_patterns_count(self) -> None:
+        assert 5 <= len(MANDARIN_PATTERNS) <= 8, (
+            f"Expected 5-8 Mandarin patterns, got {len(MANDARIN_PATTERNS)}"
+        )
+
+    def test_mandarin_patterns_l1_source(self) -> None:
+        for p in MANDARIN_PATTERNS:
+            assert p.l1_source == "mandarin"
+
+    def test_spanish_patterns_count(self) -> None:
+        assert 5 <= len(SPANISH_PATTERNS) <= 8, (
+            f"Expected 5-8 Spanish patterns, got {len(SPANISH_PATTERNS)}"
+        )
+
+    def test_spanish_patterns_l1_source(self) -> None:
+        for p in SPANISH_PATTERNS:
+            assert p.l1_source == "spanish"
+
+    def test_japanese_patterns_count(self) -> None:
+        assert 5 <= len(JAPANESE_PATTERNS) <= 8, (
+            f"Expected 5-8 Japanese patterns, got {len(JAPANESE_PATTERNS)}"
+        )
+
+    def test_japanese_patterns_l1_source(self) -> None:
+        for p in JAPANESE_PATTERNS:
+            assert p.l1_source == "japanese"
+
+
+# ---------------------------------------------------------------------------
+# Type B noise injection tests (NOISE-03)
+# ---------------------------------------------------------------------------
+class TestTypeBNoise:
+    """Tests for Type B ESL syntactic noise injection."""
+
+    def test_mandarin_removes_articles(self) -> None:
+        text = "Write a function that sorts the list"
+        result = inject_type_b_noise(text, "mandarin")
+        # Mandarin pattern should remove articles
+        assert "a " not in result.lower().split("th")[0] or "the " not in result.lower(), (
+            f"Expected article removal, got: {result}"
+        )
+
+    def test_spanish_produces_changes(self) -> None:
+        text = "The function depends on the input to sort the list"
+        result = inject_type_b_noise(text, "spanish")
+        assert result != text, f"Spanish patterns should modify text, got unchanged: {result}"
+
+    def test_japanese_produces_changes(self) -> None:
+        text = "Write a function that sorts the list and return the result"
+        result = inject_type_b_noise(text, "japanese")
+        assert result != text, f"Japanese patterns should modify text, got unchanged: {result}"
+
+    def test_mixed_applies_multiple_l1_patterns(self) -> None:
+        text = "Write a function that sorts the list and return the result"
+        result = inject_type_b_noise(text, "mixed")
+        assert result != text, f"Mixed mode should modify text, got unchanged: {result}"
+
+    def test_type_b_deterministic(self) -> None:
+        """Type B is rule-based, so same input = same output (NOISE-04)."""
+        text = "Write a function that sorts the list"
+        r1 = inject_type_b_noise(text, "mandarin")
+        r2 = inject_type_b_noise(text, "mandarin")
+        assert r1 == r2, "Type B noise must be deterministic"
+
+
+# ---------------------------------------------------------------------------
+# Full determinism tests for both types (NOISE-04)
+# ---------------------------------------------------------------------------
+class TestFullDeterminism:
+    """Comprehensive determinism verification for both noise types."""
+
+    def test_type_a_determinism_multiple_calls(self) -> None:
+        text = "Please write a function that computes the fibonacci sequence"
+        results = [inject_type_a_noise(text, 0.10, 42) for _ in range(5)]
+        assert all(r == results[0] for r in results), "Type A not deterministic across 5 calls"
+
+    def test_type_b_determinism_all_l1(self) -> None:
+        text = "Write a function that sorts the list and return the result"
+        for l1 in ["mandarin", "spanish", "japanese", "mixed"]:
+            r1 = inject_type_b_noise(text, l1)
+            r2 = inject_type_b_noise(text, l1)
+            assert r1 == r2, f"Type B not deterministic for l1={l1}"
+
+
+# ---------------------------------------------------------------------------
+# CLI tests
+# ---------------------------------------------------------------------------
+class TestCLI:
+    """Tests for the noise generator CLI interface."""
+
+    def test_cli_char_mode(self, tmp_path: Path) -> None:
+        """CLI --type char --rate 0.10 --seed 42 processes input."""
+        input_file = tmp_path / "input.json"
+        output_file = tmp_path / "output.json"
+        input_data = [
+            {
+                "prompt_id": "test_1",
+                "prompt_text": "Write a function that sorts a list",
+                "answer_type": "code",
+            }
+        ]
+        input_file.write_text(json.dumps(input_data))
+
+        result = subprocess.run(
+            [
+                sys.executable, "src/noise_generator.py",
+                "--input", str(input_file),
+                "--type", "char",
+                "--rate", "0.10",
+                "--seed", "42",
+                "--output", str(output_file),
+            ],
+            capture_output=True,
+            text=True,
+        )
+        assert result.returncode == 0, f"CLI failed: {result.stderr}"
+        output_data = json.loads(output_file.read_text())
+        assert len(output_data) == 1
+        assert "noisy_text" in output_data[0]
+
+    def test_cli_esl_mode(self, tmp_path: Path) -> None:
+        """CLI --type esl --l1 mandarin processes input."""
+        input_file = tmp_path / "input.json"
+        output_file = tmp_path / "output.json"
+        input_data = [
+            {
+                "prompt_id": "test_1",
+                "prompt_text": "Write a function that sorts the list",
+                "answer_type": "code",
+            }
+        ]
+        input_file.write_text(json.dumps(input_data))
+
+        result = subprocess.run(
+            [
+                sys.executable, "src/noise_generator.py",
+                "--input", str(input_file),
+                "--type", "esl",
+                "--l1", "mandarin",
+                "--seed", "42",
+                "--output", str(output_file),
+            ],
+            capture_output=True,
+            text=True,
+        )
+        assert result.returncode == 0, f"CLI failed: {result.stderr}"
+        output_data = json.loads(output_file.read_text())
+        assert len(output_data) == 1
+        assert "noisy_text" in output_data[0]

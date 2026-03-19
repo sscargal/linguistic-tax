@@ -1,0 +1,21 @@
+[project]
+name = "linguistic-tax"
+version = "0.1.0"
+description = "Research toolkit: Quantifying the Linguistic Tax on LLM Reasoning"
+requires-python = ">=3.11"
+dependencies = [
+    "anthropic>=0.40.0",
+    "google-generativeai>=0.8.0",
+    "bert-score>=0.3.13",
+    "statsmodels>=0.14.0",
+    "scipy>=1.12.0",
+    "pandas>=2.2.0",
+    "matplotlib>=3.8.0",
+    "seaborn>=0.13.0",
+    "pytest>=8.0.0",
+    "tiktoken>=0.7.0",
+    "datasets>=4.8.3",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

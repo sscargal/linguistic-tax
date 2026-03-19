@@ -39,9 +39,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Grading
 
-- [ ] **GRAD-01**: Auto-grade HumanEval/MBPP outputs via sandboxed subprocess code execution with timeout and resource limits
-- [ ] **GRAD-02**: Auto-grade GSM8K outputs via regex extraction of final numerical answer with format-variant handling
-- [ ] **GRAD-03**: Record pass/fail result for every experimental run in SQLite
+- [x] **GRAD-01**: Auto-grade HumanEval/MBPP outputs via sandboxed subprocess code execution with timeout and resource limits
+- [x] **GRAD-02**: Auto-grade GSM8K outputs via regex extraction of final numerical answer with format-variant handling
+- [x] **GRAD-03**: Record pass/fail result for every experimental run in SQLite
 
 ### Pilot Validation
 
@@ -117,9 +117,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | NOISE-02 | Phase 1: Foundation and Data Infrastructure | Complete |
 | NOISE-03 | Phase 1: Foundation and Data Infrastructure | Complete |
 | NOISE-04 | Phase 1: Foundation and Data Infrastructure | Complete |
-| GRAD-01 | Phase 2: Grading Pipeline | Pending |
-| GRAD-02 | Phase 2: Grading Pipeline | Pending |
-| GRAD-03 | Phase 2: Grading Pipeline | Pending |
+| GRAD-01 | Phase 2: Grading Pipeline | Complete |
+| GRAD-02 | Phase 2: Grading Pipeline | Complete |
+| GRAD-03 | Phase 2: Grading Pipeline | Complete |
 | INTV-01 | Phase 3: Interventions and Execution Engine | Pending |
 | INTV-02 | Phase 3: Interventions and Execution Engine | Pending |
 | INTV-03 | Phase 3: Interventions and Execution Engine | Pending |

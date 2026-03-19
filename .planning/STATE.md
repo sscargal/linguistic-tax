@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Phase 2 context gathered
-last_updated: "2026-03-19T23:25:40.645Z"
+stopped_at: Completed 02-01-PLAN.md
+last_updated: "2026-03-19T23:52:45.002Z"
 progress:
   total_phases: 6
-  completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
+  completed_phases: 2
+  total_plans: 4
+  completed_plans: 4
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-19)
 
 **Core value:** Produce rigorous, reproducible experimental data showing how prompt noise degrades LLM accuracy and whether automated prompt optimization recovers it
-**Current focus:** Phase 01 — foundation-and-data-infrastructure
+**Current focus:** Phase 02 — grading-pipeline
 
 ## Current Position
 
-Phase: 01 (foundation-and-data-infrastructure) — EXECUTING
-Plan: 3 of 3
+Phase: 02 (grading-pipeline) — EXECUTING
+Plan: 1 of 1
 
 ## Performance Metrics
 
@@ -49,6 +49,7 @@ Plan: 3 of 3
 | Phase 01 P01 | 3min | 2 tasks | 5 files |
 | Phase 01 P03 | 3min | 2 tasks | 6 files |
 | Phase 01 P02 | 4min | 2 tasks | 2 files |
+| Phase 02 P01 | 8min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -62,6 +63,9 @@ Recent decisions affecting current work:
 - [Phase 01]: Frozen dataclass for config immutability with SHA-256 seed derivation and WAL-mode SQLite
 - [Phase 01]: Full factorial matrix of 82,000 items for complete experimental coverage with deterministic HuggingFace sampling
 - [Phase 01]: Widened mutation count test tolerances to account for invisible mutations on uniform strings
+- [Phase 02]: Used Popen with manual process group kill for reliable subprocess timeout handling
+- [Phase 02]: Overlap deduplication in GSM8K number extraction to prevent short matches inside longer ones
+- [Phase 02]: RLIMIT_NPROC=50 to avoid interference with other user processes
 
 ### Pending Todos
 
@@ -75,6 +79,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-19T23:25:40.643Z
-Stopped at: Phase 2 context gathered
-Resume file: .planning/phases/02-grading-pipeline/02-CONTEXT.md
+Last session: 2026-03-19T23:52:45.000Z
+Stopped at: Completed 02-01-PLAN.md
+Resume file: None

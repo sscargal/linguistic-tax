@@ -31,12 +31,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. The experiment matrix JSON enumerates every prompt x noise x intervention combination as a self-contained work item
   4. SQLite database can be created with the RDD schema and accepts insert/query of experimental result rows
   5. Configuration module exposes pinned model versions, API settings, and a seed registry that prevents global random state
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 01-01: TBD
-- [ ] 01-02: TBD
-- [ ] 01-03: TBD
+- [ ] 01-01-PLAN.md -- Config module with pinned settings and seed registry, SQLite database with full RDD schema
+- [ ] 01-02-PLAN.md -- Noise generators: Type A character-level with keyword protection, Type B ESL syntactic, CLI interface
+- [ ] 01-03-PLAN.md -- Benchmark prompt curation (200 prompts from HumanEval/MBPP/GSM8K) and experiment matrix generation
 
 ### Phase 2: Grading Pipeline
 **Goal**: Researcher can automatically grade any LLM output -- HumanEval/MBPP code is executed in a secure sandbox with pass/fail, GSM8K answers are extracted and compared via regex, and all grades are recorded in SQLite
@@ -120,7 +120,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation and Data Infrastructure | 0/3 | Not started | - |
+| 1. Foundation and Data Infrastructure | 0/3 | Planning complete | - |
 | 2. Grading Pipeline | 0/2 | Not started | - |
 | 3. Interventions and Execution Engine | 0/3 | Not started | - |
 | 4. Pilot Validation | 0/1 | Not started | - |

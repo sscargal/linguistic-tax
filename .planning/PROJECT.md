@@ -12,23 +12,22 @@ Produce rigorous, reproducible experimental data showing how prompt noise degrad
 
 ### Validated
 
-(None yet — ship to validate)
+- ✓ Generate controlled Type A (character-level) noise at 5%, 10%, 20% rates with fixed seeds — Phase 1
+- ✓ Generate controlled Type B (ESL syntactic) noise patterns with fixed seeds — Phase 1
+- ✓ Store all results in SQLite with schema from the RDD — Phase 1
+- ✓ Curate 200 clean benchmark prompts (HumanEval, MBPP, GSM8K) — Phase 1
+- ✓ Build experiment matrix covering 5 intervention types x noise conditions — Phase 1
 
 ### Active
 
-- [ ] Generate controlled Type A (character-level) noise at 5%, 10%, 20% rates with fixed seeds
-- [ ] Generate controlled Type B (ESL syntactic) noise patterns with fixed seeds
 - [ ] Compress prompts by removing redundancy and condensing verbose language
 - [ ] Implement prompt repetition (<QUERY><QUERY>) intervention per Leviathan et al.
 - [ ] Execute prompts against Claude and Gemini APIs with full logging (TTFT, TTLT, tokens, cost)
 - [ ] Auto-grade HumanEval outputs via sandboxed execution
 - [ ] Auto-grade GSM8K outputs via regex matching
-- [ ] Store all results in SQLite with schema from the RDD
 - [ ] Run pilot experiment (20 prompts across all conditions)
 - [ ] Perform GLMM, bootstrap CI, McNemar's, and Kendall's tau analysis
 - [ ] Generate publication-quality figures for the ArXiv paper
-- [ ] Curate 200 clean benchmark prompts (HumanEval, MBPP, GSM8K)
-- [ ] Build experiment matrix covering 5 intervention types x noise conditions
 
 ### Out of Scope
 
@@ -71,4 +70,4 @@ Produce rigorous, reproducible experimental data showing how prompt noise degrad
 | 5 repetitions per condition | Balance statistical power with API cost | — Pending |
 
 ---
-*Last updated: 2026-03-19 after initialization*
+*Last updated: 2026-03-19 after Phase 1 completion*

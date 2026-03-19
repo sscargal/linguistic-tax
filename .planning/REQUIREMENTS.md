@@ -11,8 +11,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [ ] **DATA-01**: Curate 200 clean benchmark prompts from HumanEval, MBPP, and GSM8K with canonical problem definitions
 - [ ] **DATA-02**: Build experiment matrix covering all prompt x noise x intervention combinations as self-contained work items
-- [ ] **DATA-03**: Store all experimental results in SQLite with schema matching RDD Section 9.2
-- [ ] **DATA-04**: Implement configuration module with pinned model versions, API settings, and seed registry
+- [x] **DATA-03**: Store all experimental results in SQLite with schema matching RDD Section 9.2
+- [x] **DATA-04**: Implement configuration module with pinned model versions, API settings, and seed registry
 
 ### Noise Generation
 
@@ -111,8 +111,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | DATA-01 | Phase 1: Foundation and Data Infrastructure | Pending |
 | DATA-02 | Phase 1: Foundation and Data Infrastructure | Pending |
-| DATA-03 | Phase 1: Foundation and Data Infrastructure | Pending |
-| DATA-04 | Phase 1: Foundation and Data Infrastructure | Pending |
+| DATA-03 | Phase 1: Foundation and Data Infrastructure | Complete |
+| DATA-04 | Phase 1: Foundation and Data Infrastructure | Complete |
 | NOISE-01 | Phase 1: Foundation and Data Infrastructure | Pending |
 | NOISE-02 | Phase 1: Foundation and Data Infrastructure | Pending |
 | NOISE-03 | Phase 1: Foundation and Data Infrastructure | Pending |

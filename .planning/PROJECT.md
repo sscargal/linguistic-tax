@@ -1,0 +1,74 @@
+# Linguistic Tax Research Toolkit
+
+## What This Is
+
+A Python research toolkit that measures how prompt noise (typos, grammar errors, ESL patterns) and prompt bloat (redundancy, verbosity) degrade LLM reasoning accuracy, and whether automated "prompt optimization" (sanitization + compression) can recover that accuracy while reducing token costs. The output is data, figures, and statistical analysis for an ArXiv paper. This is a CLI-only toolkit for a single researcher — no UI, no deployment, no web framework.
+
+## Core Value
+
+Produce rigorous, reproducible experimental data showing how prompt noise degrades LLM accuracy and whether automated prompt optimization recovers it — every design choice must serve statistical validity and reproducibility.
+
+## Requirements
+
+### Validated
+
+(None yet — ship to validate)
+
+### Active
+
+- [ ] Generate controlled Type A (character-level) noise at 5%, 10%, 20% rates with fixed seeds
+- [ ] Generate controlled Type B (ESL syntactic) noise patterns with fixed seeds
+- [ ] Compress prompts by removing redundancy and condensing verbose language
+- [ ] Implement prompt repetition (<QUERY><QUERY>) intervention per Leviathan et al.
+- [ ] Execute prompts against Claude and Gemini APIs with full logging (TTFT, TTLT, tokens, cost)
+- [ ] Auto-grade HumanEval outputs via sandboxed execution
+- [ ] Auto-grade GSM8K outputs via regex matching
+- [ ] Store all results in SQLite with schema from the RDD
+- [ ] Run pilot experiment (20 prompts across all conditions)
+- [ ] Perform GLMM, bootstrap CI, McNemar's, and Kendall's tau analysis
+- [ ] Generate publication-quality figures for the ArXiv paper
+- [ ] Curate 200 clean benchmark prompts (HumanEval, MBPP, GSM8K)
+- [ ] Build experiment matrix covering 5 intervention types x noise conditions
+
+### Out of Scope
+
+- Web UI or API server — CLI-only research tool
+- Mobile or desktop app — command-line scripts only
+- Full 20,000-call matrix execution — handled outside GSD after tooling is complete
+- Real-time or streaming inference — batch execution only
+- Support for models beyond Claude and Gemini — two models sufficient for the paper
+- Deployment or packaging for distribution — single-researcher use
+
+## Context
+
+- The Research Design Document (RDD) at `docs/RDD_Linguistic_Tax_v4.md` is the authoritative spec for all experimental parameters, metrics, and conditions
+- 5 intervention types: Raw, Self-Correct, Pre-Proc Sanitize, Pre-Proc Sanitize+Compress, Prompt Repetition
+- Pre-processor calls use cheap models (Haiku or Flash) to sanitize/compress before sending to target model
+- Each condition requires 5 repetitions for stability measurement (Consistency Rate)
+- Existing code structure already established in `src/` and `tests/` directories
+- API keys via environment variables: ANTHROPIC_API_KEY, GOOGLE_API_KEY
+- Budget constraint: ~$15 for pilot run (20 prompts)
+
+## Constraints
+
+- **Language**: Python 3.11+ only — no other languages
+- **APIs**: Direct SDK calls via `anthropic` and `google-generativeai` — no CLI wrappers
+- **Storage**: SQLite only — no Postgres, no flat JSON files for results
+- **Reproducibility**: All randomness uses fixed seeds; all API calls use temperature=0.0
+- **Logging**: Python `logging` module only — no print statements
+- **Testing**: pytest with determinism tests for noise generators
+- **Style**: Type hints on all functions, docstrings on all public functions, American English
+
+## Key Decisions
+
+| Decision | Rationale | Outcome |
+|----------|-----------|---------|
+| SQLite over flat files | Single-file DB, SQL queries for analysis, no server needed | — Pending |
+| Fixed random seeds everywhere | Reproducibility is non-negotiable for a research paper | — Pending |
+| temperature=0.0 for all API calls | Minimize variance from model sampling | — Pending |
+| Pilot before full run | Validate tooling on 20 prompts before committing to 20K calls | — Pending |
+| Cheap model for pre-processing | Haiku/Flash for sanitize/compress keeps costs low | — Pending |
+| 5 repetitions per condition | Balance statistical power with API cost | — Pending |
+
+---
+*Last updated: 2026-03-19 after initialization*

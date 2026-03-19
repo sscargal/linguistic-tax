@@ -17,14 +17,15 @@ Produce rigorous, reproducible experimental data showing how prompt noise degrad
 - ✓ Store all results in SQLite with schema from the RDD — Phase 1
 - ✓ Curate 200 clean benchmark prompts (HumanEval, MBPP, GSM8K) — Phase 1
 - ✓ Build experiment matrix covering 5 intervention types x noise conditions — Phase 1
+- ✓ Auto-grade HumanEval/MBPP outputs via sandboxed subprocess execution — Phase 2
+- ✓ Auto-grade GSM8K outputs via regex-based numerical answer extraction — Phase 2
+- ✓ Record all grading results (pass/fail + metadata) to SQLite — Phase 2
 
 ### Active
 
 - [ ] Compress prompts by removing redundancy and condensing verbose language
 - [ ] Implement prompt repetition (<QUERY><QUERY>) intervention per Leviathan et al.
 - [ ] Execute prompts against Claude and Gemini APIs with full logging (TTFT, TTLT, tokens, cost)
-- [ ] Auto-grade HumanEval outputs via sandboxed execution
-- [ ] Auto-grade GSM8K outputs via regex matching
 - [ ] Run pilot experiment (20 prompts across all conditions)
 - [ ] Perform GLMM, bootstrap CI, McNemar's, and Kendall's tau analysis
 - [ ] Generate publication-quality figures for the ArXiv paper
@@ -70,4 +71,4 @@ Produce rigorous, reproducible experimental data showing how prompt noise degrad
 | 5 repetitions per condition | Balance statistical power with API cost | — Pending |
 
 ---
-*Last updated: 2026-03-19 after Phase 1 completion*
+*Last updated: 2026-03-19 after Phase 2 completion*

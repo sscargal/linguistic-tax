@@ -43,8 +43,8 @@ created: 2026-03-19
 | 01-02-01 | 02 | 1 | NOISE-01, NOISE-02 | unit | `pytest tests/test_noise_generator.py -v` | ❌ W0 | ⬜ pending |
 | 01-02-02 | 02 | 1 | NOISE-03 | unit | `pytest tests/test_noise_generator.py -k esl -v` | ❌ W0 | ⬜ pending |
 | 01-02-03 | 02 | 1 | NOISE-04 | unit | `pytest tests/test_noise_generator.py -k determinism -v` | ❌ W0 | ⬜ pending |
-| 01-03-01 | 03 | 2 | DATA-01 | unit | `pytest tests/test_benchmark_prompts.py -v` | ❌ W0 | ⬜ pending |
-| 01-03-02 | 03 | 2 | DATA-02 | unit | `pytest tests/test_experiment_matrix.py -v` | ❌ W0 | ⬜ pending |
+| 01-03-01 | 03 | 2 | DATA-01 | unit | `pytest tests/test_prompts.py -v` | ❌ W0 | ⬜ pending |
+| 01-03-02 | 03 | 2 | DATA-02 | unit | `pytest tests/test_matrix.py -v` | ❌ W0 | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -55,8 +55,8 @@ created: 2026-03-19
 - [ ] `tests/test_config.py` — stubs for DATA-04 (config module)
 - [ ] `tests/test_db.py` — stubs for DATA-03 (SQLite schema)
 - [ ] `tests/test_noise_generator.py` — stubs for NOISE-01, NOISE-02, NOISE-03, NOISE-04
-- [ ] `tests/test_benchmark_prompts.py` — stubs for DATA-01
-- [ ] `tests/test_experiment_matrix.py` — stubs for DATA-02
+- [ ] `tests/test_prompts.py` — stubs for DATA-01 (requires curate_prompts.py to be run first to generate data/prompts.json)
+- [ ] `tests/test_matrix.py` — stubs for DATA-02 (requires generate_matrix.py to be run first)
 - [ ] `tests/conftest.py` — shared fixtures (temp dirs, sample prompts)
 
 *Existing infrastructure: pytest configured in pyproject.toml, tests/ directory exists.*

@@ -109,13 +109,48 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (populated during roadmap creation) | | |
+| DATA-01 | Phase 1: Foundation and Data Infrastructure | Pending |
+| DATA-02 | Phase 1: Foundation and Data Infrastructure | Pending |
+| DATA-03 | Phase 1: Foundation and Data Infrastructure | Pending |
+| DATA-04 | Phase 1: Foundation and Data Infrastructure | Pending |
+| NOISE-01 | Phase 1: Foundation and Data Infrastructure | Pending |
+| NOISE-02 | Phase 1: Foundation and Data Infrastructure | Pending |
+| NOISE-03 | Phase 1: Foundation and Data Infrastructure | Pending |
+| NOISE-04 | Phase 1: Foundation and Data Infrastructure | Pending |
+| GRAD-01 | Phase 2: Grading Pipeline | Pending |
+| GRAD-02 | Phase 2: Grading Pipeline | Pending |
+| GRAD-03 | Phase 2: Grading Pipeline | Pending |
+| INTV-01 | Phase 3: Interventions and Execution Engine | Pending |
+| INTV-02 | Phase 3: Interventions and Execution Engine | Pending |
+| INTV-03 | Phase 3: Interventions and Execution Engine | Pending |
+| INTV-04 | Phase 3: Interventions and Execution Engine | Pending |
+| INTV-05 | Phase 3: Interventions and Execution Engine | Pending |
+| EXEC-01 | Phase 3: Interventions and Execution Engine | Pending |
+| EXEC-02 | Phase 3: Interventions and Execution Engine | Pending |
+| EXEC-03 | Phase 3: Interventions and Execution Engine | Pending |
+| EXEC-04 | Phase 3: Interventions and Execution Engine | Pending |
+| EXEC-05 | Phase 3: Interventions and Execution Engine | Pending |
+| PILOT-01 | Phase 4: Pilot Validation | Pending |
+| PILOT-02 | Phase 4: Pilot Validation | Pending |
+| PILOT-03 | Phase 4: Pilot Validation | Pending |
+| STAT-01 | Phase 5: Statistical Analysis and Derived Metrics | Pending |
+| STAT-02 | Phase 5: Statistical Analysis and Derived Metrics | Pending |
+| STAT-03 | Phase 5: Statistical Analysis and Derived Metrics | Pending |
+| STAT-04 | Phase 5: Statistical Analysis and Derived Metrics | Pending |
+| STAT-05 | Phase 5: Statistical Analysis and Derived Metrics | Pending |
+| DERV-01 | Phase 5: Statistical Analysis and Derived Metrics | Pending |
+| DERV-02 | Phase 5: Statistical Analysis and Derived Metrics | Pending |
+| DERV-03 | Phase 5: Statistical Analysis and Derived Metrics | Pending |
+| FIG-01 | Phase 6: Publication Figures | Pending |
+| FIG-02 | Phase 6: Publication Figures | Pending |
+| FIG-03 | Phase 6: Publication Figures | Pending |
+| FIG-04 | Phase 6: Publication Figures | Pending |
 
 **Coverage:**
-- v1 requirements: 30 total
-- Mapped to phases: 0
-- Unmapped: 30 ⚠️
+- v1 requirements: 36 total
+- Mapped to phases: 36
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-19*
-*Last updated: 2026-03-19 after initial definition*
+*Last updated: 2026-03-19 after roadmap creation*

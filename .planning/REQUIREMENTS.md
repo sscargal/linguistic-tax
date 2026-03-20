@@ -27,14 +27,14 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **INTV-02**: Implement prompt repeater using <QUERY><QUERY> duplication per Leviathan et al.
 - [x] **INTV-03**: Implement self-correct prompt prefix intervention (zero-overhead prompt engineering)
 - [x] **INTV-04**: Implement pre-processor pipeline that sanitizes noisy prompts via cheap model before sending to target model
-- [ ] **INTV-05**: Build intervention router that dispatches to Raw/Self-Correct/Pre-Proc Sanitize/Sanitize+Compress/Repetition
+- [x] **INTV-05**: Build intervention router that dispatches to Raw/Self-Correct/Pre-Proc Sanitize/Sanitize+Compress/Repetition
 
 ### Experiment Execution
 
 - [x] **EXEC-01**: Execute prompts against Claude Sonnet and Gemini 1.5 Pro APIs with temperature=0.0
 - [x] **EXEC-02**: Log every API call with: prompt text, response text, model version, token counts (in/out), TTFT, TTLT, cost, timestamp
-- [ ] **EXEC-03**: Run 5 repetitions per condition for stability measurement
-- [ ] **EXEC-04**: Implement resumable execution — skip already-completed work items on restart
+- [x] **EXEC-03**: Run 5 repetitions per condition for stability measurement
+- [x] **EXEC-04**: Implement resumable execution — skip already-completed work items on restart
 - [x] **EXEC-05**: Implement proactive rate limiting to avoid API throttling
 
 ### Grading
@@ -124,11 +124,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INTV-02 | Phase 3: Interventions and Execution Engine | Complete |
 | INTV-03 | Phase 3: Interventions and Execution Engine | Complete |
 | INTV-04 | Phase 3: Interventions and Execution Engine | Complete |
-| INTV-05 | Phase 3: Interventions and Execution Engine | Pending |
+| INTV-05 | Phase 3: Interventions and Execution Engine | Complete |
 | EXEC-01 | Phase 3: Interventions and Execution Engine | Complete |
 | EXEC-02 | Phase 3: Interventions and Execution Engine | Complete |
-| EXEC-03 | Phase 3: Interventions and Execution Engine | Pending |
-| EXEC-04 | Phase 3: Interventions and Execution Engine | Pending |
+| EXEC-03 | Phase 3: Interventions and Execution Engine | Complete |
+| EXEC-04 | Phase 3: Interventions and Execution Engine | Complete |
 | EXEC-05 | Phase 3: Interventions and Execution Engine | Complete |
 | PILOT-01 | Phase 4: Pilot Validation | Pending |
 | PILOT-02 | Phase 4: Pilot Validation | Pending |

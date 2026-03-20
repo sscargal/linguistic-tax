@@ -426,26 +426,28 @@ def run_engine(args: argparse.Namespace, config: ExperimentConfig | None = None)
     completed_runs = {r["run_id"] for r in query_runs(conn, status="completed")}
     logger.info("Found %d completed runs in database", len(completed_runs))
 
-    # Filter to pending items
-    pending = [item for item in matrix if make_run_id(item) not in completed_runs]
+    # Get failed run_ids
+    failed_runs = {r["run_id"] for r in query_runs(conn, status="failed")}
 
-    # Handle --retry-failed
-    if args.retry_failed:
-        failed_runs = {r["run_id"] for r in query_runs(conn, status="failed")}
-        if failed_runs:
-            # Delete old failed rows to avoid IntegrityError on re-insert
-            for failed_id in failed_runs:
-                conn.execute(
-                    "DELETE FROM experiment_runs WHERE run_id = ?", (failed_id,)
-                )
-            conn.commit()
-            logger.info("Cleared %d failed runs for retry", len(failed_runs))
+    # Filter to pending items: exclude completed and failed
+    skip_ids = completed_runs | failed_runs
+    pending = [item for item in matrix if make_run_id(item) not in skip_ids]
 
-            # Add back items whose run_id was in the failed set
-            failed_items = [
-                item for item in matrix if make_run_id(item) in failed_runs
-            ]
-            pending.extend(failed_items)
+    # Handle --retry-failed: re-add failed items after clearing old rows
+    if args.retry_failed and failed_runs:
+        # Delete old failed rows to avoid IntegrityError on re-insert
+        for failed_id in failed_runs:
+            conn.execute(
+                "DELETE FROM experiment_runs WHERE run_id = ?", (failed_id,)
+            )
+        conn.commit()
+        logger.info("Cleared %d failed runs for retry", len(failed_runs))
+
+        # Add back items whose run_id was in the failed set
+        failed_items = [
+            item for item in matrix if make_run_id(item) in failed_runs
+        ]
+        pending.extend(failed_items)
 
     # Order by model (claude first, gemini second, shuffled within)
     pending = _order_by_model(pending, config.base_seed)

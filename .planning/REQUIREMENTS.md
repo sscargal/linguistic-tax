@@ -23,10 +23,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Prompt Interventions
 
-- [ ] **INTV-01**: Implement prompt compressor that removes redundancy and condenses verbose language via cheap model (Haiku/Flash)
-- [ ] **INTV-02**: Implement prompt repeater using <QUERY><QUERY> duplication per Leviathan et al.
-- [ ] **INTV-03**: Implement self-correct prompt prefix intervention (zero-overhead prompt engineering)
-- [ ] **INTV-04**: Implement pre-processor pipeline that sanitizes noisy prompts via cheap model before sending to target model
+- [x] **INTV-01**: Implement prompt compressor that removes redundancy and condenses verbose language via cheap model (Haiku/Flash)
+- [x] **INTV-02**: Implement prompt repeater using <QUERY><QUERY> duplication per Leviathan et al.
+- [x] **INTV-03**: Implement self-correct prompt prefix intervention (zero-overhead prompt engineering)
+- [x] **INTV-04**: Implement pre-processor pipeline that sanitizes noisy prompts via cheap model before sending to target model
 - [ ] **INTV-05**: Build intervention router that dispatches to Raw/Self-Correct/Pre-Proc Sanitize/Sanitize+Compress/Repetition
 
 ### Experiment Execution
@@ -120,10 +120,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | GRAD-01 | Phase 2: Grading Pipeline | Complete |
 | GRAD-02 | Phase 2: Grading Pipeline | Complete |
 | GRAD-03 | Phase 2: Grading Pipeline | Complete |
-| INTV-01 | Phase 3: Interventions and Execution Engine | Pending |
-| INTV-02 | Phase 3: Interventions and Execution Engine | Pending |
-| INTV-03 | Phase 3: Interventions and Execution Engine | Pending |
-| INTV-04 | Phase 3: Interventions and Execution Engine | Pending |
+| INTV-01 | Phase 3: Interventions and Execution Engine | Complete |
+| INTV-02 | Phase 3: Interventions and Execution Engine | Complete |
+| INTV-03 | Phase 3: Interventions and Execution Engine | Complete |
+| INTV-04 | Phase 3: Interventions and Execution Engine | Complete |
 | INTV-05 | Phase 3: Interventions and Execution Engine | Pending |
 | EXEC-01 | Phase 3: Interventions and Execution Engine | Pending |
 | EXEC-02 | Phase 3: Interventions and Execution Engine | Pending |

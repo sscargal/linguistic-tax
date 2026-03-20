@@ -87,3 +87,53 @@ MODELS: tuple[str, ...] = (
     "claude-sonnet-4-20250514",
     "gemini-1.5-pro",
 )
+
+# ---------------------------------------------------------------------------
+# Pricing, token limits, and pre-processor configuration
+# ---------------------------------------------------------------------------
+
+PRICE_TABLE: dict[str, dict[str, float]] = {
+    "claude-sonnet-4-20250514": {"input_per_1m": 3.00, "output_per_1m": 15.00},
+    "claude-haiku-4-5-20250514": {"input_per_1m": 1.00, "output_per_1m": 5.00},
+    "gemini-1.5-pro": {"input_per_1m": 1.25, "output_per_1m": 5.00},
+    "gemini-2.0-flash": {"input_per_1m": 0.10, "output_per_1m": 0.40},
+}
+
+MAX_TOKENS_BY_BENCHMARK: dict[str, int] = {
+    "humaneval": 2048,
+    "mbpp": 2048,
+    "gsm8k": 1024,
+}
+
+PREPROC_MODEL_MAP: dict[str, str] = {
+    "claude-sonnet-4-20250514": "claude-haiku-4-5-20250514",
+    "gemini-1.5-pro": "gemini-2.0-flash",
+}
+
+RATE_LIMIT_DELAYS: dict[str, float] = {
+    "claude-sonnet-4-20250514": 0.2,
+    "claude-haiku-4-5-20250514": 0.1,
+    "gemini-1.5-pro": 0.1,
+    "gemini-2.0-flash": 0.05,
+}
+
+
+def compute_cost(model: str, input_tokens: int, output_tokens: int) -> float:
+    """Compute USD cost from token counts and price table.
+
+    Args:
+        model: Model identifier (must be a key in PRICE_TABLE).
+        input_tokens: Number of input tokens consumed.
+        output_tokens: Number of output tokens generated.
+
+    Returns:
+        Total cost in USD.
+
+    Raises:
+        KeyError: If model is not found in PRICE_TABLE.
+    """
+    prices = PRICE_TABLE[model]
+    return (
+        input_tokens * prices["input_per_1m"] / 1_000_000
+        + output_tokens * prices["output_per_1m"] / 1_000_000
+    )

@@ -31,11 +31,11 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Experiment Execution
 
-- [ ] **EXEC-01**: Execute prompts against Claude Sonnet and Gemini 1.5 Pro APIs with temperature=0.0
-- [ ] **EXEC-02**: Log every API call with: prompt text, response text, model version, token counts (in/out), TTFT, TTLT, cost, timestamp
+- [x] **EXEC-01**: Execute prompts against Claude Sonnet and Gemini 1.5 Pro APIs with temperature=0.0
+- [x] **EXEC-02**: Log every API call with: prompt text, response text, model version, token counts (in/out), TTFT, TTLT, cost, timestamp
 - [ ] **EXEC-03**: Run 5 repetitions per condition for stability measurement
 - [ ] **EXEC-04**: Implement resumable execution — skip already-completed work items on restart
-- [ ] **EXEC-05**: Implement proactive rate limiting to avoid API throttling
+- [x] **EXEC-05**: Implement proactive rate limiting to avoid API throttling
 
 ### Grading
 
@@ -125,11 +125,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INTV-03 | Phase 3: Interventions and Execution Engine | Complete |
 | INTV-04 | Phase 3: Interventions and Execution Engine | Complete |
 | INTV-05 | Phase 3: Interventions and Execution Engine | Pending |
-| EXEC-01 | Phase 3: Interventions and Execution Engine | Pending |
-| EXEC-02 | Phase 3: Interventions and Execution Engine | Pending |
+| EXEC-01 | Phase 3: Interventions and Execution Engine | Complete |
+| EXEC-02 | Phase 3: Interventions and Execution Engine | Complete |
 | EXEC-03 | Phase 3: Interventions and Execution Engine | Pending |
 | EXEC-04 | Phase 3: Interventions and Execution Engine | Pending |
-| EXEC-05 | Phase 3: Interventions and Execution Engine | Pending |
+| EXEC-05 | Phase 3: Interventions and Execution Engine | Complete |
 | PILOT-01 | Phase 4: Pilot Validation | Pending |
 | PILOT-02 | Phase 4: Pilot Validation | Pending |
 | PILOT-03 | Phase 4: Pilot Validation | Pending |

@@ -20,12 +20,11 @@ Produce rigorous, reproducible experimental data showing how prompt noise degrad
 - ✓ Auto-grade HumanEval/MBPP outputs via sandboxed subprocess execution — Phase 2
 - ✓ Auto-grade GSM8K outputs via regex-based numerical answer extraction — Phase 2
 - ✓ Record all grading results (pass/fail + metadata) to SQLite — Phase 2
+- ✓ Compress prompts by removing redundancy and condensing verbose language — Phase 3
+- ✓ Implement prompt repetition (<QUERY><QUERY>) intervention per Leviathan et al. — Phase 3
+- ✓ Execute prompts against Claude and Gemini APIs with full logging (TTFT, TTLT, tokens, cost) — Phase 3
 
 ### Active
-
-- [ ] Compress prompts by removing redundancy and condensing verbose language
-- [ ] Implement prompt repetition (<QUERY><QUERY>) intervention per Leviathan et al.
-- [ ] Execute prompts against Claude and Gemini APIs with full logging (TTFT, TTLT, tokens, cost)
 - [ ] Run pilot experiment (20 prompts across all conditions)
 - [ ] Perform GLMM, bootstrap CI, McNemar's, and Kendall's tau analysis
 - [ ] Generate publication-quality figures for the ArXiv paper
@@ -52,7 +51,7 @@ Produce rigorous, reproducible experimental data showing how prompt noise degrad
 ## Constraints
 
 - **Language**: Python 3.11+ only — no other languages
-- **APIs**: Direct SDK calls via `anthropic` and `google-generativeai` — no CLI wrappers
+- **APIs**: Direct SDK calls via `anthropic` and `google-genai` — no CLI wrappers
 - **Storage**: SQLite only — no Postgres, no flat JSON files for results
 - **Reproducibility**: All randomness uses fixed seeds; all API calls use temperature=0.0
 - **Logging**: Python `logging` module only — no print statements
@@ -71,4 +70,4 @@ Produce rigorous, reproducible experimental data showing how prompt noise degrad
 | 5 repetitions per condition | Balance statistical power with API cost | — Pending |
 
 ---
-*Last updated: 2026-03-19 after Phase 2 completion*
+*Last updated: 2026-03-20 after Phase 3 completion*

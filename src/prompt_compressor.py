@@ -14,7 +14,7 @@ import logging
 from collections.abc import Callable
 from typing import Any
 
-from config import PREPROC_MODEL_MAP
+from src.config import PREPROC_MODEL_MAP
 
 logger = logging.getLogger(__name__)
 

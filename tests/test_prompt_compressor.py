@@ -13,9 +13,7 @@ from typing import Any
 
 import pytest
 
-sys.path.insert(0, "src")
-
-from prompt_compressor import (
+from src.prompt_compressor import (
     SELF_CORRECT_PREFIX,
     _COMPRESS_INSTRUCTION,
     _COMPRESS_SYSTEM,

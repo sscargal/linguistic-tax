@@ -6,10 +6,7 @@ from pathlib import Path
 
 import pytest
 
-# Allow imports from src/
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
-
-from config import INTERVENTIONS, MODELS, NOISE_TYPES  # noqa: E402
+from src.config import INTERVENTIONS, MODELS, NOISE_TYPES
 
 MATRIX_PATH = Path(__file__).parent.parent / "data" / "experiment_matrix.json"
 

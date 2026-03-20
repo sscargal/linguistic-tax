@@ -19,7 +19,7 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from config import derive_seed  # noqa: F401 — re-exported for downstream use
+from src.config import derive_seed  # noqa: F401 — re-exported for downstream use
 
 logger = logging.getLogger(__name__)
 

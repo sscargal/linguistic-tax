@@ -17,9 +17,7 @@ from pathlib import Path
 
 import pytest
 
-sys.path.insert(0, "src")
-
-from noise_generator import (
+from src.noise_generator import (
     ESLPattern,
     JAPANESE_PATTERNS,
     MANDARIN_PATTERNS,
@@ -29,7 +27,7 @@ from noise_generator import (
     inject_type_a_noise,
     inject_type_b_noise,
 )
-from config import derive_seed
+from src.config import derive_seed
 
 
 # ---------------------------------------------------------------------------
@@ -294,7 +292,7 @@ class TestCLI:
 
         result = subprocess.run(
             [
-                sys.executable, "src/noise_generator.py",
+                sys.executable, "-m", "src.noise_generator",
                 "--input", str(input_file),
                 "--type", "char",
                 "--rate", "0.10",
@@ -324,7 +322,7 @@ class TestCLI:
 
         result = subprocess.run(
             [
-                sys.executable, "src/noise_generator.py",
+                sys.executable, "-m", "src.noise_generator",
                 "--input", str(input_file),
                 "--type", "esl",
                 "--l1", "mandarin",

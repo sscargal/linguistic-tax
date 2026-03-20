@@ -61,12 +61,12 @@ Plans:
   3. Each condition is executed 5 times (repetitions) and all repetition results are stored
   4. Stopping and restarting the engine skips already-completed work items without data loss or duplication
   5. Rate limiting prevents API throttling errors during sustained execution
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] 03-01: TBD
-- [ ] 03-02: TBD
-- [ ] 03-03: TBD
+- [ ] 03-01-PLAN.md -- Intervention pure functions (repeater, compressor/sanitizer), config extensions (price table, max_tokens, preproc models)
+- [ ] 03-02-PLAN.md -- Unified API client with streaming TTFT/TTLT, rate limiting, retry logic, pyproject.toml fix
+- [ ] 03-03-PLAN.md -- Intervention router, execution engine with resumability and inline grading, CLI
 
 ### Phase 4: Pilot Validation
 **Goal**: Researcher has validated the entire pipeline end-to-end on 20 prompts, confirmed grading accuracy, and produced a reliable cost projection for the full experiment run
@@ -121,7 +121,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 |-------|----------------|--------|-----------|
 | 1. Foundation and Data Infrastructure | 0/3 | Planning complete | - |
 | 2. Grading Pipeline | 0/1 | Planning complete | - |
-| 3. Interventions and Execution Engine | 0/3 | Not started | - |
+| 3. Interventions and Execution Engine | 0/3 | Planning complete | - |
 | 4. Pilot Validation | 0/1 | Not started | - |
 | 5. Statistical Analysis and Derived Metrics | 0/2 | Not started | - |
 | 6. Publication Figures | 0/2 | Not started | - |

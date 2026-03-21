@@ -1,16 +1,24 @@
 """Pilot validation module for the Linguistic Tax research toolkit.
 
 Provides stratified prompt selection, pilot execution, data completeness
-auditing, and noise injection sanity checking for the 20-prompt pilot run.
+auditing, noise injection sanity checking, grading spot-check, cost projection
+with bootstrap CIs, BERTScore fidelity, latency profiling, and structured
+PASS/FAIL verdict for the 20-prompt pilot run.
 """
 
 import json
 import logging
+import os
 import random
 import sqlite3
+from datetime import datetime, timezone
 from typing import Any
 
+import numpy as np
+from scipy.stats import bootstrap as scipy_bootstrap
+
 from src.config import ExperimentConfig, derive_seed
+from src.db import query_runs
 from src.noise_generator import inject_type_a_noise
 
 logger = logging.getLogger(__name__)
@@ -373,4 +381,245 @@ def verify_noise_rates(
         "Noise rate verification: %d checks, %d flagged",
         result["total_checks"], result["flagged_count"],
     )
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Grading spot-check
+# ---------------------------------------------------------------------------
+
+def run_spot_check(
+    conn: sqlite3.Connection,
+    pilot_prompt_ids: list[str],
+    prompts_by_id: dict[str, dict[str, Any]],
+    seed: int = 42,
+    code_sample_rate: float = 0.2,
+    output_path: str = "results/pilot_spot_check.json",
+) -> dict[str, Any]:
+    """Generate a grading spot-check report for pilot results.
+
+    Selects ALL GSM8K results and approximately 20% of code (HumanEval/MBPP)
+    results for side-by-side comparison of auto-grade vs. expected answer.
+
+    Args:
+        conn: Open SQLite database connection.
+        pilot_prompt_ids: List of pilot prompt IDs.
+        prompts_by_id: Mapping of prompt_id to prompt record dict.
+        seed: Random seed for code row sampling.
+        code_sample_rate: Fraction of code rows to sample (default 0.2).
+        output_path: Path for the JSON report file.
+
+    Returns:
+        Report dict with sampled results for spot-checking.
+    """
+    all_runs = query_runs(conn, status="completed")
+    id_set = set(pilot_prompt_ids)
+    pilot_runs = [r for r in all_runs if r["prompt_id"] in id_set]
+
+    gsm8k_rows = [r for r in pilot_runs if r["benchmark"] == "gsm8k"]
+    code_rows = [r for r in pilot_runs if r["benchmark"] in ("humaneval", "mbpp")]
+
+    # ALL GSM8K rows selected
+    gsm8k_selected = gsm8k_rows
+
+    # ~20% of code rows, at least 1
+    rng = random.Random(seed)
+    n_code_sample = max(1, int(len(code_rows) * code_sample_rate))
+    if n_code_sample > len(code_rows):
+        n_code_sample = len(code_rows)
+    code_selected = rng.sample(code_rows, n_code_sample) if code_rows else []
+
+    def _build_sample(row: dict[str, Any]) -> dict[str, Any]:
+        pid = row["prompt_id"]
+        prompt_info = prompts_by_id.get(pid, {})
+        expected = prompt_info.get(
+            "canonical_answer",
+            prompt_info.get("test_code", "N/A"),
+        )
+        return {
+            "run_id": row["run_id"],
+            "prompt_id": pid,
+            "benchmark": row["benchmark"],
+            "noise_type": row["noise_type"],
+            "noise_level": row.get("noise_level"),
+            "intervention": row["intervention"],
+            "model": row["model"],
+            "raw_output": row["raw_output"],
+            "pass_fail": row["pass_fail"],
+            "expected_answer": expected,
+        }
+
+    all_samples = [_build_sample(r) for r in gsm8k_selected] + [
+        _build_sample(r) for r in code_selected
+    ]
+
+    report: dict[str, Any] = {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "pilot_prompt_ids": pilot_prompt_ids,
+        "total_sampled": len(gsm8k_selected) + len(code_selected),
+        "gsm8k_count": len(gsm8k_selected),
+        "code_count": len(code_selected),
+        "code_sample_rate": code_sample_rate,
+        "samples": all_samples,
+    }
+
+    os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
+    with open(output_path, "w") as f:
+        json.dump(report, f, indent=2)
+    logger.info(
+        "Spot-check report: %d GSM8K + %d code samples written to %s",
+        report["gsm8k_count"], report["code_count"], output_path,
+    )
+    return report
+
+
+# ---------------------------------------------------------------------------
+# Cost projection with bootstrap CIs
+# ---------------------------------------------------------------------------
+
+def compute_cost_projection(
+    conn: sqlite3.Connection,
+    pilot_prompt_ids: list[str],
+    n_full_prompts: int = 200,
+    n_bootstrap: int = 10_000,
+    confidence_level: float = 0.95,
+    output_path: str = "results/pilot_cost_projection.json",
+) -> dict[str, Any]:
+    """Project full-run cost from pilot data with bootstrap confidence intervals.
+
+    Aggregates cost per pilot prompt, then scales to the full prompt count
+    using bootstrap resampling for confidence intervals.
+
+    Args:
+        conn: Open SQLite database connection.
+        pilot_prompt_ids: List of pilot prompt IDs.
+        n_full_prompts: Number of prompts in the full experiment.
+        n_bootstrap: Number of bootstrap resamples.
+        confidence_level: Confidence level for the CI (e.g. 0.95).
+        output_path: Path for the JSON report file.
+
+    Returns:
+        Dict with pilot cost, projected cost, CI bounds, and per-condition breakdown.
+    """
+    all_runs = query_runs(conn, status="completed")
+    id_set = set(pilot_prompt_ids)
+    pilot_runs = [r for r in all_runs if r["prompt_id"] in id_set]
+
+    # Aggregate cost per prompt
+    cost_by_prompt: dict[str, float] = {}
+    for r in pilot_runs:
+        pid = r["prompt_id"]
+        cost_by_prompt[pid] = cost_by_prompt.get(pid, 0.0) + (r.get("total_cost_usd") or 0.0)
+
+    per_prompt_costs = np.array([cost_by_prompt.get(pid, 0.0) for pid in pilot_prompt_ids])
+    pilot_total = float(per_prompt_costs.sum())
+    scale_factor = n_full_prompts / len(pilot_prompt_ids)
+    projected_total = pilot_total * scale_factor
+
+    # Bootstrap CI -- try BCa first, fall back to percentile if degenerate
+    import warnings
+    try:
+        with warnings.catch_warnings():
+            warnings.filterwarnings("error", category=Warning)
+            ci_result = scipy_bootstrap(
+                (per_prompt_costs,),
+                np.sum,
+                n_resamples=n_bootstrap,
+                confidence_level=confidence_level,
+                method="bca",
+            )
+            ci_low_raw = ci_result.confidence_interval.low
+            ci_high_raw = ci_result.confidence_interval.high
+            if np.isnan(ci_low_raw) or np.isnan(ci_high_raw):
+                raise ValueError("BCa produced NaN")
+    except (Warning, ValueError):
+        logger.info("BCa bootstrap failed (likely degenerate data), falling back to percentile method")
+        ci_result = scipy_bootstrap(
+            (per_prompt_costs,),
+            np.sum,
+            n_resamples=n_bootstrap,
+            confidence_level=confidence_level,
+            method="percentile",
+        )
+        ci_low_raw = ci_result.confidence_interval.low
+        ci_high_raw = ci_result.confidence_interval.high
+
+    ci_low = float(ci_low_raw * scale_factor)
+    ci_high = float(ci_high_raw * scale_factor)
+
+    # Per-condition breakdown
+    condition_costs: dict[str, float] = {}
+    for r in pilot_runs:
+        key = f"{r['model']}|{r['intervention']}|{r['noise_type']}"
+        condition_costs[key] = condition_costs.get(key, 0.0) + (r.get("total_cost_usd") or 0.0)
+
+    breakdown = [
+        {
+            "condition": k,
+            "pilot_cost": round(v, 6),
+            "projected_cost": round(v * scale_factor, 4),
+        }
+        for k, v in sorted(condition_costs.items())
+    ]
+
+    result: dict[str, Any] = {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "pilot_prompt_count": len(pilot_prompt_ids),
+        "full_prompt_count": n_full_prompts,
+        "pilot_total_cost": pilot_total,
+        "projected_full_cost": projected_total,
+        "ci_low": ci_low,
+        "ci_high": ci_high,
+        "confidence_level": confidence_level,
+        "n_bootstrap": n_bootstrap,
+        "per_condition_breakdown": breakdown,
+    }
+
+    os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
+    with open(output_path, "w") as f:
+        json.dump(result, f, indent=2)
+
+    logger.info(
+        "Cost projection: pilot $%.4f -> projected $%.2f [CI: $%.2f - $%.2f]",
+        pilot_total, projected_total, ci_low, ci_high,
+    )
+    for item in breakdown:
+        logger.info("  %s: pilot $%.4f -> projected $%.4f", item["condition"], item["pilot_cost"], item["projected_cost"])
+
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Budget gate
+# ---------------------------------------------------------------------------
+
+def check_budget_gate(
+    projected_cost: float,
+    budget_threshold: float = 200.0,
+) -> dict[str, Any]:
+    """Check whether projected cost exceeds the budget threshold.
+
+    Args:
+        projected_cost: Projected cost in USD for the full run.
+        budget_threshold: Maximum allowed cost in USD.
+
+    Returns:
+        Dict with budget_threshold, projected_cost, and exceeds_budget flag.
+    """
+    exceeds = projected_cost > budget_threshold
+    result = {
+        "budget_threshold": budget_threshold,
+        "projected_cost": projected_cost,
+        "exceeds_budget": exceeds,
+    }
+    if exceeds:
+        logger.warning(
+            "Budget gate EXCEEDED: projected $%.2f > threshold $%.2f",
+            projected_cost, budget_threshold,
+        )
+    else:
+        logger.info(
+            "Budget gate OK: projected $%.2f <= threshold $%.2f",
+            projected_cost, budget_threshold,
+        )
     return result

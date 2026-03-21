@@ -118,6 +118,14 @@ class TestApplyIntervention:
             assert text == "compressed"
             assert meta == {"preproc_model": "haiku"}
 
+    def test_apply_intervention_compress_only(self) -> None:
+        from src.run_experiment import apply_intervention
+        with patch("src.run_experiment.sanitize_and_compress", return_value=("compressed", {"preproc_model": "haiku"})) as mock_sc:
+            text, meta = apply_intervention("test prompt", "compress_only", "claude-sonnet-4-20250514", mock_call_fn)
+            mock_sc.assert_called_once_with("test prompt", "claude-sonnet-4-20250514", mock_call_fn)
+            assert isinstance(text, str)
+            assert "preproc_model" in meta
+
     def test_unknown_raises_value_error(self) -> None:
         from src.run_experiment import apply_intervention
         with pytest.raises(ValueError, match="Unknown intervention"):

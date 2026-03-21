@@ -23,9 +23,9 @@ Produce rigorous, reproducible experimental data showing how prompt noise degrad
 - ✓ Compress prompts by removing redundancy and condensing verbose language — Phase 3
 - ✓ Implement prompt repetition (<QUERY><QUERY>) intervention per Leviathan et al. — Phase 3
 - ✓ Execute prompts against Claude and Gemini APIs with full logging (TTFT, TTLT, tokens, cost) — Phase 3
+- ✓ Run pilot experiment tooling (20 prompts across all conditions) with spot-check, cost projection, and structured verdict — Phase 4
 
 ### Active
-- [ ] Run pilot experiment (20 prompts across all conditions)
 - [ ] Perform GLMM, bootstrap CI, McNemar's, and Kendall's tau analysis
 - [ ] Generate publication-quality figures for the ArXiv paper
 
@@ -70,4 +70,4 @@ Produce rigorous, reproducible experimental data showing how prompt noise degrad
 | 5 repetitions per condition | Balance statistical power with API cost | — Pending |
 
 ---
-*Last updated: 2026-03-20 after Phase 3 completion*
+*Last updated: 2026-03-21 after Phase 4 completion*

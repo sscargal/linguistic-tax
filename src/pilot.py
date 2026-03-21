@@ -6,6 +6,7 @@ with bootstrap CIs, BERTScore fidelity, latency profiling, and structured
 PASS/FAIL verdict for the 20-prompt pilot run.
 """
 
+import argparse
 import json
 import logging
 import os
@@ -518,34 +519,40 @@ def compute_cost_projection(
 
     # Bootstrap CI -- try BCa first, fall back to percentile if degenerate
     import warnings
-    try:
-        with warnings.catch_warnings():
-            warnings.filterwarnings("error", category=Warning)
+    if len(per_prompt_costs) < 2:
+        # Cannot bootstrap with fewer than 2 observations
+        logger.info("Only %d prompt(s) -- skipping bootstrap, using point estimate for CI", len(per_prompt_costs))
+        ci_low = projected_total
+        ci_high = projected_total
+    else:
+        try:
+            with warnings.catch_warnings():
+                warnings.filterwarnings("error", category=Warning)
+                ci_result = scipy_bootstrap(
+                    (per_prompt_costs,),
+                    np.sum,
+                    n_resamples=n_bootstrap,
+                    confidence_level=confidence_level,
+                    method="bca",
+                )
+                ci_low_raw = ci_result.confidence_interval.low
+                ci_high_raw = ci_result.confidence_interval.high
+                if np.isnan(ci_low_raw) or np.isnan(ci_high_raw):
+                    raise ValueError("BCa produced NaN")
+        except (Warning, ValueError):
+            logger.info("BCa bootstrap failed (likely degenerate data), falling back to percentile method")
             ci_result = scipy_bootstrap(
                 (per_prompt_costs,),
                 np.sum,
                 n_resamples=n_bootstrap,
                 confidence_level=confidence_level,
-                method="bca",
+                method="percentile",
             )
             ci_low_raw = ci_result.confidence_interval.low
             ci_high_raw = ci_result.confidence_interval.high
-            if np.isnan(ci_low_raw) or np.isnan(ci_high_raw):
-                raise ValueError("BCa produced NaN")
-    except (Warning, ValueError):
-        logger.info("BCa bootstrap failed (likely degenerate data), falling back to percentile method")
-        ci_result = scipy_bootstrap(
-            (per_prompt_costs,),
-            np.sum,
-            n_resamples=n_bootstrap,
-            confidence_level=confidence_level,
-            method="percentile",
-        )
-        ci_low_raw = ci_result.confidence_interval.low
-        ci_high_raw = ci_result.confidence_interval.high
 
-    ci_low = float(ci_low_raw * scale_factor)
-    ci_high = float(ci_high_raw * scale_factor)
+        ci_low = float(ci_low_raw * scale_factor)
+        ci_high = float(ci_high_raw * scale_factor)
 
     # Per-condition breakdown
     condition_costs: dict[str, float] = {}
@@ -623,3 +630,491 @@ def check_budget_gate(
             projected_cost, budget_threshold,
         )
     return result
+
+
+# ---------------------------------------------------------------------------
+# BERTScore pre-processor fidelity
+# ---------------------------------------------------------------------------
+
+# Lazy import wrapper so tests can mock it
+try:
+    from bert_score import score as bert_score_fn
+except ImportError:
+    bert_score_fn = None  # type: ignore[assignment]
+
+
+def check_preproc_fidelity(
+    conn: sqlite3.Connection,
+    pilot_prompt_ids: list[str],
+    prompts_by_id: dict[str, dict[str, Any]],
+    threshold: float = 0.85,
+) -> dict[str, Any]:
+    """Check pre-processor semantic fidelity using BERTScore.
+
+    Compares original clean prompt text against the pre-processed text
+    stored in the DB for sanitize/compress intervention runs.
+
+    Args:
+        conn: Open SQLite database connection.
+        pilot_prompt_ids: List of pilot prompt IDs.
+        prompts_by_id: Mapping of prompt_id to prompt record dict.
+        threshold: Minimum BERTScore F1 threshold (default 0.85).
+
+    Returns:
+        Dict with mean_f1, min_f1, threshold, flagged_count, total_pairs,
+        and flagged_pairs list. Returns {"error": ...} if bert-score unavailable.
+    """
+    all_runs = query_runs(conn, status="completed")
+    id_set = set(pilot_prompt_ids)
+    preproc_interventions = {"pre_proc_sanitize", "pre_proc_sanitize_compress", "compress_only"}
+    preproc_runs = [
+        r for r in all_runs
+        if r["prompt_id"] in id_set and r["intervention"] in preproc_interventions
+    ]
+
+    if not preproc_runs:
+        return {
+            "mean_f1": None,
+            "min_f1": None,
+            "threshold": threshold,
+            "flagged_count": 0,
+            "total_pairs": 0,
+            "flagged_pairs": [],
+        }
+
+    originals = [prompts_by_id[r["prompt_id"]]["prompt_text"] for r in preproc_runs]
+    preprocessed = [r["prompt_text"] for r in preproc_runs]
+
+    try:
+        _score_fn = bert_score_fn
+        if _score_fn is None:
+            raise ImportError("bert-score not installed")
+        P, R, F1 = _score_fn(preprocessed, originals, lang="en", verbose=False)
+        f1_scores = F1.tolist()
+    except (ImportError, TypeError) as exc:
+        logger.warning("BERTScore unavailable: %s", exc)
+        return {"error": str(exc)}
+
+    flagged_pairs: list[dict[str, Any]] = []
+    for i, score_val in enumerate(f1_scores):
+        if score_val < threshold:
+            flagged_pairs.append({
+                "index": i,
+                "f1": float(score_val),
+                "prompt_id": preproc_runs[i]["prompt_id"],
+                "intervention": preproc_runs[i]["intervention"],
+                "model": preproc_runs[i]["model"],
+            })
+
+    result: dict[str, Any] = {
+        "mean_f1": float(sum(f1_scores) / len(f1_scores)),
+        "min_f1": float(min(f1_scores)),
+        "threshold": threshold,
+        "flagged_count": len(flagged_pairs),
+        "total_pairs": len(f1_scores),
+        "flagged_pairs": flagged_pairs,
+    }
+
+    logger.info(
+        "Pre-proc fidelity: mean F1=%.4f, min F1=%.4f, %d/%d flagged (threshold=%.2f)",
+        result["mean_f1"], result["min_f1"], result["flagged_count"],
+        result["total_pairs"], threshold,
+    )
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Latency profiling
+# ---------------------------------------------------------------------------
+
+def _compute_latency_stats(values: list[float]) -> dict[str, float]:
+    """Compute summary statistics for a list of latency values.
+
+    Args:
+        values: List of latency values in milliseconds.
+
+    Returns:
+        Dict with mean, p50, p95, max, and min.
+    """
+    arr = np.array(values)
+    p50, p95 = np.percentile(arr, [50, 95])
+    return {
+        "mean": float(arr.mean()),
+        "p50": float(p50),
+        "p95": float(p95),
+        "max": float(arr.max()),
+        "min": float(arr.min()),
+    }
+
+
+def profile_latency(
+    conn: sqlite3.Connection,
+    pilot_prompt_ids: list[str],
+) -> dict[str, Any]:
+    """Profile TTFT and TTLT latency distributions from pilot data.
+
+    Groups by model and by (model, intervention) to identify latency patterns
+    and flag unexpectedly slow conditions.
+
+    Args:
+        conn: Open SQLite database connection.
+        pilot_prompt_ids: List of pilot prompt IDs.
+
+    Returns:
+        Dict with by_model, by_condition, estimated_full_run_hours, and latency_flags.
+    """
+    all_runs = query_runs(conn, status="completed")
+    id_set = set(pilot_prompt_ids)
+    pilot_runs = [r for r in all_runs if r["prompt_id"] in id_set]
+
+    # Group by model
+    by_model_ttft: dict[str, list[float]] = {}
+    by_model_ttlt: dict[str, list[float]] = {}
+    # Group by model|intervention
+    by_cond_ttft: dict[str, list[float]] = {}
+    by_cond_ttlt: dict[str, list[float]] = {}
+
+    for r in pilot_runs:
+        model = r["model"]
+        intv = r["intervention"]
+        ttft = r.get("ttft_ms")
+        ttlt = r.get("ttlt_ms")
+        if ttft is not None:
+            by_model_ttft.setdefault(model, []).append(ttft)
+            key = f"{model}|{intv}"
+            by_cond_ttft.setdefault(key, []).append(ttft)
+        if ttlt is not None:
+            by_model_ttlt.setdefault(model, []).append(ttlt)
+            key = f"{model}|{intv}"
+            by_cond_ttlt.setdefault(key, []).append(ttlt)
+
+    by_model: dict[str, dict[str, Any]] = {}
+    for model in set(list(by_model_ttft.keys()) + list(by_model_ttlt.keys())):
+        by_model[model] = {}
+        if model in by_model_ttft:
+            by_model[model]["ttft"] = _compute_latency_stats(by_model_ttft[model])
+        if model in by_model_ttlt:
+            by_model[model]["ttlt"] = _compute_latency_stats(by_model_ttlt[model])
+
+    by_condition: dict[str, dict[str, Any]] = {}
+    for key in set(list(by_cond_ttft.keys()) + list(by_cond_ttlt.keys())):
+        by_condition[key] = {}
+        if key in by_cond_ttft:
+            by_condition[key]["ttft"] = _compute_latency_stats(by_cond_ttft[key])
+        if key in by_cond_ttlt:
+            by_condition[key]["ttlt"] = _compute_latency_stats(by_cond_ttlt[key])
+
+    # Estimate wall-clock time for full run (rough)
+    all_ttlt = []
+    for vals in by_model_ttlt.values():
+        all_ttlt.extend(vals)
+    if all_ttlt:
+        mean_ttlt = np.mean(all_ttlt)
+        # Full run items: scale by 200/len(pilot_prompt_ids)
+        n_pilot_items = len(pilot_runs)
+        scale = 200 / max(len(pilot_prompt_ids), 1)
+        total_items = n_pilot_items * scale
+        estimated_hours = float(total_items * mean_ttlt / 1000 / 3600)
+    else:
+        estimated_hours = 0.0
+
+    # Flag conditions with p95 TTLT > 30s
+    latency_flags: list[dict[str, Any]] = []
+    for key, stats in by_condition.items():
+        if "ttlt" in stats and stats["ttlt"]["p95"] > 30000:
+            latency_flags.append({
+                "condition": key,
+                "p95_ttlt_ms": stats["ttlt"]["p95"],
+                "warning": "p95 TTLT exceeds 30 seconds",
+            })
+
+    result: dict[str, Any] = {
+        "by_model": by_model,
+        "by_condition": by_condition,
+        "estimated_full_run_hours": estimated_hours,
+        "latency_flags": latency_flags,
+    }
+
+    logger.info("Latency profile: estimated %.1f hours for full run", estimated_hours)
+    if latency_flags:
+        for flag in latency_flags:
+            logger.warning("Latency flag: %s - p95 TTLT %.0fms", flag["condition"], flag["p95_ttlt_ms"])
+
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Power analysis (rough estimate)
+# ---------------------------------------------------------------------------
+
+def estimate_power(
+    conn: sqlite3.Connection,
+    pilot_prompt_ids: list[str],
+) -> dict[str, Any]:
+    """Estimate whether N=200 is sufficient based on observed pilot effect sizes.
+
+    Uses a simplified binomial power calculation comparing clean+raw pass rates
+    against each noisy+raw condition. This is a rough informational estimate,
+    not the full GLMM power analysis planned for Phase 5.
+
+    Args:
+        conn: Open SQLite database connection.
+        pilot_prompt_ids: List of pilot prompt IDs.
+
+    Returns:
+        Dict with observed_effects, required_n, n_200_sufficient, and note.
+    """
+    from scipy.stats import norm
+
+    all_runs = query_runs(conn, status="completed")
+    id_set = set(pilot_prompt_ids)
+    pilot_runs = [r for r in all_runs if r["prompt_id"] in id_set]
+
+    # Compute pass rates for clean+raw vs. noisy+raw
+    raw_runs = [r for r in pilot_runs if r["intervention"] == "raw"]
+
+    def _pass_rate(runs: list[dict]) -> float | None:
+        if not runs:
+            return None
+        passed = sum(1 for r in runs if r.get("pass_fail") == 1)
+        return passed / len(runs)
+
+    clean_raw = [r for r in raw_runs if r["noise_type"] == "clean"]
+    clean_rate = _pass_rate(clean_raw)
+
+    noisy_types = set(r["noise_type"] for r in raw_runs if r["noise_type"] != "clean")
+
+    observed_effects: list[dict[str, Any]] = []
+    required_n_list: list[dict[str, Any]] = []
+
+    z_alpha = norm.ppf(1 - 0.05 / 2)  # two-sided alpha=0.05
+    z_beta = norm.ppf(0.80)  # power=0.80
+
+    for noise_type in sorted(noisy_types):
+        noisy_raw = [r for r in raw_runs if r["noise_type"] == noise_type]
+        noisy_rate = _pass_rate(noisy_raw)
+
+        if clean_rate is None or noisy_rate is None:
+            continue
+
+        effect_size = clean_rate - noisy_rate
+        observed_effects.append({
+            "noise_type": noise_type,
+            "clean_rate": round(clean_rate, 4),
+            "noisy_rate": round(noisy_rate, 4),
+            "effect_size": round(effect_size, 4),
+        })
+
+        # Required N per group via z-test on two proportions
+        if abs(effect_size) > 0.001:
+            p1, p2 = clean_rate, noisy_rate
+            numerator = (z_alpha + z_beta) ** 2 * (p1 * (1 - p1) + p2 * (1 - p2))
+            denominator = (p1 - p2) ** 2
+            n_required = int(np.ceil(numerator / denominator))
+        else:
+            n_required = None  # Effect too small to estimate
+
+        required_n_list.append({
+            "noise_type": noise_type,
+            "required_n_per_group": n_required,
+        })
+
+    # Check if 200 is sufficient for all observed effects
+    n_200_sufficient = all(
+        item["required_n_per_group"] is not None and item["required_n_per_group"] <= 200
+        for item in required_n_list
+    ) if required_n_list else True
+
+    return {
+        "observed_effects": observed_effects,
+        "required_n": required_n_list,
+        "n_200_sufficient": n_200_sufficient,
+        "note": "Rough estimate; full GLMM power analysis in Phase 5",
+    }
+
+
+# ---------------------------------------------------------------------------
+# Structured verdict
+# ---------------------------------------------------------------------------
+
+def run_pilot_verdict(
+    conn: sqlite3.Connection,
+    pilot_prompt_ids: list[str],
+    prompts_by_id: dict[str, dict[str, Any]],
+    budget: float = 200.0,
+    output_path: str = "results/pilot_verdict.json",
+) -> dict[str, Any]:
+    """Produce a structured PASS/FAIL verdict for the pilot run.
+
+    Aggregates all validation checks (completeness, noise, cost, spot-check,
+    latency, power, fidelity) into a single report with an overall verdict.
+
+    Args:
+        conn: Open SQLite database connection.
+        pilot_prompt_ids: List of pilot prompt IDs.
+        prompts_by_id: Mapping of prompt_id to prompt record dict.
+        budget: Budget threshold in USD for cost gate.
+        output_path: Path for the JSON verdict report.
+
+    Returns:
+        Verdict dict with overall PASS/FAIL and all sub-reports.
+    """
+    all_runs = query_runs(conn, status="completed")
+    failed_runs = query_runs(conn, status="failed")
+    id_set = set(pilot_prompt_ids)
+
+    completed = [r for r in all_runs if r["prompt_id"] in id_set]
+    failed = [r for r in failed_runs if r["prompt_id"] in id_set]
+
+    total = len(completed) + len(failed)
+    completion_rate = len(completed) / total if total > 0 else 0.0
+
+    # Check for systematic failures: any model+intervention combo with 0% completion
+    systematic_failures: list[dict[str, str]] = []
+    group_counts: dict[str, dict[str, int]] = {}
+    for r in completed + failed:
+        key = f"{r['model']}|{r['intervention']}"
+        if key not in group_counts:
+            group_counts[key] = {"completed": 0, "failed": 0}
+        if r.get("status") == "completed":
+            group_counts[key]["completed"] += 1
+        else:
+            group_counts[key]["failed"] += 1
+
+    for key, counts in group_counts.items():
+        if counts["completed"] == 0 and counts["failed"] > 0:
+            model, intv = key.split("|", 1)
+            systematic_failures.append({"model": model, "intervention": intv})
+
+    # Zero variance check
+    condition_results: dict[str, set[int]] = {}
+    for r in completed:
+        cond_key = f"{r['prompt_id']}|{r['noise_type']}|{r['intervention']}|{r['model']}"
+        pf = r.get("pass_fail")
+        if pf is not None:
+            condition_results.setdefault(cond_key, set()).add(pf)
+
+    zero_var_count = sum(1 for vals in condition_results.values() if len(vals) == 1)
+    total_conditions = len(condition_results)
+    zero_variance_pct = (zero_var_count / total_conditions * 100) if total_conditions > 0 else 0.0
+
+    # Run all sub-checks
+    data_audit = audit_data_completeness(conn, pilot_prompt_ids)
+    noise_check = verify_noise_rates(prompts_by_id, pilot_prompt_ids)
+    cost_proj = compute_cost_projection(conn, pilot_prompt_ids)
+    budget_check = check_budget_gate(cost_proj["projected_full_cost"], budget)
+    spot_check = run_spot_check(conn, pilot_prompt_ids, prompts_by_id)
+    latency = profile_latency(conn, pilot_prompt_ids)
+    power = estimate_power(conn, pilot_prompt_ids)
+
+    # BERTScore fidelity (optional)
+    try:
+        fidelity = check_preproc_fidelity(conn, pilot_prompt_ids, prompts_by_id)
+    except Exception as exc:
+        logger.warning("BERTScore fidelity check failed: %s", exc)
+        fidelity = {"error": str(exc)}
+
+    # Determine overall verdict
+    flagged_issues: list[str] = []
+    overall = "PASS"
+
+    if completion_rate < 0.95:
+        overall = "FAIL"
+        flagged_issues.append(f"Completion rate {completion_rate:.1%} < 95%")
+
+    if systematic_failures:
+        overall = "FAIL"
+        for sf in systematic_failures:
+            flagged_issues.append(f"Systematic failure: {sf['model']}|{sf['intervention']}")
+
+    if budget_check["exceeds_budget"]:
+        flagged_issues.append(
+            f"Budget warning: projected ${cost_proj['projected_full_cost']:.2f} > ${budget:.2f}"
+        )
+
+    verdict: dict[str, Any] = {
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "overall_verdict": overall,
+        "completion_rate": completion_rate,
+        "systematic_failures": systematic_failures,
+        "zero_variance_pct": zero_variance_pct,
+        "data_audit": data_audit,
+        "noise_check": noise_check,
+        "cost_projection": cost_proj,
+        "budget_gate": budget_check,
+        "spot_check_summary": {
+            "total_sampled": spot_check["total_sampled"],
+            "gsm8k_count": spot_check["gsm8k_count"],
+            "code_count": spot_check["code_count"],
+        },
+        "latency": latency,
+        "power_analysis": power,
+        "preproc_fidelity": fidelity,
+        "flagged_issues": flagged_issues,
+    }
+
+    os.makedirs(os.path.dirname(output_path) or ".", exist_ok=True)
+    with open(output_path, "w") as f:
+        json.dump(verdict, f, indent=2, default=str)
+
+    logger.info(
+        "Pilot verdict: %s | completion=%.1f%% | projected=$%.2f | flags=%d",
+        overall, completion_rate * 100, cost_proj["projected_full_cost"],
+        len(flagged_issues),
+    )
+    return verdict
+
+
+# ---------------------------------------------------------------------------
+# CLI
+# ---------------------------------------------------------------------------
+
+def _build_parser() -> argparse.ArgumentParser:
+    """Build the argument parser for the pilot CLI.
+
+    Returns:
+        Configured ArgumentParser instance.
+    """
+    parser = argparse.ArgumentParser(
+        description="Pilot validation for the Linguistic Tax research toolkit.",
+    )
+    parser.add_argument(
+        "--budget",
+        type=float,
+        default=200.0,
+        help="Budget threshold for full run cost projection (default: 200.0)",
+    )
+    parser.add_argument(
+        "--db",
+        type=str,
+        default=None,
+        help="Override path to results database",
+    )
+    parser.add_argument(
+        "--select-only",
+        action="store_true",
+        help="Only select pilot prompts, do not run or analyze",
+    )
+    parser.add_argument(
+        "--analyze-only",
+        action="store_true",
+        help="Only analyze existing results, do not run experiment",
+    )
+    return parser
+
+
+def main() -> None:
+    """Entry point for the pilot validation CLI."""
+    parser = _build_parser()
+    args = parser.parse_args()
+    result = run_pilot(
+        budget=args.budget,
+        db_path=args.db,
+        select_only=args.select_only,
+        analyze_only=args.analyze_only,
+    )
+    logger.info("Pilot result: %s", result.get("status", "unknown"))
+
+
+if __name__ == "__main__":
+    main()

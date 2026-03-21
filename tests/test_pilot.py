@@ -466,3 +466,245 @@ class TestBudgetGate:
         from src.pilot import check_budget_gate
         result = check_budget_gate(200.0, budget_threshold=200.0)
         assert result["exceeds_budget"] is False
+
+
+# ---------------------------------------------------------------------------
+# check_preproc_fidelity tests
+# ---------------------------------------------------------------------------
+
+class TestCheckPreprocFidelity:
+    """Tests for BERTScore pre-processor fidelity checking."""
+
+    def test_preproc_fidelity_returns_expected_fields(self, pilot_db: tuple) -> None:
+        from src.pilot import check_preproc_fidelity
+        conn, pilot_ids, prompts_by_id = pilot_db
+        # Mock bert_score.score to avoid downloading model
+        import torch
+        mock_f1 = torch.tensor([0.92, 0.88, 0.78, 0.95, 0.80, 0.91, 0.87, 0.93, 0.76, 0.90])
+        mock_p = mock_f1.clone()
+        mock_r = mock_f1.clone()
+        with patch("src.pilot.bert_score_fn", return_value=(mock_p, mock_r, mock_f1)):
+            result = check_preproc_fidelity(conn, pilot_ids, prompts_by_id)
+        assert "mean_f1" in result
+        assert "min_f1" in result
+        assert "threshold" in result
+        assert "flagged_count" in result
+        assert "flagged_pairs" in result
+        assert "total_pairs" in result
+
+    def test_preproc_fidelity_flags_below_threshold(self, pilot_db: tuple) -> None:
+        from src.pilot import check_preproc_fidelity
+        conn, pilot_ids, prompts_by_id = pilot_db
+        import torch
+        # Create scores with some below 0.85
+        mock_f1 = torch.tensor([0.92, 0.50, 0.78, 0.95, 0.80, 0.91, 0.60, 0.93, 0.76, 0.90])
+        mock_p = mock_f1.clone()
+        mock_r = mock_f1.clone()
+        with patch("src.pilot.bert_score_fn", return_value=(mock_p, mock_r, mock_f1)):
+            result = check_preproc_fidelity(conn, pilot_ids, prompts_by_id, threshold=0.85)
+        # Scores below 0.85: 0.50, 0.78, 0.80, 0.60, 0.76 = 5 flagged
+        assert result["flagged_count"] == 5
+        for fp in result["flagged_pairs"]:
+            assert fp["f1"] < 0.85
+
+    def test_preproc_fidelity_handles_import_error(self, pilot_db: tuple) -> None:
+        from src.pilot import check_preproc_fidelity
+        conn, pilot_ids, prompts_by_id = pilot_db
+        with patch("src.pilot.bert_score_fn", side_effect=ImportError("No module")):
+            result = check_preproc_fidelity(conn, pilot_ids, prompts_by_id)
+        assert "error" in result
+
+
+# ---------------------------------------------------------------------------
+# profile_latency tests
+# ---------------------------------------------------------------------------
+
+class TestProfileLatency:
+    """Tests for latency profiling."""
+
+    def test_profile_latency_returns_expected_structure(self, pilot_db: tuple) -> None:
+        from src.pilot import profile_latency
+        conn, pilot_ids, _ = pilot_db
+        result = profile_latency(conn, pilot_ids)
+        assert "by_model" in result
+        assert "by_condition" in result
+        assert "estimated_full_run_hours" in result
+        assert "latency_flags" in result
+
+    def test_profile_latency_per_model_stats(self, pilot_db: tuple) -> None:
+        from src.pilot import profile_latency
+        conn, pilot_ids, _ = pilot_db
+        result = profile_latency(conn, pilot_ids)
+        # We have one model in our fixture
+        assert "claude-sonnet-4-20250514" in result["by_model"]
+        model_stats = result["by_model"]["claude-sonnet-4-20250514"]
+        assert "ttft" in model_stats
+        assert "ttlt" in model_stats
+        for stat_key in ["mean", "p50", "p95", "max", "min"]:
+            assert stat_key in model_stats["ttft"]
+            assert stat_key in model_stats["ttlt"]
+
+    def test_profile_latency_flags_slow_conditions(self, tmp_path: Path) -> None:
+        from src.pilot import profile_latency
+        db_path = str(tmp_path / "slow.db")
+        conn = init_database(db_path)
+        # Insert rows with very high latency
+        for rep in range(1, 6):
+            insert_run(conn, _make_run(
+                prompt_id="gsm8k_1", benchmark="gsm8k",
+                repetition=rep, ttft_ms=1000.0, ttlt_ms=35000.0,  # > 30s
+            ))
+        result = profile_latency(conn, ["gsm8k_1"])
+        assert len(result["latency_flags"]) > 0
+
+
+# ---------------------------------------------------------------------------
+# estimate_power tests
+# ---------------------------------------------------------------------------
+
+class TestEstimatePower:
+    """Tests for power analysis estimation."""
+
+    def test_estimate_power_returns_expected_fields(self, tmp_path: Path) -> None:
+        from src.pilot import estimate_power
+        db_path = str(tmp_path / "power.db")
+        conn = init_database(db_path)
+        # Create clean+raw runs (high pass rate)
+        for rep in range(1, 6):
+            insert_run(conn, _make_run(
+                prompt_id="gsm8k_1", benchmark="gsm8k",
+                noise_type="clean", intervention="raw",
+                repetition=rep, pass_fail=1,
+            ))
+        # Create noisy+raw runs (lower pass rate)
+        for rep in range(1, 6):
+            insert_run(conn, _make_run(
+                prompt_id="gsm8k_1", benchmark="gsm8k",
+                noise_type="type_a_20pct", intervention="raw",
+                repetition=rep, pass_fail=0 if rep <= 3 else 1,
+            ))
+        result = estimate_power(conn, ["gsm8k_1"])
+        assert "observed_effects" in result
+        assert "required_n" in result
+        assert "n_200_sufficient" in result
+        assert "note" in result
+
+
+# ---------------------------------------------------------------------------
+# run_pilot_verdict tests
+# ---------------------------------------------------------------------------
+
+class TestRunPilotVerdict:
+    """Tests for structured pilot verdict."""
+
+    def test_verdict_pass_on_high_completion(self, pilot_db: tuple, tmp_path: Path) -> None:
+        from src.pilot import run_pilot_verdict
+        conn, pilot_ids, prompts_by_id = pilot_db
+        out = str(tmp_path / "verdict.json")
+        import torch
+        mock_f1 = torch.tensor([0.92] * 10)
+        with patch("src.pilot.bert_score_fn", return_value=(mock_f1, mock_f1, mock_f1)):
+            result = run_pilot_verdict(conn, pilot_ids, prompts_by_id, output_path=out)
+        assert result["overall_verdict"] == "PASS"
+        assert result["completion_rate"] >= 0.95
+
+    def test_verdict_fail_on_low_completion(self, tmp_path: Path) -> None:
+        from src.pilot import run_pilot_verdict
+        db_path = str(tmp_path / "fail_verdict.db")
+        conn = init_database(db_path)
+        pilot_ids = ["gsm8k_1"]
+        prompts_by_id = {
+            "gsm8k_1": {"prompt_text": "What is 2+2?", "canonical_answer": "4", "answer_type": "numeric"},
+        }
+        # Insert 10 completed, 10 failed -> 50% completion
+        for i in range(1, 11):
+            insert_run(conn, _make_run(
+                prompt_id="gsm8k_1", benchmark="gsm8k",
+                noise_type="clean", intervention="raw",
+                repetition=i, status="completed",
+            ))
+        for i in range(11, 21):
+            insert_run(conn, _make_run(
+                prompt_id="gsm8k_1", benchmark="gsm8k",
+                noise_type="type_a_5pct", intervention="raw",
+                repetition=i, status="failed",
+            ))
+        out = str(tmp_path / "verdict.json")
+        with patch("src.pilot.bert_score_fn", side_effect=ImportError("skip")):
+            result = run_pilot_verdict(conn, pilot_ids, prompts_by_id, output_path=out)
+        assert result["overall_verdict"] == "FAIL"
+        assert result["completion_rate"] < 0.95
+
+    def test_verdict_includes_zero_variance(self, pilot_db: tuple, tmp_path: Path) -> None:
+        from src.pilot import run_pilot_verdict
+        conn, pilot_ids, prompts_by_id = pilot_db
+        out = str(tmp_path / "verdict.json")
+        import torch
+        mock_f1 = torch.tensor([0.92] * 10)
+        with patch("src.pilot.bert_score_fn", return_value=(mock_f1, mock_f1, mock_f1)):
+            result = run_pilot_verdict(conn, pilot_ids, prompts_by_id, output_path=out)
+        assert "zero_variance_pct" in result
+
+    def test_verdict_includes_power_analysis(self, pilot_db: tuple, tmp_path: Path) -> None:
+        from src.pilot import run_pilot_verdict
+        conn, pilot_ids, prompts_by_id = pilot_db
+        out = str(tmp_path / "verdict.json")
+        import torch
+        mock_f1 = torch.tensor([0.92] * 10)
+        with patch("src.pilot.bert_score_fn", return_value=(mock_f1, mock_f1, mock_f1)):
+            result = run_pilot_verdict(conn, pilot_ids, prompts_by_id, output_path=out)
+        assert "power_analysis" in result
+
+    def test_verdict_writes_json(self, pilot_db: tuple, tmp_path: Path) -> None:
+        from src.pilot import run_pilot_verdict
+        conn, pilot_ids, prompts_by_id = pilot_db
+        out = str(tmp_path / "verdict.json")
+        import torch
+        mock_f1 = torch.tensor([0.92] * 10)
+        with patch("src.pilot.bert_score_fn", return_value=(mock_f1, mock_f1, mock_f1)):
+            run_pilot_verdict(conn, pilot_ids, prompts_by_id, output_path=out)
+        assert Path(out).exists()
+        with open(out) as f:
+            data = json.load(f)
+        assert "overall_verdict" in data
+
+
+# ---------------------------------------------------------------------------
+# CLI / _build_parser tests
+# ---------------------------------------------------------------------------
+
+class TestCLI:
+    """Tests for the CLI argument parser."""
+
+    def test_build_parser_has_budget(self) -> None:
+        from src.pilot import _build_parser
+        parser = _build_parser()
+        args = parser.parse_args(["--budget", "300.0"])
+        assert args.budget == 300.0
+
+    def test_build_parser_has_db(self) -> None:
+        from src.pilot import _build_parser
+        parser = _build_parser()
+        args = parser.parse_args(["--db", "/tmp/test.db"])
+        assert args.db == "/tmp/test.db"
+
+    def test_build_parser_has_select_only(self) -> None:
+        from src.pilot import _build_parser
+        parser = _build_parser()
+        args = parser.parse_args(["--select-only"])
+        assert args.select_only is True
+
+    def test_build_parser_has_analyze_only(self) -> None:
+        from src.pilot import _build_parser
+        parser = _build_parser()
+        args = parser.parse_args(["--analyze-only"])
+        assert args.analyze_only is True
+
+    def test_build_parser_defaults(self) -> None:
+        from src.pilot import _build_parser
+        parser = _build_parser()
+        args = parser.parse_args([])
+        assert args.budget == 200.0
+        assert args.db is None
+        assert args.select_only is False
+        assert args.analyze_only is False

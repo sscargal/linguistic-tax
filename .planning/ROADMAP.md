@@ -76,10 +76,11 @@ Plans:
   1. Pilot run completes for 20 prompts across all noise conditions and intervention types with results in SQLite
   2. Manual spot-check of at least 10% of pilot grading results confirms grading accuracy (no systematic errors)
   3. Cost projection for the full experiment run is computed from pilot data and falls within budget constraints
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 04-01: TBD
+- [ ] 04-01-PLAN.md -- Core pilot module: compress_only fix, stratified prompt selection, pilot execution entry point, data completeness audit, noise sanity check
+- [ ] 04-02-PLAN.md -- Pilot analysis: grading spot-check, cost projection with bootstrap CIs, BERTScore fidelity, latency profiling, verdict report, CLI
 
 ### Phase 5: Statistical Analysis and Derived Metrics
 **Goal**: Researcher can compute all statistical analyses and derived metrics defined in the RDD from experimental results in SQLite
@@ -122,6 +123,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 1. Foundation and Data Infrastructure | 0/3 | Planning complete | - |
 | 2. Grading Pipeline | 0/1 | Planning complete | - |
 | 3. Interventions and Execution Engine | 0/3 | Planning complete | - |
-| 4. Pilot Validation | 0/1 | Not started | - |
+| 4. Pilot Validation | 0/2 | Planning complete | - |
 | 5. Statistical Analysis and Derived Metrics | 0/2 | Not started | - |
 | 6. Publication Figures | 0/2 | Not started | - |

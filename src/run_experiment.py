@@ -100,6 +100,8 @@ def apply_intervention(
             return sanitize(prompt_text, model, call_fn)
         case "pre_proc_sanitize_compress":
             return sanitize_and_compress(prompt_text, model, call_fn)
+        case "compress_only":
+            return sanitize_and_compress(prompt_text, model, call_fn)
         case _:
             raise ValueError(f"Unknown intervention: {intervention}")
 

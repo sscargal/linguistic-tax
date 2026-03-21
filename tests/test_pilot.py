@@ -140,7 +140,7 @@ class TestSelectPilotPrompts:
         )
         assert len(ids) == 20
         humaneval_ids = [i for i in ids if i.startswith("HumanEval/")]
-        mbpp_ids = [i for i in ids if i.startswith("Mbpp/")]
+        mbpp_ids = [i for i in ids if i.startswith("mbpp_")]
         gsm8k_ids = [i for i in ids if i.startswith("gsm8k")]
         assert len(humaneval_ids) == 7
         assert len(mbpp_ids) == 7

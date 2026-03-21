@@ -45,7 +45,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Pilot Validation
 
-- [ ] **PILOT-01**: Run pilot experiment with 20 prompts across all conditions to validate full pipeline end-to-end
+- [x] **PILOT-01**: Run pilot experiment with 20 prompts across all conditions to validate full pipeline end-to-end
 - [ ] **PILOT-02**: Verify grading accuracy via manual spot-check of pilot results
 - [ ] **PILOT-03**: Generate cost projection for full experiment run from pilot data
 
@@ -130,7 +130,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | EXEC-03 | Phase 3: Interventions and Execution Engine | Complete |
 | EXEC-04 | Phase 3: Interventions and Execution Engine | Complete |
 | EXEC-05 | Phase 3: Interventions and Execution Engine | Complete |
-| PILOT-01 | Phase 4: Pilot Validation | Pending |
+| PILOT-01 | Phase 4: Pilot Validation | Complete |
 | PILOT-02 | Phase 4: Pilot Validation | Pending |
 | PILOT-03 | Phase 4: Pilot Validation | Pending |
 | STAT-01 | Phase 5: Statistical Analysis and Derived Metrics | Pending |

@@ -176,3 +176,13 @@ Plans:
 
 Plans:
 - [ ] TBD (run /gsd:plan-phase 11 to break down)
+
+### Phase 12: Comprehensive documentation and README for new users
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 11
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 12 to break down)

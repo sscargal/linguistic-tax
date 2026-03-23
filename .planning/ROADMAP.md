@@ -132,7 +132,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 **Goal:** GPT-4o is a fully integrated third target model in the experiment pipeline -- API client streams with TTFT/TTLT tracking, config has all pricing/routing entries, pilot and figures handle 3 models, and the full test suite passes
 **Requirements**: OAPI-01, OAPI-02, OAPI-03, OAPI-04, OAPI-05, OAPI-06
 **Depends on:** Phase 6
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 - [ ] 07-01-PLAN.md -- Core OpenAI integration: config entries, _call_openai with streaming, call_model routing, retry/rate-limit, pyproject.toml, .env.example, comprehensive tests

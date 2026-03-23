@@ -22,6 +22,7 @@ class ExperimentConfig:
     # Model versions (pinned)
     claude_model: str = "claude-sonnet-4-20250514"
     gemini_model: str = "gemini-1.5-pro"
+    openai_model: str = "gpt-4o-2024-11-20"
 
     # Seeds
     base_seed: int = 42
@@ -86,6 +87,7 @@ INTERVENTIONS: tuple[str, ...] = (
 MODELS: tuple[str, ...] = (
     "claude-sonnet-4-20250514",
     "gemini-1.5-pro",
+    "gpt-4o-2024-11-20",
 )
 
 # ---------------------------------------------------------------------------
@@ -97,6 +99,8 @@ PRICE_TABLE: dict[str, dict[str, float]] = {
     "claude-haiku-4-5-20250514": {"input_per_1m": 1.00, "output_per_1m": 5.00},
     "gemini-1.5-pro": {"input_per_1m": 1.25, "output_per_1m": 5.00},
     "gemini-2.0-flash": {"input_per_1m": 0.10, "output_per_1m": 0.40},
+    "gpt-4o-2024-11-20": {"input_per_1m": 2.50, "output_per_1m": 10.00},
+    "gpt-4o-mini-2024-07-18": {"input_per_1m": 0.15, "output_per_1m": 0.60},
 }
 
 MAX_TOKENS_BY_BENCHMARK: dict[str, int] = {
@@ -108,6 +112,7 @@ MAX_TOKENS_BY_BENCHMARK: dict[str, int] = {
 PREPROC_MODEL_MAP: dict[str, str] = {
     "claude-sonnet-4-20250514": "claude-haiku-4-5-20250514",
     "gemini-1.5-pro": "gemini-2.0-flash",
+    "gpt-4o-2024-11-20": "gpt-4o-mini-2024-07-18",
 }
 
 RATE_LIMIT_DELAYS: dict[str, float] = {
@@ -115,6 +120,8 @@ RATE_LIMIT_DELAYS: dict[str, float] = {
     "claude-haiku-4-5-20250514": 0.1,
     "gemini-1.5-pro": 0.1,
     "gemini-2.0-flash": 0.05,
+    "gpt-4o-2024-11-20": 0.2,
+    "gpt-4o-mini-2024-07-18": 0.1,
 }
 
 

@@ -10,6 +10,7 @@ import time
 from dataclasses import dataclass
 
 import anthropic
+import openai
 from google import genai
 from google.genai import errors as genai_errors
 from google.genai import types
@@ -50,6 +51,9 @@ def _validate_api_keys(model: str) -> None:
     elif model.startswith("gemini"):
         if not os.environ.get("GOOGLE_API_KEY"):
             raise EnvironmentError("GOOGLE_API_KEY not set")
+    elif model.startswith("gpt"):
+        if not os.environ.get("OPENAI_API_KEY"):
+            raise EnvironmentError("OPENAI_API_KEY not set")
 
 
 def _apply_rate_limit(model: str) -> None:
@@ -172,6 +176,65 @@ def _call_google(
     )
 
 
+def _call_openai(
+    model: str,
+    system: str | None,
+    user_message: str,
+    max_tokens: int,
+    temperature: float,
+) -> APIResponse:
+    """Call OpenAI API with streaming for TTFT/TTLT measurement.
+
+    Args:
+        model: OpenAI model identifier.
+        system: Optional system prompt.
+        user_message: The user message to send.
+        max_tokens: Maximum tokens in the response.
+        temperature: Sampling temperature.
+
+    Returns:
+        Unified APIResponse with text, token counts, and timing.
+    """
+    client = openai.OpenAI()
+    start = time.monotonic()
+    ttft_ms = 0.0
+    chunks: list[str] = []
+
+    messages: list[dict] = []
+    if system is not None:
+        messages.append({"role": "system", "content": system})
+    messages.append({"role": "user", "content": user_message})
+
+    stream = client.chat.completions.create(
+        model=model,
+        messages=messages,
+        max_tokens=max_tokens,
+        temperature=temperature,
+        stream=True,
+        stream_options={"include_usage": True},
+    )
+
+    usage = None
+    for chunk in stream:
+        if chunk.usage is not None:
+            usage = chunk.usage
+        if chunk.choices and chunk.choices[0].delta.content is not None:
+            if not chunks:
+                ttft_ms = (time.monotonic() - start) * 1000
+            chunks.append(chunk.choices[0].delta.content)
+
+    ttlt_ms = (time.monotonic() - start) * 1000
+
+    return APIResponse(
+        text="".join(chunks),
+        input_tokens=usage.prompt_tokens if usage else 0,
+        output_tokens=usage.completion_tokens if usage else 0,
+        ttft_ms=ttft_ms,
+        ttlt_ms=ttlt_ms,
+        model=model,
+    )
+
+
 def call_model(
     model: str,
     system: str | None,
@@ -199,6 +262,7 @@ def call_model(
         ValueError: If model name is not recognized.
         EnvironmentError: If required API key is missing.
         anthropic.RateLimitError: If rate limited after 4 attempts.
+        openai.RateLimitError: If rate limited after 4 attempts (OpenAI).
         genai_errors.ClientError: If rate limited after 4 attempts (Google).
     """
     _validate_api_keys(model)
@@ -217,9 +281,24 @@ def call_model(
                 return _call_google(
                     model, system, user_message, max_tokens, temperature
                 )
+            elif model.startswith("gpt"):
+                return _call_openai(
+                    model, system, user_message, max_tokens, temperature
+                )
             else:
                 raise ValueError(f"Unknown model: {model}")
         except anthropic.RateLimitError as e:
+            last_error = e
+            _rate_delays[model] = _rate_delays.get(model, 0.2) * 2
+            logger.warning(
+                "Rate limited on %s (attempt %d/4), delay now %.1fs",
+                model,
+                attempt + 1,
+                _rate_delays[model],
+            )
+            if attempt < 3:
+                time.sleep(retry_delays[attempt])
+        except openai.RateLimitError as e:
             last_error = e
             _rate_delays[model] = _rate_delays.get(model, 0.2) * 2
             logger.warning(

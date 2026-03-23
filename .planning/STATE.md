@@ -100,6 +100,7 @@ None yet.
 - Phase 7 added: Add OpenAI to the supported model provider
 - Phase 8 added: Write unit tests
 - Phase 9 added: Add OpenRouter support with free model defaults (Nemotron) — examine https://openrouter.ai/models?max_price=0 for free models, default to Nemotron models to avoid API costs
+- Phase 10 added: Research optimal prompt input formats — investigate whether compact/structured prompt formats (analogous to TOON vs JSON) yield superior LLM results; human-convention-friendly notation that reduces tokens while improving accuracy; innovate testable ideas for whitepaper inclusion
 
 ### Blockers/Concerns
 

@@ -101,3 +101,147 @@ def populated_test_db(tmp_path):
 
     conn.close()
     return db_path
+
+
+@pytest.fixture
+def analysis_test_db(tmp_path):
+    """Create a richer synthetic dataset for statistical analysis tests.
+
+    Inserts 300 rows: 10 prompts x 3 noise_types x 2 interventions x 1 model x 5 reps.
+    Pass/fail patterns are designed to produce known statistical outcomes:
+    - HumanEval/1: always passes clean_raw, always fails type_a_20pct_raw (fragile)
+    - HumanEval/2: always fails clean_raw, always passes clean_pre_proc_sanitize (recoverable)
+    - MBPP/1: passes in all conditions (robust, not fragile)
+    - GSM8K/1: passes 4/5 clean, 2/5 noisy (for tau test)
+
+    Returns:
+        The path to the temporary database file as a string.
+    """
+    import random
+
+    from src.db import init_database, insert_run
+
+    db_path = str(tmp_path / "test_analysis.db")
+    conn = init_database(db_path)
+
+    model = "claude-sonnet-4-20250514"
+    noise_types = ["clean", "type_a_10pct", "type_a_20pct"]
+    interventions = ["raw", "pre_proc_sanitize"]
+
+    # 10 prompts
+    prompts = [
+        "HumanEval/1", "HumanEval/2", "HumanEval/3", "HumanEval/4",
+        "MBPP/1", "MBPP/2", "MBPP/3",
+        "GSM8K/1", "GSM8K/2", "GSM8K/3",
+    ]
+
+    # Define deterministic pass/fail patterns per (prompt_id, noise_type, intervention)
+    # Key is (prompt_id, noise_type, intervention) -> list of 5 pass/fail values
+    rng = random.Random(42)
+
+    patterns: dict[tuple[str, str, str], list[int]] = {}
+
+    for prompt_id in prompts:
+        for noise_type in noise_types:
+            for intervention in interventions:
+                # Default: random-looking but deterministic
+                patterns[(prompt_id, noise_type, intervention)] = [
+                    rng.randint(0, 1) for _ in range(5)
+                ]
+
+    # Override specific patterns for known test outcomes
+
+    # HumanEval/1: always passes clean_raw, always fails type_a_20pct_raw (fragile)
+    patterns[("HumanEval/1", "clean", "raw")] = [1, 1, 1, 1, 1]
+    patterns[("HumanEval/1", "type_a_20pct", "raw")] = [0, 0, 0, 0, 0]
+    patterns[("HumanEval/1", "type_a_10pct", "raw")] = [1, 1, 0, 0, 0]
+
+    # HumanEval/2: always fails clean_raw, always passes clean_pre_proc_sanitize
+    patterns[("HumanEval/2", "clean", "raw")] = [0, 0, 0, 0, 0]
+    patterns[("HumanEval/2", "clean", "pre_proc_sanitize")] = [1, 1, 1, 1, 1]
+
+    # MBPP/1: passes in all conditions (robust)
+    for noise_type in noise_types:
+        for intervention in interventions:
+            patterns[("MBPP/1", noise_type, intervention)] = [1, 1, 1, 1, 1]
+
+    # GSM8K/1: passes 4/5 clean, 2/5 noisy (for tau test)
+    patterns[("GSM8K/1", "clean", "raw")] = [1, 1, 1, 1, 0]
+    patterns[("GSM8K/1", "type_a_10pct", "raw")] = [1, 0, 1, 0, 0]
+    patterns[("GSM8K/1", "type_a_20pct", "raw")] = [0, 1, 0, 0, 0]
+
+    for (prompt_id, noise_type, intervention), pass_fail_list in patterns.items():
+        benchmark = prompt_id.split("/")[0].lower()
+        noise_level = ""
+        if "10pct" in noise_type:
+            noise_level = "10"
+        elif "20pct" in noise_type:
+            noise_level = "20"
+
+        preproc_cost = 0.0003 if intervention == "pre_proc_sanitize" else 0.0
+        for rep, pf in enumerate(pass_fail_list, start=1):
+            run_id = f"{prompt_id}_{noise_type}_{intervention}_{model}_rep{rep}"
+            insert_run(conn, {
+                "run_id": run_id,
+                "prompt_id": prompt_id,
+                "benchmark": benchmark,
+                "noise_type": noise_type,
+                "noise_level": noise_level,
+                "intervention": intervention,
+                "model": model,
+                "repetition": rep,
+                "pass_fail": pf,
+                "prompt_tokens": 100,
+                "optimized_tokens": 85,
+                "completion_tokens": 50,
+                "total_cost_usd": 0.001,
+                "preproc_cost_usd": preproc_cost,
+                "main_model_input_cost_usd": 0.0005,
+                "main_model_output_cost_usd": 0.0005,
+                "status": "completed",
+                "ttft_ms": 50.0,
+                "ttlt_ms": 200.0,
+            })
+
+    conn.close()
+    return db_path
+
+
+@pytest.fixture
+def degenerate_test_db(tmp_path):
+    """Create a tiny DB with only 5 rows to force GLMM convergence failure.
+
+    Returns:
+        The path to the temporary database file as a string.
+    """
+    from src.db import init_database, insert_run
+
+    db_path = str(tmp_path / "test_degenerate.db")
+    conn = init_database(db_path)
+
+    model = "claude-sonnet-4-20250514"
+    for rep in range(1, 6):
+        insert_run(conn, {
+            "run_id": f"degen_rep{rep}",
+            "prompt_id": "HumanEval/1",
+            "benchmark": "humaneval",
+            "noise_type": "clean",
+            "noise_level": "",
+            "intervention": "raw",
+            "model": model,
+            "repetition": rep,
+            "pass_fail": 1,
+            "prompt_tokens": 100,
+            "optimized_tokens": 85,
+            "completion_tokens": 50,
+            "total_cost_usd": 0.001,
+            "preproc_cost_usd": 0.0,
+            "main_model_input_cost_usd": 0.0005,
+            "main_model_output_cost_usd": 0.0005,
+            "status": "completed",
+            "ttft_ms": 50.0,
+            "ttlt_ms": 200.0,
+        })
+
+    conn.close()
+    return db_path

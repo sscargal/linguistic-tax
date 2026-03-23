@@ -98,6 +98,7 @@ None yet.
 ### Roadmap Evolution
 
 - Phase 7 added: Add OpenAI to the supported model provider
+- Phase 8 added: Write unit tests
 
 ### Blockers/Concerns
 

@@ -4,7 +4,10 @@ import dataclasses
 
 import pytest
 
-from src.config import ExperimentConfig, derive_seed, NOISE_TYPES, INTERVENTIONS, MODELS
+from src.config import (
+    ExperimentConfig, derive_seed, NOISE_TYPES, INTERVENTIONS, MODELS,
+    PRICE_TABLE, PREPROC_MODEL_MAP, RATE_LIMIT_DELAYS,
+)
 
 
 class TestExperimentConfig:
@@ -54,6 +57,10 @@ class TestExperimentConfig:
     def test_results_db_path(self, sample_config):
         """Results DB path is results/results.db."""
         assert sample_config.results_db_path == "results/results.db"
+
+    def test_openai_model_pinned(self, sample_config):
+        """OpenAI model version is pinned."""
+        assert sample_config.openai_model == "gpt-4o-2024-11-20"
 
 
 class TestDeriveSeed:
@@ -113,10 +120,25 @@ class TestConstants:
         assert set(INTERVENTIONS) == expected
 
     def test_models_count(self):
-        """MODELS has exactly 2 entries."""
-        assert len(MODELS) == 2
+        """MODELS has exactly 3 entries."""
+        assert len(MODELS) == 3
 
     def test_models_contents(self):
         """MODELS contains the pinned model versions."""
         assert "claude-sonnet-4-20250514" in MODELS
         assert "gemini-1.5-pro" in MODELS
+        assert "gpt-4o-2024-11-20" in MODELS
+
+    def test_price_table_openai(self):
+        """PRICE_TABLE contains GPT-4o and GPT-4o-mini pricing entries."""
+        assert PRICE_TABLE["gpt-4o-2024-11-20"] == {"input_per_1m": 2.50, "output_per_1m": 10.00}
+        assert PRICE_TABLE["gpt-4o-mini-2024-07-18"] == {"input_per_1m": 0.15, "output_per_1m": 0.60}
+
+    def test_preproc_map_openai(self):
+        """PREPROC_MODEL_MAP maps GPT-4o to GPT-4o-mini."""
+        assert PREPROC_MODEL_MAP["gpt-4o-2024-11-20"] == "gpt-4o-mini-2024-07-18"
+
+    def test_rate_limit_delays_openai(self):
+        """RATE_LIMIT_DELAYS contains entries for GPT-4o and GPT-4o-mini."""
+        assert RATE_LIMIT_DELAYS["gpt-4o-2024-11-20"] == 0.2
+        assert RATE_LIMIT_DELAYS["gpt-4o-mini-2024-07-18"] == 0.1

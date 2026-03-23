@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch, PropertyMock
 
 import pytest
 
-from src.api_client import APIResponse, call_model, _call_anthropic, _call_google, _rate_delays
+from src.api_client import APIResponse, call_model, _call_anthropic, _call_google, _call_openai, _rate_delays
 
 
 # ---------------------------------------------------------------------------
@@ -50,6 +50,37 @@ def _make_google_chunks(text_chunks: list[str], prompt_tokens: int, candidate_to
         else:
             chunk.usage_metadata = None
         chunks.append(chunk)
+    return chunks
+
+
+def _make_openai_stream_chunks(
+    text_chunks: list[str], prompt_tokens: int, completion_tokens: int
+):
+    """Create mock OpenAI streaming chunks.
+
+    Each text chunk has choices[0].delta.content = text and usage = None.
+    The final chunk has choices = [] and usage populated.
+    """
+    chunks = []
+    for text in text_chunks:
+        chunk = MagicMock()
+        chunk.usage = None
+        delta = MagicMock()
+        delta.content = text
+        choice = MagicMock()
+        choice.delta = delta
+        chunk.choices = [choice]
+        chunks.append(chunk)
+
+    # Final usage chunk with empty choices
+    final = MagicMock()
+    final.choices = []
+    usage = MagicMock()
+    usage.prompt_tokens = prompt_tokens
+    usage.completion_tokens = completion_tokens
+    final.usage = usage
+    chunks.append(final)
+
     return chunks
 
 
@@ -118,11 +149,24 @@ class TestCallModelRouting:
         mock_google.assert_called_once()
         assert result.model == "gemini-1.5-pro"
 
-    @patch.dict(os.environ, {"ANTHROPIC_API_KEY": "x", "GOOGLE_API_KEY": "y"})
+    @patch.dict(os.environ, {"ANTHROPIC_API_KEY": "x", "GOOGLE_API_KEY": "y", "OPENAI_API_KEY": "z"})
     def test_unknown_model_raises_value_error(self):
         """call_model with unknown model raises ValueError."""
         with pytest.raises(ValueError, match="Unknown model"):
-            call_model("gpt-4", None, "hello", 100)
+            call_model("llama-3-70b", None, "hello", 100)
+
+    @patch.dict(os.environ, {"OPENAI_API_KEY": "test-key"})
+    @patch("src.api_client._call_openai")
+    @patch("src.api_client._apply_rate_limit")
+    def test_routes_gpt_to_openai(self, mock_rate, mock_openai):
+        """call_model with gpt model name routes to _call_openai."""
+        mock_openai.return_value = APIResponse(
+            text="ok", input_tokens=1, output_tokens=1,
+            ttft_ms=1.0, ttlt_ms=2.0, model="gpt-4o-2024-11-20",
+        )
+        result = call_model("gpt-4o-2024-11-20", None, "hello", 100)
+        mock_openai.assert_called_once()
+        assert result.model == "gpt-4o-2024-11-20"
 
 
 # ---------------------------------------------------------------------------
@@ -222,6 +266,89 @@ class TestCallGoogle:
         assert result.input_tokens == 0
         assert result.output_tokens == 0
         assert result.text == ""
+
+
+# ---------------------------------------------------------------------------
+# OpenAI streaming tests
+# ---------------------------------------------------------------------------
+
+class TestCallOpenAI:
+    @patch("src.api_client.openai.OpenAI")
+    def test_streams_and_assembles_text(self, mock_cls):
+        """_call_openai streams chunks and assembles text correctly."""
+        chunks = _make_openai_stream_chunks(["hello ", "world"], 10, 5)
+        client = MagicMock()
+        client.chat.completions.create.return_value = iter(chunks)
+        mock_cls.return_value = client
+
+        result = _call_openai("gpt-4o-2024-11-20", None, "test", 100, 0.0)
+
+        assert result.text == "hello world"
+
+    @patch("src.api_client.openai.OpenAI")
+    def test_returns_token_counts_from_usage(self, mock_cls):
+        """_call_openai returns token counts from the usage chunk."""
+        chunks = _make_openai_stream_chunks(["hi"], 25, 10)
+        client = MagicMock()
+        client.chat.completions.create.return_value = iter(chunks)
+        mock_cls.return_value = client
+
+        result = _call_openai("gpt-4o-2024-11-20", None, "test", 100, 0.0)
+
+        assert result.input_tokens == 25
+        assert result.output_tokens == 10
+
+    @patch("src.api_client.openai.OpenAI")
+    def test_system_message_prepended(self, mock_cls):
+        """_call_openai prepends system message when provided."""
+        chunks = _make_openai_stream_chunks(["hi"], 10, 5)
+        client = MagicMock()
+        client.chat.completions.create.return_value = iter(chunks)
+        mock_cls.return_value = client
+
+        _call_openai("gpt-4o-2024-11-20", "Be helpful", "test", 100, 0.0)
+
+        call_kwargs = client.chat.completions.create.call_args[1]
+        messages = call_kwargs["messages"]
+        assert messages[0] == {"role": "system", "content": "Be helpful"}
+        assert messages[1] == {"role": "user", "content": "test"}
+
+    @patch("src.api_client.openai.OpenAI")
+    def test_no_system_message_when_none(self, mock_cls):
+        """_call_openai sends only user message when system is None."""
+        chunks = _make_openai_stream_chunks(["hi"], 10, 5)
+        client = MagicMock()
+        client.chat.completions.create.return_value = iter(chunks)
+        mock_cls.return_value = client
+
+        _call_openai("gpt-4o-2024-11-20", None, "test", 100, 0.0)
+
+        call_kwargs = client.chat.completions.create.call_args[1]
+        messages = call_kwargs["messages"]
+        assert len(messages) == 1
+        assert messages[0]["role"] == "user"
+
+    @patch("src.api_client.openai.OpenAI")
+    def test_handles_none_delta_content(self, mock_cls):
+        """_call_openai handles chunks where delta.content is None."""
+        # Create a chunk with None content (role-only delta)
+        role_chunk = MagicMock()
+        role_chunk.usage = None
+        delta = MagicMock()
+        delta.content = None
+        choice = MagicMock()
+        choice.delta = delta
+        role_chunk.choices = [choice]
+
+        text_chunks = _make_openai_stream_chunks(["hello"], 10, 5)
+        all_chunks = [role_chunk] + text_chunks
+        client = MagicMock()
+        client.chat.completions.create.return_value = iter(all_chunks)
+        mock_cls.return_value = client
+
+        result = _call_openai("gpt-4o-2024-11-20", None, "test", 100, 0.0)
+
+        assert result.text == "hello"
 
 
 # ---------------------------------------------------------------------------
@@ -329,6 +456,69 @@ class TestRetryAndRateLimiting:
 
         assert mock_call.call_count == 4
 
+    @patch.dict(os.environ, {"OPENAI_API_KEY": "test-key"})
+    @patch("src.api_client.time.sleep")
+    @patch("src.api_client._call_openai")
+    @patch("src.api_client._apply_rate_limit")
+    def test_retries_on_openai_rate_limit(self, mock_rate, mock_call, mock_sleep):
+        """Retry logic retries on openai.RateLimitError."""
+        import openai as oai
+
+        error_response = MagicMock()
+        error_response.status_code = 429
+        error_response.headers = {}
+        error_response.json.return_value = {"error": {"message": "rate limited"}}
+        rate_error = oai.RateLimitError(
+            message="rate limited",
+            response=error_response,
+            body={"error": {"message": "rate limited"}},
+        )
+
+        success = APIResponse(
+            text="ok", input_tokens=1, output_tokens=1,
+            ttft_ms=1.0, ttlt_ms=2.0, model="gpt-4o-2024-11-20",
+        )
+        mock_call.side_effect = [rate_error, rate_error, success]
+
+        _rate_delays.update({"gpt-4o-2024-11-20": 0.2})
+
+        result = call_model("gpt-4o-2024-11-20", None, "hello", 100)
+
+        assert result.text == "ok"
+        assert mock_call.call_count == 3
+        assert mock_sleep.call_count >= 2
+
+    @patch.dict(os.environ, {"OPENAI_API_KEY": "test-key"})
+    @patch("src.api_client.time.sleep")
+    @patch("src.api_client._call_openai")
+    @patch("src.api_client._apply_rate_limit")
+    def test_openai_429_doubles_rate_delay(self, mock_rate, mock_call, mock_sleep):
+        """On OpenAI 429, rate limit delay doubles."""
+        import openai as oai
+
+        error_response = MagicMock()
+        error_response.status_code = 429
+        error_response.headers = {}
+        error_response.json.return_value = {"error": {"message": "rate limited"}}
+        rate_error = oai.RateLimitError(
+            message="rate limited",
+            response=error_response,
+            body={"error": {"message": "rate limited"}},
+        )
+
+        success = APIResponse(
+            text="ok", input_tokens=1, output_tokens=1,
+            ttft_ms=1.0, ttlt_ms=2.0, model="gpt-4o-2024-11-20",
+        )
+        mock_call.side_effect = [rate_error, success]
+
+        original_delay = 0.2
+        _rate_delays.update({"gpt-4o-2024-11-20": original_delay})
+
+        call_model("gpt-4o-2024-11-20", None, "hello", 100)
+
+        assert _rate_delays["gpt-4o-2024-11-20"] == original_delay * 2
+
     @patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-key"})
     @patch("src.api_client.time.sleep")
     @patch("src.api_client._call_anthropic")
@@ -377,3 +567,9 @@ class TestAPIKeyValidation:
         """API keys validated via os.environ.get with EnvironmentError if missing."""
         with pytest.raises(EnvironmentError, match="GOOGLE_API_KEY"):
             call_model("gemini-1.5-pro", None, "test", 100)
+
+    @patch.dict(os.environ, {}, clear=True)
+    def test_missing_openai_key_raises(self):
+        """Missing OPENAI_API_KEY raises EnvironmentError."""
+        with pytest.raises(EnvironmentError, match="OPENAI_API_KEY"):
+            call_model("gpt-4o-2024-11-20", None, "test", 100)

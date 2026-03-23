@@ -129,13 +129,14 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 
 ### Phase 7: Add OpenAI to the supported model provider
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** GPT-4o is a fully integrated third target model in the experiment pipeline -- API client streams with TTFT/TTLT tracking, config has all pricing/routing entries, pilot and figures handle 3 models, and the full test suite passes
+**Requirements**: OAPI-01, OAPI-02, OAPI-03, OAPI-04, OAPI-05, OAPI-06
 **Depends on:** Phase 6
-**Plans:** 0 plans
+**Plans:** 2 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 7 to break down)
+- [ ] 07-01-PLAN.md -- Core OpenAI integration: config entries, _call_openai with streaming, call_model routing, retry/rate-limit, pyproject.toml, .env.example, comprehensive tests
+- [ ] 07-02-PLAN.md -- Downstream updates: pilot _VALID_MODELS from config, figure layout scaling for 3 models, full suite verification
 
 ### Phase 8: Write unit tests
 
@@ -186,3 +187,33 @@ Plans:
 
 Plans:
 - [ ] TBD (run /gsd:plan-phase 12 to break down)
+
+### Phase 13: Guided setup wizard for project configuration
+
+**Goal:** Brainstorm and potentially implement a guided setup wizard that helps new users get started quickly -- choose model provider, model(s), working directory, and other essential configuration through a simple Q&A flow instead of manually editing config files (manual config still supported)
+**Requirements**: TBD
+**Depends on:** Phase 12
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 13 to break down)
+
+### Phase 14: CLI config subcommands for viewing and modifying settings
+
+**Goal:** Add subcommands to display configuration as JSON, text, or terminal table, and allow users to set/modify any config property. The `list` (get) command shows all properties and highlights which have been changed from defaults, helping researchers understand which variables have been modified
+**Requirements**: TBD
+**Depends on:** Phase 13
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 14 to break down)
+
+### Phase 15: Pre-execution experiment summary and confirmation gate
+
+**Goal:** Before executing experiments, display a summary of what will run -- cost projection, number of experiments, estimated runtime, models, noise conditions, and interventions included. Researcher can accept/reject, make changes, and re-execute. Includes a --yes flag to skip confirmation for automated/scripted runs
+**Requirements**: TBD
+**Depends on:** Phase 14
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 15 to break down)

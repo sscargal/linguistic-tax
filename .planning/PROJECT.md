@@ -29,6 +29,7 @@ Produce rigorous, reproducible experimental data showing how prompt noise degrad
 None — all v1 requirements validated.
 
 ### Recently Validated
+- ✓ Integrate OpenAI GPT-4o as full third target model (API client, config, pilot, figures) — Phase 7
 - ✓ Generate publication-quality figures (accuracy curves, quadrant plots, cost heatmaps, Kendall's tau) — Phase 6
 - ✓ Perform GLMM, bootstrap CI, McNemar's, and Kendall's tau analysis — Phase 5
 - ✓ Compute derived metrics: Consistency Rate, quadrant classification, cost rollups — Phase 5
@@ -39,7 +40,6 @@ None — all v1 requirements validated.
 - Mobile or desktop app — command-line scripts only
 - Full 20,000-call matrix execution — handled outside GSD after tooling is complete
 - Real-time or streaming inference — batch execution only
-- Support for models beyond Claude and Gemini — two models sufficient for the paper
 - Deployment or packaging for distribution — single-researcher use
 
 ## Context
@@ -49,13 +49,13 @@ None — all v1 requirements validated.
 - Pre-processor calls use cheap models (Haiku or Flash) to sanitize/compress before sending to target model
 - Each condition requires 5 repetitions for stability measurement (Consistency Rate)
 - Existing code structure already established in `src/` and `tests/` directories
-- API keys via environment variables: ANTHROPIC_API_KEY, GOOGLE_API_KEY
+- API keys via environment variables: ANTHROPIC_API_KEY, GOOGLE_API_KEY, OPENAI_API_KEY
 - Budget constraint: ~$15 for pilot run (20 prompts)
 
 ## Constraints
 
 - **Language**: Python 3.11+ only — no other languages
-- **APIs**: Direct SDK calls via `anthropic` and `google-genai` — no CLI wrappers
+- **APIs**: Direct SDK calls via `anthropic`, `google-genai`, and `openai` — no CLI wrappers
 - **Storage**: SQLite only — no Postgres, no flat JSON files for results
 - **Reproducibility**: All randomness uses fixed seeds; all API calls use temperature=0.0
 - **Logging**: Python `logging` module only — no print statements
@@ -74,4 +74,4 @@ None — all v1 requirements validated.
 | 5 repetitions per condition | Balance statistical power with API cost | — Pending |
 
 ---
-*Last updated: 2026-03-23 after Phase 6 completion — all v1 phases complete*
+*Last updated: 2026-03-23 after Phase 7 completion — OpenAI GPT-4o integrated as third model provider*

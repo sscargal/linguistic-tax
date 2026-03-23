@@ -59,9 +59,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Derived Metrics
 
-- [ ] **DERV-01**: Compute Consistency Rate (CR) from pairwise agreement across 5 repetitions per condition
-- [ ] **DERV-02**: Classify each prompt-condition pair into stability-correctness quadrant (Robust/Confidently-Wrong/Lucky/Broken)
-- [ ] **DERV-03**: Compute cost rollups and net ROI for optimizer interventions (savings minus pre-processor overhead)
+- [x] **DERV-01**: Compute Consistency Rate (CR) from pairwise agreement across 5 repetitions per condition
+- [x] **DERV-02**: Classify each prompt-condition pair into stability-correctness quadrant (Robust/Confidently-Wrong/Lucky/Broken)
+- [x] **DERV-03**: Compute cost rollups and net ROI for optimizer interventions (savings minus pre-processor overhead)
 
 ### Figures
 
@@ -138,9 +138,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | STAT-03 | Phase 5: Statistical Analysis and Derived Metrics | Pending |
 | STAT-04 | Phase 5: Statistical Analysis and Derived Metrics | Pending |
 | STAT-05 | Phase 5: Statistical Analysis and Derived Metrics | Pending |
-| DERV-01 | Phase 5: Statistical Analysis and Derived Metrics | Pending |
-| DERV-02 | Phase 5: Statistical Analysis and Derived Metrics | Pending |
-| DERV-03 | Phase 5: Statistical Analysis and Derived Metrics | Pending |
+| DERV-01 | Phase 5: Statistical Analysis and Derived Metrics | Complete |
+| DERV-02 | Phase 5: Statistical Analysis and Derived Metrics | Complete |
+| DERV-03 | Phase 5: Statistical Analysis and Derived Metrics | Complete |
 | FIG-01 | Phase 6: Publication Figures | Pending |
 | FIG-02 | Phase 6: Publication Figures | Pending |
 | FIG-03 | Phase 6: Publication Figures | Pending |

@@ -26,9 +26,10 @@ Produce rigorous, reproducible experimental data showing how prompt noise degrad
 - ✓ Run pilot experiment tooling (20 prompts across all conditions) with spot-check, cost projection, and structured verdict — Phase 4
 
 ### Active
-- [ ] Generate publication-quality figures for the ArXiv paper
+None — all v1 requirements validated.
 
 ### Recently Validated
+- ✓ Generate publication-quality figures (accuracy curves, quadrant plots, cost heatmaps, Kendall's tau) — Phase 6
 - ✓ Perform GLMM, bootstrap CI, McNemar's, and Kendall's tau analysis — Phase 5
 - ✓ Compute derived metrics: Consistency Rate, quadrant classification, cost rollups — Phase 5
 
@@ -73,4 +74,4 @@ Produce rigorous, reproducible experimental data showing how prompt noise degrad
 | 5 repetitions per condition | Balance statistical power with API cost | — Pending |
 
 ---
-*Last updated: 2026-03-23 after Phase 5 completion*
+*Last updated: 2026-03-23 after Phase 6 completion — all v1 phases complete*

@@ -51,11 +51,11 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Statistical Analysis
 
-- [ ] **STAT-01**: Fit GLMM with prompt-level random effects on binary pass/fail outcomes
-- [ ] **STAT-02**: Compute bootstrap confidence intervals for all reported metrics
-- [ ] **STAT-03**: Run McNemar's test for prompt-level fragility/recoverability analysis
-- [ ] **STAT-04**: Compute Kendall's tau for rank-order stability (uniform vs. targeted tax)
-- [ ] **STAT-05**: Apply Benjamini-Hochberg correction across ALL reported p-values in a single family
+- [x] **STAT-01**: Fit GLMM with prompt-level random effects on binary pass/fail outcomes
+- [x] **STAT-02**: Compute bootstrap confidence intervals for all reported metrics
+- [x] **STAT-03**: Run McNemar's test for prompt-level fragility/recoverability analysis
+- [x] **STAT-04**: Compute Kendall's tau for rank-order stability (uniform vs. targeted tax)
+- [x] **STAT-05**: Apply Benjamini-Hochberg correction across ALL reported p-values in a single family
 
 ### Derived Metrics
 
@@ -133,11 +133,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PILOT-01 | Phase 4: Pilot Validation | Complete |
 | PILOT-02 | Phase 4: Pilot Validation | Complete |
 | PILOT-03 | Phase 4: Pilot Validation | Complete |
-| STAT-01 | Phase 5: Statistical Analysis and Derived Metrics | Pending |
-| STAT-02 | Phase 5: Statistical Analysis and Derived Metrics | Pending |
-| STAT-03 | Phase 5: Statistical Analysis and Derived Metrics | Pending |
-| STAT-04 | Phase 5: Statistical Analysis and Derived Metrics | Pending |
-| STAT-05 | Phase 5: Statistical Analysis and Derived Metrics | Pending |
+| STAT-01 | Phase 5: Statistical Analysis and Derived Metrics | Complete |
+| STAT-02 | Phase 5: Statistical Analysis and Derived Metrics | Complete |
+| STAT-03 | Phase 5: Statistical Analysis and Derived Metrics | Complete |
+| STAT-04 | Phase 5: Statistical Analysis and Derived Metrics | Complete |
+| STAT-05 | Phase 5: Statistical Analysis and Derived Metrics | Complete |
 | DERV-01 | Phase 5: Statistical Analysis and Derived Metrics | Complete |
 | DERV-02 | Phase 5: Statistical Analysis and Derived Metrics | Complete |
 | DERV-03 | Phase 5: Statistical Analysis and Derived Metrics | Complete |

@@ -83,7 +83,7 @@ class TestSelfCorrect:
 class TestPriceTable:
     """Tests for PRICE_TABLE config constant."""
 
-    def test_contains_all_four_models(self) -> None:
+    def test_contains_all_six_models(self) -> None:
         from src.config import PRICE_TABLE
 
         expected_models = {
@@ -91,6 +91,8 @@ class TestPriceTable:
             "claude-haiku-4-5-20250514",
             "gemini-1.5-pro",
             "gemini-2.0-flash",
+            "gpt-4o-2024-11-20",
+            "gpt-4o-mini-2024-07-18",
         }
         assert set(PRICE_TABLE.keys()) == expected_models
 

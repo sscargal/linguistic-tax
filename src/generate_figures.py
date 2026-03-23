@@ -164,7 +164,7 @@ def generate_accuracy_curves(
     models = sorted(acc["model"].unique())
     n_models = len(models)
 
-    fig, axes = plt.subplots(1, max(n_models, 2), figsize=(7, 3.5), sharey=True)
+    fig, axes = plt.subplots(1, max(n_models, 2), figsize=(3.5 * max(n_models, 2), 3.5), sharey=True)
     if n_models == 1:
         axes = [axes[0]]
     else:
@@ -262,7 +262,7 @@ def generate_quadrant_plot(
     models = sorted(df["model"].unique())
     n_models = len(models)
 
-    fig, axes = plt.subplots(1, max(n_models, 2), figsize=(7, 3.5))
+    fig, axes = plt.subplots(1, max(n_models, 2), figsize=(3.5 * max(n_models, 2), 3.5))
     if n_models == 1:
         axes = [axes[0]]
     else:

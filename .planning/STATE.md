@@ -101,6 +101,7 @@ None yet.
 - Phase 8 added: Write unit tests
 - Phase 9 added: Add OpenRouter support with free model defaults (Nemotron) — examine https://openrouter.ai/models?max_price=0 for free models, default to Nemotron models to avoid API costs
 - Phase 10 added: Research optimal prompt input formats — investigate whether compact/structured prompt formats (analogous to TOON vs JSON) yield superior LLM results; human-convention-friendly notation that reduces tokens while improving accuracy; innovate testable ideas for whitepaper inclusion
+- Phase 11 added: Brainstorm micro-formatting test questions — e.g. does a question mark at end of a question matter? Do newlines matter to LLMs or only for human readability? Explore and design testable hypotheses for the experiment suite
 
 ### Blockers/Concerns
 

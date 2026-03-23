@@ -108,11 +108,10 @@ Plans:
   2. Stability-correctness quadrant plots display each prompt-condition as a point in the 4-quadrant space (Robust/Confidently-Wrong/Lucky/Broken)
   3. Cost-benefit heatmaps show net token savings by condition with clear color scale
   4. All figures are saved as publication-quality vector graphics (PDF or SVG) in the figures/ directory
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 06-01: TBD
-- [ ] 06-02: TBD
+- [ ] 06-01-PLAN.md -- All 4 figure types (accuracy curves, quadrant plots, cost heatmaps, Kendall tau bars) with shared style config, save helper, and argparse CLI (TDD)
 
 ## Progress
 
@@ -126,4 +125,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 3. Interventions and Execution Engine | 0/3 | Planning complete | - |
 | 4. Pilot Validation | 0/2 | Planning complete | - |
 | 5. Statistical Analysis and Derived Metrics | 2/3 | Gap closure planned | - |
-| 6. Publication Figures | 0/2 | Not started | - |
+| 6. Publication Figures | 0/1 | Planning complete | - |

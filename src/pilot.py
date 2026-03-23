@@ -18,7 +18,7 @@ from typing import Any
 import numpy as np
 from scipy.stats import bootstrap as scipy_bootstrap
 
-from src.config import ExperimentConfig, derive_seed
+from src.config import ExperimentConfig, MODELS, derive_seed
 from src.db import query_runs
 from src.noise_generator import inject_type_a_noise
 
@@ -215,7 +215,7 @@ _REQUIRED_FIELDS = [
     "pass_fail", "ttft_ms", "ttlt_ms", "total_cost_usd", "model", "timestamp",
 ]
 
-_VALID_MODELS = {"claude-sonnet-4-20250514", "gemini-1.5-pro"}
+_VALID_MODELS = set(MODELS)
 
 
 def audit_data_completeness(

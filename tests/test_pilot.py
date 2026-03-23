@@ -708,3 +708,24 @@ class TestCLI:
         assert args.db is None
         assert args.select_only is False
         assert args.analyze_only is False
+
+
+class TestValidModels:
+    """Tests for _VALID_MODELS derivation from config."""
+
+    def test_valid_models_includes_openai(self) -> None:
+        from src.pilot import _VALID_MODELS
+        assert "gpt-4o-2024-11-20" in _VALID_MODELS
+
+    def test_valid_models_includes_claude(self) -> None:
+        from src.pilot import _VALID_MODELS
+        assert "claude-sonnet-4-20250514" in _VALID_MODELS
+
+    def test_valid_models_includes_gemini(self) -> None:
+        from src.pilot import _VALID_MODELS
+        assert "gemini-1.5-pro" in _VALID_MODELS
+
+    def test_valid_models_matches_config(self) -> None:
+        from src.config import MODELS
+        from src.pilot import _VALID_MODELS
+        assert _VALID_MODELS == set(MODELS)

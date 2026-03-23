@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Phase 7 context gathered
-last_updated: "2026-03-23T22:27:13.623Z"
+stopped_at: Completed 07-01-PLAN.md
+last_updated: "2026-03-23T22:56:04.927Z"
 progress:
-  total_phases: 12
+  total_phases: 15
   completed_phases: 6
-  total_plans: 13
-  completed_plans: 13
+  total_plans: 15
+  completed_plans: 14
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-23)
 
 **Core value:** Produce rigorous, reproducible experimental data showing how prompt noise degrades LLM accuracy and whether automated prompt optimization recovers it
-**Current focus:** Phase 06 — publication-figures
+**Current focus:** Phase 07 — add-openai-to-the-supported-model-provider
 
 ## Current Position
 
-Phase: 06 (publication-figures) — EXECUTING
-Plan: 1 of 1
+Phase: 07 (add-openai-to-the-supported-model-provider) — EXECUTING
+Plan: 2 of 2
 
 ## Performance Metrics
 
@@ -59,6 +59,7 @@ Plan: 1 of 1
 | Phase 05 P02 | 6min | 2 tasks | 3 files |
 | Phase 05 P03 | 4min | 2 tasks | 4 files |
 | Phase 06 P01 | 5min | 2 tasks | 2 files |
+| Phase 07 P01 | 5min | 1 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -90,6 +91,7 @@ Recent decisions affecting current work:
 - [Phase 05]: CR bootstrap CIs use optional db_path parameter for backward compatibility
 - [Phase 05]: Sensitivity analysis excluded from CR bootstrap to avoid misleading filtered results
 - [Phase 06]: Module-level _configure_style() call for consistent defaults across all entry points
+- [Phase 07]: OpenAI streaming with stream_options include_usage for token extraction; gpt prefix routing matching existing provider patterns
 
 ### Pending Todos
 
@@ -103,6 +105,9 @@ None yet.
 - Phase 10 added: Research optimal prompt input formats — investigate whether compact/structured prompt formats (analogous to TOON vs JSON) yield superior LLM results; human-convention-friendly notation that reduces tokens while improving accuracy; innovate testable ideas for whitepaper inclusion
 - Phase 11 added: Brainstorm micro-formatting test questions — e.g. does a question mark at end of a question matter? Do newlines matter to LLMs or only for human readability? Explore and design testable hypotheses for the experiment suite
 - Phase 12 added: Comprehensive docs for new users — README.md with quick start, docs/ with: install/setup/config guide, user guide with examples, analysis interpretation guide, and any other docs needed. Assume reader has zero context about the repo, its goals, or why it matters.
+- Phase 13 added: Guided setup wizard for project configuration — brainstorm and potentially implement a Q&A wizard to help users choose model provider, models, working directory, etc. without manual config file editing
+- Phase 14 added: CLI config subcommands — display config as JSON/text/table, set/modify any property, list command highlights changes from defaults
+- Phase 15 added: Pre-execution experiment summary and confirmation gate — show cost/runtime/experiment count before running, accept/reject/modify flow, --yes flag for automation
 
 ### Blockers/Concerns
 
@@ -112,6 +117,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-23T22:27:13.620Z
+Last session: 2026-03-23T23:01:13Z
 Stopped at: Phase 7 context gathered
 Resume file: .planning/phases/07-add-openai-to-the-supported-model-provider/07-CONTEXT.md

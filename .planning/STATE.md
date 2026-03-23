@@ -16,10 +16,10 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-19)
+See: .planning/PROJECT.md (updated 2026-03-23)
 
 **Core value:** Produce rigorous, reproducible experimental data showing how prompt noise degrades LLM accuracy and whether automated prompt optimization recovers it
-**Current focus:** Phase 05 — statistical-analysis-and-derived-metrics
+**Current focus:** Phase 06 — publication-figures
 
 ## Current Position
 
@@ -96,11 +96,11 @@ None yet.
 ### Blockers/Concerns
 
 - Research flag: google-generativeai package in pyproject.toml is deprecated, must be replaced with google-genai before writing API code (Phase 3)
-- Research flag: GLMM convergence risk with statsmodels BinomialBayesMixedGLM -- may need fallback (Phase 5)
+- ✓ RESOLVED: GLMM convergence handled with 3-level fallback chain (BayesMixedGLM → reduced → GEE) — Phase 5
 - Research flag: Pre-processor prompt engineering for sanitizer/compressor not specified in RDD -- needs iteration (Phase 3)
 
 ## Session Continuity
 
-Last session: 2026-03-23T18:03:40.187Z
-Stopped at: Completed 05-03-PLAN.md
+Last session: 2026-03-23
+Stopped at: Phase 05 complete, ready to plan Phase 06
 Resume file: None

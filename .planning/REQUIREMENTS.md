@@ -65,10 +65,10 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Figures
 
-- [ ] **FIG-01**: Generate accuracy degradation curves (noise level x accuracy, by model and intervention)
-- [ ] **FIG-02**: Generate stability-correctness quadrant plots
-- [ ] **FIG-03**: Generate cost-benefit heatmaps showing net token savings by condition
-- [ ] **FIG-04**: Generate Kendall's tau rank-order stability visualization
+- [x] **FIG-01**: Generate accuracy degradation curves (noise level x accuracy, by model and intervention)
+- [x] **FIG-02**: Generate stability-correctness quadrant plots
+- [x] **FIG-03**: Generate cost-benefit heatmaps showing net token savings by condition
+- [x] **FIG-04**: Generate Kendall's tau rank-order stability visualization
 
 ## v2 Requirements
 
@@ -141,10 +141,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | DERV-01 | Phase 5: Statistical Analysis and Derived Metrics | Complete |
 | DERV-02 | Phase 5: Statistical Analysis and Derived Metrics | Complete |
 | DERV-03 | Phase 5: Statistical Analysis and Derived Metrics | Complete |
-| FIG-01 | Phase 6: Publication Figures | Pending |
-| FIG-02 | Phase 6: Publication Figures | Pending |
-| FIG-03 | Phase 6: Publication Figures | Pending |
-| FIG-04 | Phase 6: Publication Figures | Pending |
+| FIG-01 | Phase 6: Publication Figures | Complete |
+| FIG-02 | Phase 6: Publication Figures | Complete |
+| FIG-03 | Phase 6: Publication Figures | Complete |
+| FIG-04 | Phase 6: Publication Figures | Complete |
 
 **Coverage:**
 - v1 requirements: 36 total

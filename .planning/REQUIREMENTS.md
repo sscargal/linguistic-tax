@@ -55,7 +55,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **STAT-02**: Compute bootstrap confidence intervals for all reported metrics
 - [x] **STAT-03**: Run McNemar's test for prompt-level fragility/recoverability analysis
 - [x] **STAT-04**: Compute Kendall's tau for rank-order stability (uniform vs. targeted tax)
-- [x] **STAT-05**: Apply Benjamini-Hochberg correction across ALL reported p-values in a single family
+- [x] **STAT-05**: Apply Benjamini-Hochberg correction per test-type family (McNemar's, GLMM, Kendall's) across reported p-values
 
 ### Derived Metrics
 

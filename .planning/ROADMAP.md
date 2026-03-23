@@ -146,3 +146,13 @@ Plans:
 
 Plans:
 - [ ] TBD (run /gsd:plan-phase 8 to break down)
+
+### Phase 9: Add OpenRouter support with free model defaults (Nemotron)
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 8
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 9 to break down)

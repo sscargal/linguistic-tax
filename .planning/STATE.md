@@ -99,6 +99,7 @@ None yet.
 
 - Phase 7 added: Add OpenAI to the supported model provider
 - Phase 8 added: Write unit tests
+- Phase 9 added: Add OpenRouter support with free model defaults (Nemotron) — examine https://openrouter.ai/models?max_price=0 for free models, default to Nemotron models to avoid API costs
 
 ### Blockers/Concerns
 

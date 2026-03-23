@@ -75,6 +75,29 @@ def load_experiment_data(db_path: str) -> pd.DataFrame:
     return df
 
 
+def load_derived_metrics(db_path: str) -> pd.DataFrame:
+    """Load derived metrics from the SQLite database.
+
+    Returns DataFrame with consistency_rate, quadrant, cost fields
+    per (prompt_id, condition, model).
+
+    Args:
+        db_path: Path to the SQLite results database.
+
+    Returns:
+        DataFrame containing all derived metrics rows.
+    """
+    conn = sqlite3.connect(db_path)
+    df = pd.read_sql_query(
+        "SELECT prompt_id, condition, model, consistency_rate, "
+        "majority_pass, pass_count, quadrant, mean_total_cost_usd, "
+        "token_savings, net_token_cost FROM derived_metrics",
+        conn,
+    )
+    conn.close()
+    return df
+
+
 # ---------------------------------------------------------------------------
 # GLMM with fallback chain
 # ---------------------------------------------------------------------------
@@ -319,16 +342,22 @@ def compute_bootstrap_cis(
     df: pd.DataFrame,
     n_iterations: int = 10000,
     seed: int = 42,
+    db_path: str | None = None,
 ) -> dict[str, dict[str, Any]]:
     """Compute bootstrap confidence intervals for accuracy per condition.
 
     Groups by (noise_type, intervention, model) and computes bootstrap
     CIs for mean pass_fail (accuracy). Uses BCa with percentile fallback.
 
+    When db_path is provided, also computes bootstrap CIs for Consistency
+    Rate (CR) values from the derived_metrics table. CR entries are keyed
+    with a "cr_" prefix and tagged with metric="consistency_rate".
+
     Args:
         df: DataFrame with experiment_runs data.
         n_iterations: Number of bootstrap resamples.
         seed: Random seed for reproducibility.
+        db_path: Optional path to SQLite DB for CR bootstrap CIs.
 
     Returns:
         Dict keyed by condition string, each with mean, ci_lower,
@@ -365,6 +394,44 @@ def compute_bootstrap_cis(
             "method_used": method_used,
             "n": len(values),
         }
+
+    # Bootstrap CIs for Consistency Rate from derived_metrics
+    if db_path is not None:
+        derived_df = load_derived_metrics(db_path)
+        if not derived_df.empty:
+            for (condition, model_name), group in derived_df.groupby(
+                ["condition", "model"]
+            ):
+                cr_values = (
+                    group["consistency_rate"].dropna().astype(float).values
+                )
+                if len(cr_values) < 2:
+                    cr_mean = (
+                        float(np.mean(cr_values)) if len(cr_values) > 0
+                        else 0.0
+                    )
+                    results[f"cr_{condition}_{model_name}"] = {
+                        "mean": cr_mean,
+                        "ci_lower": cr_mean,
+                        "ci_upper": cr_mean,
+                        "method_used": "point_estimate",
+                        "n": len(cr_values),
+                        "metric": "consistency_rate",
+                    }
+                    continue
+
+                cr_mean = float(np.mean(cr_values))
+                ci_lower, ci_upper, method_used = _bootstrap_ci(
+                    cr_values, np.mean, n_iterations, seed
+                )
+                results[f"cr_{condition}_{model_name}"] = {
+                    "mean": cr_mean,
+                    "ci_lower": ci_lower,
+                    "ci_upper": ci_upper,
+                    "method_used": method_used,
+                    "n": len(cr_values),
+                    "metric": "consistency_rate",
+                }
 
     return results
 
@@ -943,7 +1010,8 @@ def main() -> None:
         glmm_results = fit_glmm(df)
         kendall_results = compute_kendall_tau(df)
         bootstrap_results = compute_bootstrap_cis(
-            df, n_iterations=args.bootstrap_iterations, seed=args.seed
+            df, n_iterations=args.bootstrap_iterations, seed=args.seed,
+            db_path=args.db,
         )
         summary_df = generate_effect_size_summary(
             glmm_results, kendall_results, bootstrap_results
@@ -1057,7 +1125,8 @@ def _run_bootstrap_analysis(
     """Run bootstrap CI analysis and write outputs."""
     logger.info("Running bootstrap CI analysis")
     result = compute_bootstrap_cis(
-        df, n_iterations=args.bootstrap_iterations, seed=args.seed
+        df, n_iterations=args.bootstrap_iterations, seed=args.seed,
+        db_path=args.db,
     )
 
     # Write JSON

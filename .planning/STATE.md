@@ -95,6 +95,10 @@ Recent decisions affecting current work:
 
 None yet.
 
+### Roadmap Evolution
+
+- Phase 7 added: Add OpenAI to the supported model provider
+
 ### Blockers/Concerns
 
 - Research flag: google-generativeai package in pyproject.toml is deprecated, must be replaced with google-genai before writing API code (Phase 3)

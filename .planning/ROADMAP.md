@@ -126,3 +126,13 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 4. Pilot Validation | 0/2 | Planning complete | - |
 | 5. Statistical Analysis and Derived Metrics | 2/3 | Gap closure planned | - |
 | 6. Publication Figures | 0/1 | Planning complete | - |
+
+### Phase 7: Add OpenAI to the supported model provider
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 6
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 7 to break down)

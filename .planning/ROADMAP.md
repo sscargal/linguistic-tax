@@ -92,11 +92,11 @@ Plans:
   3. McNemar's test identifies prompt-level fragility and recoverability with BH-corrected p-values across all comparisons
   4. Consistency Rate (CR) is computed from pairwise agreement across 5 repetitions, and each prompt-condition is classified into a stability-correctness quadrant
   5. Cost rollups show net ROI for each intervention (token savings minus pre-processor overhead)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 05-01: TBD
-- [ ] 05-02: TBD
+- [ ] 05-01-PLAN.md -- Derived metrics: CR computation, quadrant classification, cost rollups, quadrant migration matrices, CLI
+- [ ] 05-02-PLAN.md -- Statistical analysis: GLMM with fallback, bootstrap CIs, McNemar's fragility, Kendall's tau, BH correction, sensitivity analysis, effect size summary, CLI with subcommands
 
 ### Phase 6: Publication Figures
 **Goal**: Researcher has publication-quality figures for all key results, ready for the ArXiv paper
@@ -124,5 +124,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 2. Grading Pipeline | 0/1 | Planning complete | - |
 | 3. Interventions and Execution Engine | 0/3 | Planning complete | - |
 | 4. Pilot Validation | 0/2 | Planning complete | - |
-| 5. Statistical Analysis and Derived Metrics | 0/2 | Not started | - |
+| 5. Statistical Analysis and Derived Metrics | 0/2 | Planning complete | - |
 | 6. Publication Figures | 0/2 | Not started | - |

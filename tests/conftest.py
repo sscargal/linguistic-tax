@@ -204,6 +204,11 @@ def analysis_test_db(tmp_path):
             })
 
     conn.close()
+
+    # Populate derived_metrics table so CR values are available for bootstrap
+    from src.compute_derived import compute_derived_metrics
+    compute_derived_metrics(db_path, cr_threshold=0.8)
+
     return db_path
 
 

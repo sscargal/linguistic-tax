@@ -14,6 +14,7 @@ from src.analyze_results import (
     compute_kendall_tau,
     fit_glmm,
     generate_effect_size_summary,
+    load_derived_metrics,
     load_experiment_data,
     run_mcnemar_analysis,
     run_sensitivity_analysis,
@@ -101,6 +102,52 @@ class TestBootstrapCIs:
         result = compute_bootstrap_cis(df, n_iterations=500, seed=42)
         # Should complete without raising
         assert isinstance(result, dict)
+
+
+# ---------------------------------------------------------------------------
+# Bootstrap CI for Consistency Rate Tests
+# ---------------------------------------------------------------------------
+
+
+class TestBootstrapCR:
+    """Tests for bootstrap CIs on Consistency Rate from derived_metrics."""
+
+    def test_bootstrap_ci_cr(self, analysis_test_db: str) -> None:
+        """compute_bootstrap_cis with db_path returns CR CIs."""
+        df = load_experiment_data(analysis_test_db)
+        result = compute_bootstrap_cis(
+            df, n_iterations=500, seed=42, db_path=analysis_test_db
+        )
+        # Should have CR entries (keyed with "cr_" prefix)
+        cr_keys = [k for k in result if k.startswith("cr_")]
+        assert len(cr_keys) > 0, "Should have CR bootstrap CIs"
+        for k in cr_keys:
+            entry = result[k]
+            assert "mean" in entry
+            assert "ci_lower" in entry
+            assert "ci_upper" in entry
+            assert "metric" in entry
+            assert entry["metric"] == "consistency_rate"
+
+    def test_bootstrap_ci_cr_values_valid(self, analysis_test_db: str) -> None:
+        """CR CI values are between 0.0 and 1.0."""
+        df = load_experiment_data(analysis_test_db)
+        result = compute_bootstrap_cis(
+            df, n_iterations=500, seed=42, db_path=analysis_test_db
+        )
+        cr_keys = [k for k in result if k.startswith("cr_")]
+        for k in cr_keys:
+            entry = result[k]
+            assert 0.0 <= entry["ci_lower"] <= 1.0
+            assert 0.0 <= entry["ci_upper"] <= 1.0
+            assert entry["ci_lower"] <= entry["ci_upper"]
+
+    def test_bootstrap_ci_without_db_path(self, analysis_test_db: str) -> None:
+        """compute_bootstrap_cis without db_path still works (no CR CIs)."""
+        df = load_experiment_data(analysis_test_db)
+        result = compute_bootstrap_cis(df, n_iterations=500, seed=42)
+        cr_keys = [k for k in result if k.startswith("cr_")]
+        assert len(cr_keys) == 0, "Without db_path, no CR CIs should be present"
 
 
 # ---------------------------------------------------------------------------

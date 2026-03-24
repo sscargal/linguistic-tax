@@ -104,6 +104,52 @@ def populated_test_db(tmp_path):
 
 
 @pytest.fixture
+def mock_anthropic_response():
+    """Factory for mock Anthropic API responses with streaming support."""
+    def _make(content="test response", input_tokens=100, output_tokens=50,
+              model="claude-sonnet-4-20250514", ttft=0.05):
+        from unittest.mock import MagicMock
+        # Non-streaming response
+        response = MagicMock()
+        response.content = [MagicMock(text=content)]
+        response.model = model
+        response.usage.input_tokens = input_tokens
+        response.usage.output_tokens = output_tokens
+        return response
+    return _make
+
+
+@pytest.fixture
+def mock_google_response():
+    """Factory for mock Google Gemini API responses."""
+    def _make(text="test response", input_tokens=100, output_tokens=50):
+        from unittest.mock import MagicMock
+        response = MagicMock()
+        response.text = text
+        response.usage_metadata.prompt_token_count = input_tokens
+        response.usage_metadata.candidates_token_count = output_tokens
+        return response
+    return _make
+
+
+@pytest.fixture
+def mock_openai_response():
+    """Factory for mock OpenAI API responses with streaming chunks."""
+    def _make(content="test response", input_tokens=100, output_tokens=50,
+              model="gpt-4o-2024-11-20"):
+        from unittest.mock import MagicMock
+        chunk = MagicMock()
+        chunk.choices = [MagicMock()]
+        chunk.choices[0].delta.content = content
+        chunk.model = model
+        chunk.usage = MagicMock()
+        chunk.usage.prompt_tokens = input_tokens
+        chunk.usage.completion_tokens = output_tokens
+        return chunk
+    return _make
+
+
+@pytest.fixture
 def analysis_test_db(tmp_path):
     """Create a richer synthetic dataset for statistical analysis tests.
 

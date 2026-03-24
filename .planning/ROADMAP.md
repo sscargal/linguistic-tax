@@ -152,13 +152,14 @@ Plans:
 
 ### Phase 9: Add OpenRouter support with free model defaults (Nemotron)
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** OpenRouter is a fully integrated 4th provider gateway with free Nemotron models -- _call_openrouter streams via OpenAI SDK reuse with TTFT/TTLT, config has all pricing/routing entries at $0, call_model routes openrouter/ prefix, comprehensive unit and integration tests pass, and QA script validates all entries
+**Requirements**: OR-01, OR-02, OR-03, OR-04, OR-05, OR-06, OR-07, OR-08, OR-09
 **Depends on:** Phase 8
-**Plans:** 0 plans
+**Plans:** 2 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 9 to break down)
+- [ ] 09-01-PLAN.md -- Core OpenRouter integration: config entries (MODELS, PRICE_TABLE, PREPROC_MODEL_MAP, RATE_LIMIT_DELAYS, ExperimentConfig), _call_openrouter with OpenAI SDK reuse, call_model routing, .env.example
+- [ ] 09-02-PLAN.md -- Unit tests (TestCallOpenRouter, TestOpenRouterConfig, routing, key validation), integration lifecycle test, QA script OpenRouter checks
 
 ### Phase 10: Research optimal prompt input formats for whitepaper
 

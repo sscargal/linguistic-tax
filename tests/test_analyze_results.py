@@ -5,10 +5,14 @@ recoverability test, Kendall's tau rank-order stability, BH correction,
 sensitivity analysis, and effect size summary table generation.
 """
 
+from unittest.mock import patch
+
+import numpy as np
 import pandas as pd
 import pytest
 
 from src.analyze_results import (
+    _bootstrap_ci,
     apply_bh_correction,
     compute_bootstrap_cis,
     compute_kendall_tau,
@@ -16,6 +20,7 @@ from src.analyze_results import (
     generate_effect_size_summary,
     load_derived_metrics,
     load_experiment_data,
+    main,
     run_mcnemar_analysis,
     run_sensitivity_analysis,
 )
@@ -335,3 +340,110 @@ class TestEffectSizeSummary:
             f"Missing columns: {required_cols - set(summary_df.columns)}"
         )
         assert len(summary_df) > 0
+
+
+# ---------------------------------------------------------------------------
+# CLI Tests
+# ---------------------------------------------------------------------------
+
+
+class TestCLI:
+    """Tests for the CLI main() function and subcommands."""
+
+    def test_main_glmm_subcommand(
+        self, analysis_test_db: str, tmp_path
+    ) -> None:
+        """main() with 'glmm' subcommand completes without error."""
+        with patch(
+            "sys.argv",
+            ["analyze_results", "--db", analysis_test_db,
+             "--output-dir", str(tmp_path), "glmm"],
+        ):
+            main()
+
+    def test_main_mcnemar_subcommand(
+        self, analysis_test_db: str, tmp_path
+    ) -> None:
+        """main() with 'mcnemar' subcommand completes without error."""
+        with patch(
+            "sys.argv",
+            ["analyze_results", "--db", analysis_test_db,
+             "--output-dir", str(tmp_path), "mcnemar"],
+        ):
+            main()
+
+    def test_main_bootstrap_subcommand(
+        self, analysis_test_db: str, tmp_path
+    ) -> None:
+        """main() with 'bootstrap' subcommand completes without error."""
+        with patch(
+            "sys.argv",
+            ["analyze_results", "--db", analysis_test_db,
+             "--output-dir", str(tmp_path),
+             "--bootstrap-iterations", "100", "bootstrap"],
+        ):
+            main()
+
+    def test_main_kendall_subcommand(
+        self, analysis_test_db: str, tmp_path
+    ) -> None:
+        """main() with 'kendall' subcommand completes without error."""
+        with patch(
+            "sys.argv",
+            ["analyze_results", "--db", analysis_test_db,
+             "--output-dir", str(tmp_path), "kendall"],
+        ):
+            main()
+
+    def test_main_sensitivity_subcommand(
+        self, analysis_test_db: str, tmp_path
+    ) -> None:
+        """main() with 'sensitivity' subcommand completes without error."""
+        with patch(
+            "sys.argv",
+            ["analyze_results", "--db", analysis_test_db,
+             "--output-dir", str(tmp_path), "sensitivity"],
+        ):
+            main()
+
+    def test_main_all_subcommand(
+        self, analysis_test_db: str, tmp_path
+    ) -> None:
+        """main() with 'all' subcommand runs every analysis."""
+        with patch(
+            "sys.argv",
+            ["analyze_results", "--db", analysis_test_db,
+             "--output-dir", str(tmp_path),
+             "--bootstrap-iterations", "100", "all"],
+        ):
+            main()
+        # Verify output files created
+        import os
+        assert os.path.exists(tmp_path / "glmm_results.json")
+        assert os.path.exists(tmp_path / "analysis_summary.json")
+
+
+# ---------------------------------------------------------------------------
+# Edge Case Tests
+# ---------------------------------------------------------------------------
+
+
+class TestEdgeCases:
+    """Tests for edge cases and boundary conditions."""
+
+    def test_bootstrap_ci_constant_series(self) -> None:
+        """_bootstrap_ci with constant data returns finite CI."""
+        data = np.array([1.0, 1.0, 1.0, 1.0, 1.0])
+        ci_low, ci_high, method = _bootstrap_ci(
+            data, np.mean, n_resamples=100, seed=42
+        )
+        assert np.isfinite(ci_low)
+        assert np.isfinite(ci_high)
+
+    def test_compute_bootstrap_cis_empty_df(self) -> None:
+        """compute_bootstrap_cis with empty DataFrame returns empty dict."""
+        empty_df = pd.DataFrame(
+            columns=["noise_type", "intervention", "model", "pass_fail"]
+        )
+        result = compute_bootstrap_cis(empty_df, n_iterations=100, seed=42)
+        assert result == {}

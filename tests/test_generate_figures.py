@@ -463,3 +463,48 @@ class TestCLI:
         assert not os.path.exists(os.path.join(output_dir, "quadrant_migration.pdf"))
         assert not os.path.exists(os.path.join(output_dir, "cost_model.pdf"))
         assert not os.path.exists(os.path.join(output_dir, "rank_stability.pdf"))
+
+
+# ---------------------------------------------------------------------------
+# Empty data edge case tests
+# ---------------------------------------------------------------------------
+
+
+class TestEmptyDataHandling:
+    """Tests for graceful handling of empty/missing data."""
+
+    def test_accuracy_curves_empty_db(self, tmp_path):
+        """generate_accuracy_curves with empty DB returns empty list."""
+        from src.db import init_database
+        db_path = str(tmp_path / "empty.db")
+        conn = init_database(db_path)
+        conn.close()
+        result = generate_accuracy_curves(db_path, str(tmp_path / "figs"))
+        assert result == []
+
+    def test_quadrant_plot_empty_db(self, tmp_path):
+        """generate_quadrant_plot with no derived_metrics returns empty list."""
+        from src.db import init_database
+        db_path = str(tmp_path / "empty.db")
+        conn = init_database(db_path)
+        conn.close()
+        result = generate_quadrant_plot(db_path, str(tmp_path / "figs"))
+        assert result == []
+
+    def test_cost_heatmap_missing_file(self, tmp_path):
+        """generate_cost_heatmap with missing cost_rollups.json returns empty list."""
+        result = generate_cost_heatmap(
+            "dummy.db",
+            str(tmp_path / "figs"),
+            analysis_dir=str(tmp_path / "nonexistent"),
+        )
+        assert result == []
+
+    def test_kendall_plot_missing_file(self, tmp_path):
+        """generate_kendall_plot with missing kendall_results.json returns empty list."""
+        result = generate_kendall_plot(
+            "dummy.db",
+            str(tmp_path / "figs"),
+            analysis_dir=str(tmp_path / "nonexistent"),
+        )
+        assert result == []

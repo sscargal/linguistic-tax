@@ -1,6 +1,7 @@
 """Tests for compute_derived module -- CR, quadrant classification, cost rollups, migration."""
 
 import sqlite3
+from unittest.mock import patch
 
 import pytest
 
@@ -11,6 +12,7 @@ from src.compute_derived import (
     compute_cr,
     compute_derived_metrics,
     compute_quadrant_migration,
+    main,
 )
 
 
@@ -195,3 +197,103 @@ class TestDerivedMetricsDB:
 
         # GSM8K/1: broken -> broken
         assert tm["broken"]["broken"] == 1
+
+
+# ---------------------------------------------------------------------------
+# CLI Tests
+# ---------------------------------------------------------------------------
+
+
+class TestComputeDerivedCLI:
+    """Tests for the CLI main() function."""
+
+    def test_main_default_args(self, populated_test_db: str) -> None:
+        """main() with default args populates derived_metrics table."""
+        with patch(
+            "sys.argv",
+            ["compute_derived", "--db", populated_test_db],
+        ):
+            main()
+        # Verify derived_metrics table populated
+        conn = sqlite3.connect(populated_test_db)
+        rows = conn.execute("SELECT COUNT(*) FROM derived_metrics").fetchone()[0]
+        conn.close()
+        assert rows > 0
+
+    def test_main_with_cr_threshold(self, populated_test_db: str) -> None:
+        """main() with custom CR threshold completes without error."""
+        with patch(
+            "sys.argv",
+            ["compute_derived", "--db", populated_test_db,
+             "--cr-threshold", "0.9"],
+        ):
+            main()
+
+    def test_main_with_output_dir(
+        self, populated_test_db: str, tmp_path
+    ) -> None:
+        """main() writes cost rollups and migration JSON to output dir."""
+        import os
+        output_dir = str(tmp_path / "output")
+        with patch(
+            "sys.argv",
+            ["compute_derived", "--db", populated_test_db,
+             "--output-dir", output_dir],
+        ):
+            main()
+        assert os.path.exists(os.path.join(output_dir, "cost_rollups.json"))
+        assert os.path.exists(os.path.join(output_dir, "quadrant_migration.json"))
+
+
+# ---------------------------------------------------------------------------
+# Edge Case Tests
+# ---------------------------------------------------------------------------
+
+
+class TestComputeDerivedEdgeCases:
+    """Tests for edge cases in derived metric computation."""
+
+    def test_cost_rollups_empty_db(self, tmp_db_path: str) -> None:
+        """compute_cost_rollups on DB with no runs returns empty list."""
+        from src.db import init_database
+        conn = init_database(tmp_db_path)
+        conn.close()
+        result = compute_cost_rollups(tmp_db_path)
+        assert result == []
+
+    def test_compute_derived_metrics_single_rep(self, tmp_path) -> None:
+        """Derived metrics with 1 repetition per condition yields CR=1.0."""
+        from src.db import init_database, insert_run
+        db_path = str(tmp_path / "single_rep.db")
+        conn = init_database(db_path)
+        insert_run(conn, {
+            "run_id": "single_rep_1",
+            "prompt_id": "HumanEval/1",
+            "benchmark": "humaneval",
+            "noise_type": "clean",
+            "noise_level": "",
+            "intervention": "raw",
+            "model": "claude-sonnet-4-20250514",
+            "repetition": 1,
+            "pass_fail": 1,
+            "prompt_tokens": 100,
+            "optimized_tokens": 85,
+            "completion_tokens": 50,
+            "total_cost_usd": 0.001,
+            "preproc_cost_usd": 0.0,
+            "main_model_input_cost_usd": 0.0005,
+            "main_model_output_cost_usd": 0.0005,
+            "status": "completed",
+            "ttft_ms": 50.0,
+            "ttlt_ms": 200.0,
+        })
+        conn.close()
+
+        summary = compute_derived_metrics(db_path)
+        # Single rep means CR=1.0 (trivially consistent)
+        conn = sqlite3.connect(db_path)
+        cr = conn.execute(
+            "SELECT consistency_rate FROM derived_metrics"
+        ).fetchone()[0]
+        conn.close()
+        assert cr == 1.0

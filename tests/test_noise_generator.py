@@ -307,6 +307,62 @@ class TestCLI:
         assert len(output_data) == 1
         assert "noisy_text" in output_data[0]
 
+    def test_main_type_char(self, tmp_path: Path) -> None:
+        """In-process main() with --type char for coverage."""
+        from unittest.mock import patch as mock_patch
+        from src.noise_generator import main
+
+        input_file = tmp_path / "input.json"
+        output_file = tmp_path / "output_main.json"
+        input_data = [
+            {
+                "prompt_id": "test_main",
+                "prompt_text": "Hello world test sentence here",
+                "answer_type": "code",
+            }
+        ]
+        input_file.write_text(json.dumps(input_data))
+
+        with mock_patch(
+            "sys.argv",
+            ["noise_generator", "--input", str(input_file),
+             "--type", "char", "--rate", "0.1", "--seed", "42",
+             "--output", str(output_file)],
+        ):
+            main()
+
+        output_data = json.loads(output_file.read_text())
+        assert len(output_data) == 1
+        assert "noisy_text" in output_data[0]
+
+    def test_main_type_esl(self, tmp_path: Path) -> None:
+        """In-process main() with --type esl for coverage."""
+        from unittest.mock import patch as mock_patch
+        from src.noise_generator import main
+
+        input_file = tmp_path / "input.json"
+        output_file = tmp_path / "output_esl.json"
+        input_data = [
+            {
+                "prompt_id": "test_esl",
+                "prompt_text": "This is a test sentence for ESL noise",
+                "answer_type": "code",
+            }
+        ]
+        input_file.write_text(json.dumps(input_data))
+
+        with mock_patch(
+            "sys.argv",
+            ["noise_generator", "--input", str(input_file),
+             "--type", "esl", "--l1", "mandarin", "--seed", "42",
+             "--output", str(output_file)],
+        ):
+            main()
+
+        output_data = json.loads(output_file.read_text())
+        assert len(output_data) == 1
+        assert "noisy_text" in output_data[0]
+
     def test_cli_esl_mode(self, tmp_path: Path) -> None:
         """CLI --type esl --l1 mandarin processes input."""
         input_file = tmp_path / "input.json"

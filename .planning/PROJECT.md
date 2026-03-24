@@ -77,4 +77,4 @@ None — all v1 requirements validated.
 | 5 repetitions per condition | Balance statistical power with API cost | — Pending |
 
 ---
-*Last updated: 2026-03-24 after Phase 10 completion — prompt format research with 6 hypotheses and experiment designs*
+*Last updated: 2026-03-24 after Phase 11 completion — 31 atomic micro-formatting experiment specs across 6 topic-cluster files with tiered execution plan*

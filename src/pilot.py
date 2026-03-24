@@ -12,6 +12,7 @@ import logging
 import os
 import random
 import sqlite3
+import sys
 from datetime import datetime, timezone
 from typing import Any
 
@@ -19,6 +20,7 @@ import numpy as np
 from scipy.stats import bootstrap as scipy_bootstrap
 
 from src.config import ExperimentConfig, MODELS, derive_seed
+from src.config_manager import find_config_path, CONFIG_FILENAME
 from src.db import query_runs
 from src.noise_generator import inject_type_a_noise
 
@@ -1103,8 +1105,19 @@ def _build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _check_config_exists() -> None:
+    """Exit with guidance if no config file is found."""
+    if find_config_path() is None:
+        logger.error(
+            "No config found. Run `python src/cli.py setup` to configure "
+            "the slicer before running experiments."
+        )
+        sys.exit(1)
+
+
 def main() -> None:
     """Entry point for the pilot validation CLI."""
+    _check_config_exists()
     parser = _build_parser()
     args = parser.parse_args()
     result = run_pilot(

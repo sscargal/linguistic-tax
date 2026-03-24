@@ -8,12 +8,14 @@ import argparse
 import json
 import logging
 import random
+import sys
 import time
 from collections.abc import Callable
 from datetime import datetime, timezone
 from typing import Any
 
 from src.api_client import APIResponse, call_model, _validate_api_keys
+from src.config_manager import find_config_path, CONFIG_FILENAME
 from src.config import (
     ExperimentConfig,
     MAX_TOKENS_BY_BENCHMARK,
@@ -492,6 +494,16 @@ def run_engine(args: argparse.Namespace, config: ExperimentConfig | None = None)
 # CLI
 # ---------------------------------------------------------------------------
 
+def _check_config_exists() -> None:
+    """Exit with guidance if no config file is found."""
+    if find_config_path() is None:
+        logger.error(
+            "No config found. Run `python src/cli.py setup` to configure "
+            "the slicer before running experiments."
+        )
+        sys.exit(1)
+
+
 def _build_parser() -> argparse.ArgumentParser:
     """Build the argument parser for the execution engine CLI.
 
@@ -534,6 +546,7 @@ def _build_parser() -> argparse.ArgumentParser:
 
 def main() -> None:
     """CLI entry point for the execution engine."""
+    _check_config_exists()
     parser = _build_parser()
     args = parser.parse_args()
 

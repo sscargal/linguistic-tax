@@ -163,13 +163,14 @@ Plans:
 
 ### Phase 10: Research optimal prompt input formats for whitepaper
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** Researcher has a comprehensive research document surveying how prompt input formats affect LLM reasoning accuracy and token efficiency, with 6 testable hypotheses ranked by feasibility, detailed experiment designs for the top 3, and integration notes showing how promising formats map to future intervention types in the existing experiment framework
+**Requirements**: FMT-RES-01, FMT-RES-02, FMT-RES-03, FMT-RES-04, FMT-RES-05
 **Depends on:** Phase 9
-**Plans:** 0 plans
+**Plans:** 2 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 10 to break down)
+- [ ] 10-01-PLAN.md -- Literature survey across 6 format categories (TOON, XML, bullet/outline, punctuation, hybrid/novel, verbose NL baseline) with format taxonomy comparison table
+- [ ] 10-02-PLAN.md -- 6 testable hypotheses with full specifications, experiment designs for top 3, integration notes for experiment framework, finalized executive summary
 
 ### Phase 11: Brainstorm micro-formatting test questions for experiment suite
 

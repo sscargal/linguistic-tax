@@ -29,6 +29,7 @@ Produce rigorous, reproducible experimental data showing how prompt noise degrad
 None — all v1 requirements validated.
 
 ### Recently Validated
+- ✓ Research optimal prompt input formats with 6 testable hypotheses and 3 experiment designs for whitepaper — Phase 10
 - ✓ Add OpenRouter as 4th model provider with free Nemotron model defaults, full test coverage — Phase 9
 - ✓ Expand test coverage to 80%+ line coverage (achieved 88.37%) with integration tests and QA script — Phase 8
 - ✓ Integrate OpenAI GPT-4o as full third target model (API client, config, pilot, figures) — Phase 7
@@ -76,4 +77,4 @@ None — all v1 requirements validated.
 | 5 repetitions per condition | Balance statistical power with API cost | — Pending |
 
 ---
-*Last updated: 2026-03-24 after Phase 9 completion — OpenRouter provider with free Nemotron models added*
+*Last updated: 2026-03-24 after Phase 10 completion — prompt format research with 6 hypotheses and experiment designs*

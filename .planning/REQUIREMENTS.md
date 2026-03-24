@@ -82,11 +82,11 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **SETUP-01**: Persist experiment configuration as JSON file (experiment_config.json) in project directory with sparse override pattern -- only user-changed values stored, missing keys fall back to ExperimentConfig defaults
 - [x] **SETUP-02**: Validate config on load -- model strings match PRICE_TABLE keys, noise rates in [0,1], repetitions >= 1, temperature >= 0, data paths exist
-- [ ] **SETUP-03**: CLI entry point (src/cli.py) with argparse subparsers architecture extensible for Phase 14 config subcommands
-- [ ] **SETUP-04**: Interactive setup wizard (src/cli.py setup) guiding provider selection, model auto-fill from PREPROC_MODEL_MAP, path configuration, and config file generation
-- [ ] **SETUP-05**: API key validation via minimal test call (~$0.001) distinguishing auth errors from network/transient errors
-- [ ] **SETUP-06**: Environment prerequisite check -- Python >= 3.11, required packages installed, API key env vars set and non-empty
-- [ ] **SETUP-07**: Config-missing guard in run_experiment.py and pilot.py -- prints guidance message and exits if no config file found (does NOT auto-launch wizard)
+- [x] **SETUP-03**: CLI entry point (src/cli.py) with argparse subparsers architecture extensible for Phase 14 config subcommands
+- [x] **SETUP-04**: Interactive setup wizard (src/cli.py setup) guiding provider selection, model auto-fill from PREPROC_MODEL_MAP, path configuration, and config file generation
+- [x] **SETUP-05**: API key validation via minimal test call (~$0.001) distinguishing auth errors from network/transient errors
+- [x] **SETUP-06**: Environment prerequisite check -- Python >= 3.11, required packages installed, API key env vars set and non-empty
+- [x] **SETUP-07**: Config-missing guard in run_experiment.py and pilot.py -- prints guidance message and exits if no config file found (does NOT auto-launch wizard)
 
 ## v2 Requirements
 

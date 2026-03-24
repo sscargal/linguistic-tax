@@ -199,7 +199,7 @@ Plans:
 **Goal:** New users can run `python src/cli.py setup` to configure the toolkit through a guided Q&A flow -- select model provider and models, validate API keys, check environment prerequisites, and generate experiment_config.json with all configurable properties and sensible defaults. Manual config editing remains fully supported. CLI entry point with extensible subcommand architecture is established for Phase 14.
 **Requirements**: SETUP-01, SETUP-02, SETUP-03, SETUP-04, SETUP-05, SETUP-06, SETUP-07
 **Depends on:** Phase 12
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 - [ ] 13-01-PLAN.md -- Config manager module: JSON config file I/O, sparse override merge with ExperimentConfig, validation rules

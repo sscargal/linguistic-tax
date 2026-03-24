@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 11-01-PLAN.md
-last_updated: "2026-03-24T19:58:17.120Z"
+stopped_at: Completed 11-02-PLAN.md
+last_updated: "2026-03-24T20:00:19.926Z"
 progress:
   total_phases: 15
   completed_phases: 10
   total_plans: 25
-  completed_plans: 23
+  completed_plans: 24
 ---
 
 # Project State
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-03-24)
 ## Current Position
 
 Phase: 11 (brainstorm-micro-formatting-test-questions-for-experiment-suite) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 
 ## Performance Metrics
 
@@ -69,6 +69,7 @@ Plan: 2 of 3
 | Phase 10 P01 | 3min | 1 tasks | 1 files |
 | Phase 10 P02 | 4min | 1 tasks | 1 files |
 | Phase 11 P01 | 6min | 2 tasks | 2 files |
+| Phase 11 P02 | 8min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -112,6 +113,8 @@ Recent decisions affecting current work:
 - [Phase 10]: Ranked H-FMT-01 (TOON), H-FMT-02 (XML), H-FMT-04 (punctuation) as HIGH priority; H-FMT-05 (format x noise) as stretch goal
 - [Phase 11]: Rule-based format conversion as default; LLM pre-processor only for AQ-TE-04 comparison
 - [Phase 11]: Free OpenRouter Nemotron as default model; immediate paid escalation for model-specific XML hypothesis (AQ-SM-01)
+- [Phase 11]: Punctuation removal uses regex patterns (zero-cost) not LLM pre-processing
+- [Phase 11]: Micro-pilot gate (AQ-FN-05) uses 5pp slope difference go/3pp no-go thresholds for format x noise experiments
 
 ### Pending Todos
 
@@ -137,6 +140,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-24T19:58:17.117Z
-Stopped at: Completed 11-01-PLAN.md
+Last session: 2026-03-24T20:00:19.921Z
+Stopped at: Completed 11-02-PLAN.md
 Resume file: None

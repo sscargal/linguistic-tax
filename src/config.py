@@ -6,9 +6,14 @@ file paths, and deterministic seed derivation for reproducible experiments.
 
 import hashlib
 import logging
+import os
 from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
+
+OPENROUTER_BASE_URL: str = os.environ.get(
+    "OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1"
+)
 
 
 @dataclass(frozen=True)
@@ -23,6 +28,8 @@ class ExperimentConfig:
     claude_model: str = "claude-sonnet-4-20250514"
     gemini_model: str = "gemini-1.5-pro"
     openai_model: str = "gpt-4o-2024-11-20"
+    openrouter_model: str = "openrouter/nvidia/nemotron-3-super-120b-a12b:free"
+    openrouter_preproc_model: str = "openrouter/nvidia/nemotron-3-nano-30b-a3b:free"
 
     # Seeds
     base_seed: int = 42
@@ -88,6 +95,7 @@ MODELS: tuple[str, ...] = (
     "claude-sonnet-4-20250514",
     "gemini-1.5-pro",
     "gpt-4o-2024-11-20",
+    "openrouter/nvidia/nemotron-3-super-120b-a12b:free",
 )
 
 # ---------------------------------------------------------------------------
@@ -101,6 +109,8 @@ PRICE_TABLE: dict[str, dict[str, float]] = {
     "gemini-2.0-flash": {"input_per_1m": 0.10, "output_per_1m": 0.40},
     "gpt-4o-2024-11-20": {"input_per_1m": 2.50, "output_per_1m": 10.00},
     "gpt-4o-mini-2024-07-18": {"input_per_1m": 0.15, "output_per_1m": 0.60},
+    "openrouter/nvidia/nemotron-3-super-120b-a12b:free": {"input_per_1m": 0.0, "output_per_1m": 0.0},
+    "openrouter/nvidia/nemotron-3-nano-30b-a3b:free": {"input_per_1m": 0.0, "output_per_1m": 0.0},
 }
 
 MAX_TOKENS_BY_BENCHMARK: dict[str, int] = {
@@ -113,6 +123,7 @@ PREPROC_MODEL_MAP: dict[str, str] = {
     "claude-sonnet-4-20250514": "claude-haiku-4-5-20250514",
     "gemini-1.5-pro": "gemini-2.0-flash",
     "gpt-4o-2024-11-20": "gpt-4o-mini-2024-07-18",
+    "openrouter/nvidia/nemotron-3-super-120b-a12b:free": "openrouter/nvidia/nemotron-3-nano-30b-a3b:free",
 }
 
 RATE_LIMIT_DELAYS: dict[str, float] = {
@@ -122,6 +133,8 @@ RATE_LIMIT_DELAYS: dict[str, float] = {
     "gemini-2.0-flash": 0.05,
     "gpt-4o-2024-11-20": 0.2,
     "gpt-4o-mini-2024-07-18": 0.1,
+    "openrouter/nvidia/nemotron-3-super-120b-a12b:free": 0.5,
+    "openrouter/nvidia/nemotron-3-nano-30b-a3b:free": 0.5,
 }
 
 

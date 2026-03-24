@@ -156,6 +156,69 @@ class TestDerivedMetricsPipeline:
         assert q3 == "lucky"
 
 
+class TestOpenRouterLifecycle:
+    """Integration test: config -> MODELS -> call_model routing -> _call_openrouter -> APIResponse."""
+
+    def test_openrouter_full_lifecycle(self):
+        """Full lifecycle: OpenRouter model in MODELS, routes through call_model, returns APIResponse."""
+        import os
+        from unittest.mock import patch, MagicMock
+
+        from src.config import MODELS, PRICE_TABLE, PREPROC_MODEL_MAP, compute_cost
+        from src.api_client import call_model, APIResponse
+
+        target = "openrouter/nvidia/nemotron-3-super-120b-a12b:free"
+        preproc = "openrouter/nvidia/nemotron-3-nano-30b-a3b:free"
+
+        # Step 1: Verify config entries exist
+        assert target in MODELS, "Target model not in MODELS"
+        assert target in PRICE_TABLE, "Target model not in PRICE_TABLE"
+        assert preproc in PRICE_TABLE, "Preproc model not in PRICE_TABLE"
+        assert PREPROC_MODEL_MAP[target] == preproc, "Preproc mapping wrong"
+
+        # Step 2: Verify zero-cost pricing
+        cost = compute_cost(target, 1000, 500)
+        assert cost == 0.0, f"Expected 0.0, got {cost}"
+
+        # Step 3: Mock the OpenAI client and verify call_model routes correctly
+        mock_client_instance = MagicMock()
+
+        # Create streaming chunks (content chunk + usage chunk)
+        content_chunk = MagicMock()
+        content_chunk.choices = [MagicMock()]
+        content_chunk.choices[0].delta.content = "Hello from Nemotron"
+        content_chunk.usage = None
+
+        usage_chunk = MagicMock()
+        usage_chunk.choices = []
+        usage_chunk.usage = MagicMock()
+        usage_chunk.usage.prompt_tokens = 50
+        usage_chunk.usage.completion_tokens = 25
+
+        mock_client_instance.chat.completions.create.return_value = iter(
+            [content_chunk, usage_chunk]
+        )
+
+        with patch("src.api_client.openai.OpenAI", return_value=mock_client_instance), \
+             patch.dict(os.environ, {"OPENROUTER_API_KEY": "test-key"}), \
+             patch("src.api_client.time.sleep"):  # skip rate limit delay
+
+            result = call_model(target, None, "test prompt", 1024, 0.0)
+
+        # Step 4: Verify full APIResponse
+        assert isinstance(result, APIResponse)
+        assert result.text == "Hello from Nemotron"
+        assert result.input_tokens == 50
+        assert result.output_tokens == 25
+        assert result.model == target  # Full prefixed ID preserved
+
+        # Step 5: Verify prefix was stripped for the API call
+        create_call = mock_client_instance.chat.completions.create
+        call_kwargs = create_call.call_args
+        assert call_kwargs.kwargs.get("model") == "nvidia/nemotron-3-super-120b-a12b:free", \
+            "Model prefix was not stripped for API call"
+
+
 class TestConfigToDatabasePipeline:
     """Tests the flow: config -> seed derivation -> DB init -> insert -> query."""
 

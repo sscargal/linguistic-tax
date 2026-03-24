@@ -83,7 +83,7 @@ class TestSelfCorrect:
 class TestPriceTable:
     """Tests for PRICE_TABLE config constant."""
 
-    def test_contains_all_six_models(self) -> None:
+    def test_contains_all_eight_models(self) -> None:
         from src.config import PRICE_TABLE
 
         expected_models = {
@@ -93,6 +93,8 @@ class TestPriceTable:
             "gemini-2.0-flash",
             "gpt-4o-2024-11-20",
             "gpt-4o-mini-2024-07-18",
+            "openrouter/nvidia/nemotron-3-super-120b-a12b:free",
+            "openrouter/nvidia/nemotron-3-nano-30b-a3b:free",
         }
         assert set(PRICE_TABLE.keys()) == expected_models
 

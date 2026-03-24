@@ -311,6 +311,9 @@ print(f'Python {v.major}.{v.minor}.{v.micro}')
     # pytest-cov
     run_warn_check "Package importable: pytest-cov" python3 -c "import pytest_cov"
 
+    # API keys (warn only)
+    run_warn_check "OPENROUTER_API_KEY is set" test -n "${OPENROUTER_API_KEY:-}"
+
     # Directories exist
     run_check "Directory exists: src/" test -d "$PROJECT_ROOT/src"
     run_check "Directory exists: tests/" test -d "$PROJECT_ROOT/tests"
@@ -418,6 +421,39 @@ s1 = derive_seed(42, 'test', 'type_a', '5')
 s2 = derive_seed(42, 'test', 'type_a', '5')
 assert s1 == s2, f'Seeds differ: {s1} != {s2}'
 print(f'Deterministic seed: {s1}')
+"
+
+    # OpenRouter config entries
+    run_check "OpenRouter target model in MODELS tuple" python3 -c "
+from src.config import MODELS
+assert 'openrouter/nvidia/nemotron-3-super-120b-a12b:free' in MODELS
+print('OK')
+"
+
+    run_check "OpenRouter preproc model in PRICE_TABLE" python3 -c "
+from src.config import PRICE_TABLE
+p = PRICE_TABLE['openrouter/nvidia/nemotron-3-nano-30b-a3b:free']
+assert p['input_per_1m'] == 0.0 and p['output_per_1m'] == 0.0
+print('OK: pricing is \$0')
+"
+
+    run_check "OpenRouter PREPROC_MODEL_MAP entry" python3 -c "
+from src.config import PREPROC_MODEL_MAP
+assert PREPROC_MODEL_MAP['openrouter/nvidia/nemotron-3-super-120b-a12b:free'] == 'openrouter/nvidia/nemotron-3-nano-30b-a3b:free'
+print('OK')
+"
+
+    run_check "OpenRouter zero-cost compute_cost" python3 -c "
+from src.config import compute_cost
+c = compute_cost('openrouter/nvidia/nemotron-3-super-120b-a12b:free', 10000, 5000)
+assert c == 0.0, f'Expected 0.0, got {c}'
+print('OK: cost is \$0.00')
+"
+
+    run_check "OPENROUTER_BASE_URL constant exists" python3 -c "
+from src.config import OPENROUTER_BASE_URL
+assert OPENROUTER_BASE_URL.startswith('https://')
+print(f'OK: {OPENROUTER_BASE_URL}')
 "
 }
 

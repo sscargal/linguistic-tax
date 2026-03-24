@@ -140,13 +140,15 @@ Plans:
 
 ### Phase 8: Write unit tests
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** Expand test coverage to 80%+ line coverage across all modules, fill gaps in the two lowest-coverage modules (analyze_results at 62%, compute_derived at 64%), add integration tests for multi-module flows, shared mock factories in conftest, and create a comprehensive QA bash script (scripts/qa_script.sh) for pre-release validation
+**Requirements**: TEST-01, TEST-02, TEST-03, TEST-04, TEST-05, TEST-06
 **Depends on:** Phase 7
-**Plans:** 0 plans
+**Plans:** 3 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 8 to break down)
+- [ ] 08-01-PLAN.md -- Conftest mock factories, pyproject.toml updates (pytest-cov, slow marker), coverage gap tests for analyze_results, compute_derived, noise_generator, generate_figures
+- [ ] 08-02-PLAN.md -- Integration tests (noise->grading, derived metrics, config->DB pipelines) and final coverage verification
+- [ ] 08-03-PLAN.md -- QA bash script (scripts/qa_script.sh) with 6 sections, --live/--section/--log flags, summary table with VERDICT
 
 ### Phase 9: Add OpenRouter support with free model defaults (Nemotron)
 

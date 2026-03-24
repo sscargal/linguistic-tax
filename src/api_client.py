@@ -15,7 +15,7 @@ from google import genai
 from google.genai import errors as genai_errors
 from google.genai import types
 
-from src.config import RATE_LIMIT_DELAYS
+from src.config import OPENROUTER_BASE_URL, RATE_LIMIT_DELAYS
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +54,9 @@ def _validate_api_keys(model: str) -> None:
     elif model.startswith("gpt"):
         if not os.environ.get("OPENAI_API_KEY"):
             raise EnvironmentError("OPENAI_API_KEY not set")
+    elif model.startswith("openrouter/"):
+        if not os.environ.get("OPENROUTER_API_KEY"):
+            raise EnvironmentError("OPENROUTER_API_KEY not set")
 
 
 def _apply_rate_limit(model: str) -> None:
@@ -235,6 +238,78 @@ def _call_openai(
     )
 
 
+def _call_openrouter(
+    model: str,
+    system: str | None,
+    user_message: str,
+    max_tokens: int,
+    temperature: float,
+) -> APIResponse:
+    """Call OpenRouter API with streaming for TTFT/TTLT measurement.
+
+    Uses the OpenAI SDK with base_url override pointing to OpenRouter.
+    Strips the 'openrouter/' prefix from the model ID before sending
+    to the API. Adds project-identifying HTTP headers.
+
+    Args:
+        model: Full model identifier with openrouter/ prefix.
+        system: Optional system prompt.
+        user_message: The user message to send.
+        max_tokens: Maximum tokens in the response.
+        temperature: Sampling temperature.
+
+    Returns:
+        Unified APIResponse with text, token counts, and timing.
+    """
+    api_model = model.removeprefix("openrouter/")
+
+    client = openai.OpenAI(
+        base_url=OPENROUTER_BASE_URL,
+        api_key=os.environ.get("OPENROUTER_API_KEY"),
+        default_headers={
+            "HTTP-Referer": "https://github.com/linguistic-tax",
+            "X-Title": "Linguistic Tax Research",
+        },
+    )
+    start = time.monotonic()
+    ttft_ms = 0.0
+    chunks: list[str] = []
+
+    messages: list[dict] = []
+    if system is not None:
+        messages.append({"role": "system", "content": system})
+    messages.append({"role": "user", "content": user_message})
+
+    stream = client.chat.completions.create(
+        model=api_model,
+        messages=messages,
+        max_tokens=max_tokens,
+        temperature=temperature,
+        stream=True,
+        stream_options={"include_usage": True},
+    )
+
+    usage = None
+    for chunk in stream:
+        if chunk.usage is not None:
+            usage = chunk.usage
+        if chunk.choices and chunk.choices[0].delta.content is not None:
+            if not chunks:
+                ttft_ms = (time.monotonic() - start) * 1000
+            chunks.append(chunk.choices[0].delta.content)
+
+    ttlt_ms = (time.monotonic() - start) * 1000
+
+    return APIResponse(
+        text="".join(chunks),
+        input_tokens=usage.prompt_tokens if usage else 0,
+        output_tokens=usage.completion_tokens if usage else 0,
+        ttft_ms=ttft_ms,
+        ttlt_ms=ttlt_ms,
+        model=model,
+    )
+
+
 def call_model(
     model: str,
     system: str | None,
@@ -262,7 +337,7 @@ def call_model(
         ValueError: If model name is not recognized.
         EnvironmentError: If required API key is missing.
         anthropic.RateLimitError: If rate limited after 4 attempts.
-        openai.RateLimitError: If rate limited after 4 attempts (OpenAI).
+        openai.RateLimitError: If rate limited after 4 attempts (OpenAI or OpenRouter).
         genai_errors.ClientError: If rate limited after 4 attempts (Google).
     """
     _validate_api_keys(model)
@@ -283,6 +358,10 @@ def call_model(
                 )
             elif model.startswith("gpt"):
                 return _call_openai(
+                    model, system, user_message, max_tokens, temperature
+                )
+            elif model.startswith("openrouter/"):
+                return _call_openrouter(
                     model, system, user_message, max_tokens, temperature
                 )
             else:

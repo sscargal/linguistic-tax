@@ -120,8 +120,8 @@ class TestConstants:
         assert set(INTERVENTIONS) == expected
 
     def test_models_count(self):
-        """MODELS has exactly 3 entries."""
-        assert len(MODELS) == 3
+        """MODELS has exactly 4 entries (3 direct + 1 OpenRouter)."""
+        assert len(MODELS) == 4
 
     def test_models_contents(self):
         """MODELS contains the pinned model versions."""

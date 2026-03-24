@@ -174,13 +174,15 @@ Plans:
 
 ### Phase 11: Brainstorm micro-formatting test questions for experiment suite
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** Researcher has a complete suite of atomic, self-contained experiment specifications for micro-formatting effects on LLM reasoning -- all 6 Phase 10 hypotheses decomposed into independently executable test questions, new micro-formatting ideas brainstormed across 4 categories (whitespace/layout, code-specific formatting, instruction phrasing, structural markers) with top ideas fully specified, and a tiered execution plan prioritizing experiments by cost and scientific value
+**Requirements**: MFMT-01, MFMT-02, MFMT-03, MFMT-04, MFMT-05
 **Depends on:** Phase 10
-**Plans:** 0 plans
+**Plans:** 3 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 11 to break down)
+- [ ] 11-01-PLAN.md -- Token efficiency and structural markup experiment specs: TOON (H-FMT-01), bullet/outline (H-FMT-03), XML (H-FMT-02) atomic questions
+- [ ] 11-02-PLAN.md -- Punctuation and format-noise interaction experiment specs: punctuation removal (H-FMT-04), question marks (H-FMT-06), format x noise (H-FMT-05) atomic questions
+- [ ] 11-03-PLAN.md -- Novel brainstormed hypotheses across 4 categories and README index with tiered execution plan
 
 ### Phase 12: Comprehensive documentation and README for new users
 

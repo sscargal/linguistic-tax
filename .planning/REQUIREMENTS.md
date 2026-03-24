@@ -70,6 +70,14 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **FIG-03**: Generate cost-benefit heatmaps showing net token savings by condition
 - [x] **FIG-04**: Generate Kendall's tau rank-order stability visualization
 
+### Micro-Formatting Experiment Design
+
+- [ ] **MFMT-01**: Decompose all 6 Phase 10 hypotheses (H-FMT-01 through H-FMT-06) into atomic, independently executable test questions with self-contained experiment specs
+- [ ] **MFMT-02**: Brainstorm new micro-formatting ideas across 4 categories (whitespace/layout, code-specific formatting, instruction phrasing, structural markers) with full specs for top 3-5 ideas
+- [ ] **MFMT-03**: Create tiered execution plan (Tier 1/2/3) with cumulative cost estimates, model escalation strategy, and cross-cluster bundling opportunities
+- [ ] **MFMT-04**: Each atomic test question includes all required fields: claim, variables, benchmarks, prompt count, models, cost, conversion method, statistical analysis, success criteria, pilot protocol
+- [ ] **MFMT-05**: Organize experiment specs into topic-cluster files in docs/experiments/ with README index
+
 ## v2 Requirements
 
 Deferred to future release. Tracked but not in current roadmap.
@@ -145,12 +153,17 @@ Which phases cover which requirements. Updated during roadmap creation.
 | FIG-02 | Phase 6: Publication Figures | Complete |
 | FIG-03 | Phase 6: Publication Figures | Complete |
 | FIG-04 | Phase 6: Publication Figures | Complete |
+| MFMT-01 | Phase 11: Brainstorm micro-formatting test questions | Planned |
+| MFMT-02 | Phase 11: Brainstorm micro-formatting test questions | Planned |
+| MFMT-03 | Phase 11: Brainstorm micro-formatting test questions | Planned |
+| MFMT-04 | Phase 11: Brainstorm micro-formatting test questions | Planned |
+| MFMT-05 | Phase 11: Brainstorm micro-formatting test questions | Planned |
 
 **Coverage:**
-- v1 requirements: 36 total
-- Mapped to phases: 36
+- v1 requirements: 41 total
+- Mapped to phases: 41
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-19*
-*Last updated: 2026-03-19 after roadmap creation*
+*Last updated: 2026-03-24 after Phase 11 planning*

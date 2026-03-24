@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 11-02-PLAN.md
-last_updated: "2026-03-24T20:00:19.926Z"
+stopped_at: Completed 11-03-PLAN.md
+last_updated: "2026-03-24T20:08:16.600Z"
 progress:
   total_phases: 15
-  completed_phases: 10
+  completed_phases: 11
   total_plans: 25
-  completed_plans: 24
+  completed_plans: 25
 ---
 
 # Project State
@@ -70,6 +70,7 @@ Plan: 3 of 3
 | Phase 10 P02 | 4min | 1 tasks | 1 files |
 | Phase 11 P01 | 6min | 2 tasks | 2 files |
 | Phase 11 P02 | 8min | 2 tasks | 2 files |
+| Phase 11 P03 | 5min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -115,6 +116,8 @@ Recent decisions affecting current work:
 - [Phase 11]: Free OpenRouter Nemotron as default model; immediate paid escalation for model-specific XML hypothesis (AQ-SM-01)
 - [Phase 11]: Punctuation removal uses regex patterns (zero-cost) not LLM pre-processing
 - [Phase 11]: Micro-pilot gate (AQ-FN-05) uses 5pp slope difference go/3pp no-go thresholds for format x noise experiments
+- [Phase 11]: Selected 5 novel hypotheses for full specs: instruction phrasing, politeness, code comments, newline density, emphasis markers
+- [Phase 11]: Cross-cluster bundling saves ~30% API calls by sharing HumanEval/MBPP/GSM8K control conditions
 
 ### Pending Todos
 
@@ -140,6 +143,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-24T20:00:19.921Z
-Stopped at: Completed 11-02-PLAN.md
+Last session: 2026-03-24T20:08:16.597Z
+Stopped at: Completed 11-03-PLAN.md
 Resume file: None

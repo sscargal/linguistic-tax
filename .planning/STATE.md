@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 08-03-PLAN.md
-last_updated: "2026-03-24T00:28:36.049Z"
+stopped_at: Completed 08-01-PLAN.md
+last_updated: "2026-03-24T00:31:26.976Z"
 progress:
   total_phases: 15
   completed_phases: 7
   total_plans: 18
-  completed_plans: 16
+  completed_plans: 17
 ---
 
 # Project State
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-03-23)
 ## Current Position
 
 Phase: 08 (write-unit-tests) — EXECUTING
-Plan: 3 of 3 (COMPLETE)
+Plan: 2 of 3
 
 ## Performance Metrics
 
@@ -62,6 +62,7 @@ Plan: 3 of 3 (COMPLETE)
 | Phase 07 P01 | 5min | 1 tasks | 6 files |
 | Phase 07 P02 | 4min | 2 tasks | 4 files |
 | Phase 08 P03 | 8min | 1 tasks | 1 files |
+| Phase 08 P01 | 10min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -96,6 +97,8 @@ Recent decisions affecting current work:
 - [Phase 07]: OpenAI streaming with stream_options include_usage for token extraction; gpt prefix routing matching existing provider patterns
 - [Phase 07]: Derive _VALID_MODELS as set(MODELS) from config for automatic propagation of new models
 - [Phase 08]: Auto-activate project venv in QA script for portable package availability
+- [Phase 08]: In-process CLI testing via sys.argv patching for coverage attribution (subprocess tests don't count)
+- [Phase 08]: Mock factory fixtures in conftest.py for project-wide API response mocking reuse
 
 ### Pending Todos
 
@@ -121,6 +124,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-24T00:28:36.046Z
-Stopped at: Completed 08-03-PLAN.md
+Last session: 2026-03-24T00:31:26.973Z
+Stopped at: Completed 08-01-PLAN.md
 Resume file: None

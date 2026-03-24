@@ -150,6 +150,23 @@ def mock_openai_response():
 
 
 @pytest.fixture
+def mock_openrouter_response():
+    """Factory for mock OpenRouter API responses (OpenAI SDK format)."""
+    def _make(content="test response", input_tokens=100, output_tokens=50,
+              model="openrouter/nvidia/nemotron-3-super-120b-a12b:free"):
+        from unittest.mock import MagicMock
+        chunk = MagicMock()
+        chunk.choices = [MagicMock()]
+        chunk.choices[0].delta.content = content
+        chunk.model = model
+        chunk.usage = MagicMock()
+        chunk.usage.prompt_tokens = input_tokens
+        chunk.usage.completion_tokens = output_tokens
+        return chunk
+    return _make
+
+
+@pytest.fixture
 def analysis_test_db(tmp_path):
     """Create a richer synthetic dataset for statistical analysis tests.
 

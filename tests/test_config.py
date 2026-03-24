@@ -6,7 +6,8 @@ import pytest
 
 from src.config import (
     ExperimentConfig, derive_seed, NOISE_TYPES, INTERVENTIONS, MODELS,
-    PRICE_TABLE, PREPROC_MODEL_MAP, RATE_LIMIT_DELAYS,
+    PRICE_TABLE, PREPROC_MODEL_MAP, RATE_LIMIT_DELAYS, OPENROUTER_BASE_URL,
+    compute_cost,
 )
 
 
@@ -61,6 +62,14 @@ class TestExperimentConfig:
     def test_openai_model_pinned(self, sample_config):
         """OpenAI model version is pinned."""
         assert sample_config.openai_model == "gpt-4o-2024-11-20"
+
+    def test_openrouter_model_pinned(self, sample_config):
+        """OpenRouter target model version is pinned."""
+        assert sample_config.openrouter_model == "openrouter/nvidia/nemotron-3-super-120b-a12b:free"
+
+    def test_openrouter_preproc_model_pinned(self, sample_config):
+        """OpenRouter preproc model version is pinned."""
+        assert sample_config.openrouter_preproc_model == "openrouter/nvidia/nemotron-3-nano-30b-a3b:free"
 
 
 class TestDeriveSeed:
@@ -142,3 +151,50 @@ class TestConstants:
         """RATE_LIMIT_DELAYS contains entries for GPT-4o and GPT-4o-mini."""
         assert RATE_LIMIT_DELAYS["gpt-4o-2024-11-20"] == 0.2
         assert RATE_LIMIT_DELAYS["gpt-4o-mini-2024-07-18"] == 0.1
+
+
+class TestOpenRouterConfig:
+    """Tests for OpenRouter-specific configuration entries."""
+
+    def test_openrouter_base_url_default(self):
+        """OPENROUTER_BASE_URL defaults to OpenRouter API endpoint."""
+        assert OPENROUTER_BASE_URL == "https://openrouter.ai/api/v1"
+
+    def test_openrouter_model_in_models(self):
+        """OpenRouter target model is in the MODELS tuple."""
+        assert "openrouter/nvidia/nemotron-3-super-120b-a12b:free" in MODELS
+
+    def test_openrouter_target_in_price_table(self):
+        """OpenRouter target model has zero-cost pricing."""
+        entry = PRICE_TABLE["openrouter/nvidia/nemotron-3-super-120b-a12b:free"]
+        assert entry["input_per_1m"] == 0.0
+        assert entry["output_per_1m"] == 0.0
+
+    def test_openrouter_preproc_in_price_table(self):
+        """OpenRouter preproc model has zero-cost pricing."""
+        entry = PRICE_TABLE["openrouter/nvidia/nemotron-3-nano-30b-a3b:free"]
+        assert entry["input_per_1m"] == 0.0
+        assert entry["output_per_1m"] == 0.0
+
+    def test_openrouter_preproc_map(self):
+        """PREPROC_MODEL_MAP maps OpenRouter target to preproc model."""
+        assert PREPROC_MODEL_MAP["openrouter/nvidia/nemotron-3-super-120b-a12b:free"] == \
+            "openrouter/nvidia/nemotron-3-nano-30b-a3b:free"
+
+    def test_openrouter_rate_limit_target(self):
+        """RATE_LIMIT_DELAYS has OpenRouter target model at 0.5s."""
+        assert RATE_LIMIT_DELAYS["openrouter/nvidia/nemotron-3-super-120b-a12b:free"] == 0.5
+
+    def test_openrouter_rate_limit_preproc(self):
+        """RATE_LIMIT_DELAYS has OpenRouter preproc model at 0.5s."""
+        assert RATE_LIMIT_DELAYS["openrouter/nvidia/nemotron-3-nano-30b-a3b:free"] == 0.5
+
+    def test_compute_cost_zero_for_free_model(self):
+        """compute_cost returns exactly 0.0 for free OpenRouter target model."""
+        cost = compute_cost("openrouter/nvidia/nemotron-3-super-120b-a12b:free", 10000, 5000)
+        assert cost == 0.0
+
+    def test_compute_cost_zero_for_free_preproc(self):
+        """compute_cost returns exactly 0.0 for free OpenRouter preproc model."""
+        cost = compute_cost("openrouter/nvidia/nemotron-3-nano-30b-a3b:free", 10000, 5000)
+        assert cost == 0.0

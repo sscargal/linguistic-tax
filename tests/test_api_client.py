@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch, PropertyMock
 
 import pytest
 
-from src.api_client import APIResponse, call_model, _call_anthropic, _call_google, _call_openai, _rate_delays
+from src.api_client import APIResponse, call_model, _call_anthropic, _call_google, _call_openai, _call_openrouter, _validate_api_keys, _rate_delays
 
 
 # ---------------------------------------------------------------------------
@@ -167,6 +167,22 @@ class TestCallModelRouting:
         result = call_model("gpt-4o-2024-11-20", None, "hello", 100)
         mock_openai.assert_called_once()
         assert result.model == "gpt-4o-2024-11-20"
+
+    @patch.dict(os.environ, {"OPENROUTER_API_KEY": "test-key"})
+    @patch("src.api_client._call_openrouter")
+    @patch("src.api_client._apply_rate_limit")
+    def test_routes_openrouter_prefix(self, mock_rate, mock_openrouter):
+        """call_model with openrouter/ prefix routes to _call_openrouter."""
+        mock_openrouter.return_value = APIResponse(
+            text="ok", input_tokens=1, output_tokens=1,
+            ttft_ms=1.0, ttlt_ms=2.0,
+            model="openrouter/nvidia/nemotron-3-super-120b-a12b:free",
+        )
+        result = call_model(
+            "openrouter/nvidia/nemotron-3-super-120b-a12b:free", None, "hello", 100,
+        )
+        mock_openrouter.assert_called_once()
+        assert result.model == "openrouter/nvidia/nemotron-3-super-120b-a12b:free"
 
 
 # ---------------------------------------------------------------------------
@@ -352,6 +368,129 @@ class TestCallOpenAI:
 
 
 # ---------------------------------------------------------------------------
+# OpenRouter streaming tests
+# ---------------------------------------------------------------------------
+
+class TestCallOpenRouter:
+    """Tests for _call_openrouter streaming implementation."""
+
+    @patch.dict(os.environ, {"OPENROUTER_API_KEY": "test-key"})
+    @patch("src.api_client.openai.OpenAI")
+    def test_openrouter_streaming_returns_api_response(self, mock_cls):
+        """_call_openrouter streams chunks and returns APIResponse."""
+        chunks = _make_openai_stream_chunks(["hello ", "world"], 10, 5)
+        client = MagicMock()
+        client.chat.completions.create.return_value = iter(chunks)
+        mock_cls.return_value = client
+
+        result = _call_openrouter(
+            "openrouter/nvidia/nemotron-3-super-120b-a12b:free",
+            None, "hello", 1024, 0.0,
+        )
+
+        assert isinstance(result, APIResponse)
+        assert result.text == "hello world"
+        assert result.input_tokens == 10
+        assert result.output_tokens == 5
+        assert result.model == "openrouter/nvidia/nemotron-3-super-120b-a12b:free"
+        assert result.ttft_ms > 0
+        assert result.ttlt_ms >= result.ttft_ms
+
+    @patch.dict(os.environ, {"OPENROUTER_API_KEY": "test-key"})
+    @patch("src.api_client.openai.OpenAI")
+    def test_openrouter_prefix_stripping(self, mock_cls):
+        """_call_openrouter strips openrouter/ prefix for API call."""
+        chunks = _make_openai_stream_chunks(["hi"], 10, 5)
+        client = MagicMock()
+        client.chat.completions.create.return_value = iter(chunks)
+        mock_cls.return_value = client
+
+        _call_openrouter(
+            "openrouter/nvidia/nemotron-3-super-120b-a12b:free",
+            None, "hello", 1024, 0.0,
+        )
+
+        call_kwargs = client.chat.completions.create.call_args[1]
+        assert call_kwargs["model"] == "nvidia/nemotron-3-super-120b-a12b:free"
+
+    @patch.dict(os.environ, {"OPENROUTER_API_KEY": "test-key"})
+    @patch("src.api_client.openai.OpenAI")
+    def test_openrouter_base_url(self, mock_cls):
+        """_call_openrouter uses OPENROUTER_BASE_URL for client."""
+        from src.config import OPENROUTER_BASE_URL
+
+        chunks = _make_openai_stream_chunks(["hi"], 10, 5)
+        client = MagicMock()
+        client.chat.completions.create.return_value = iter(chunks)
+        mock_cls.return_value = client
+
+        _call_openrouter(
+            "openrouter/nvidia/nemotron-3-super-120b-a12b:free",
+            None, "hello", 1024, 0.0,
+        )
+
+        constructor_kwargs = mock_cls.call_args[1]
+        assert constructor_kwargs["base_url"] == OPENROUTER_BASE_URL
+
+    @patch.dict(os.environ, {"OPENROUTER_API_KEY": "test-key"})
+    @patch("src.api_client.openai.OpenAI")
+    def test_openrouter_headers(self, mock_cls):
+        """_call_openrouter sets project-identifying HTTP headers."""
+        chunks = _make_openai_stream_chunks(["hi"], 10, 5)
+        client = MagicMock()
+        client.chat.completions.create.return_value = iter(chunks)
+        mock_cls.return_value = client
+
+        _call_openrouter(
+            "openrouter/nvidia/nemotron-3-super-120b-a12b:free",
+            None, "hello", 1024, 0.0,
+        )
+
+        constructor_kwargs = mock_cls.call_args[1]
+        headers = constructor_kwargs["default_headers"]
+        assert headers["HTTP-Referer"] == "https://github.com/linguistic-tax"
+        assert headers["X-Title"] == "Linguistic Tax Research"
+
+    @patch.dict(os.environ, {"OPENROUTER_API_KEY": "test-key"})
+    @patch("src.api_client.openai.OpenAI")
+    def test_openrouter_system_prompt(self, mock_cls):
+        """_call_openrouter includes system message when provided."""
+        chunks = _make_openai_stream_chunks(["hi"], 10, 5)
+        client = MagicMock()
+        client.chat.completions.create.return_value = iter(chunks)
+        mock_cls.return_value = client
+
+        _call_openrouter(
+            "openrouter/nvidia/nemotron-3-super-120b-a12b:free",
+            "You are helpful", "hello", 1024, 0.0,
+        )
+
+        call_kwargs = client.chat.completions.create.call_args[1]
+        messages = call_kwargs["messages"]
+        assert messages[0] == {"role": "system", "content": "You are helpful"}
+        assert messages[1] == {"role": "user", "content": "hello"}
+
+    @patch.dict(os.environ, {"OPENROUTER_API_KEY": "test-key"})
+    @patch("src.api_client.openai.OpenAI")
+    def test_openrouter_no_system_prompt(self, mock_cls):
+        """_call_openrouter sends only user message when system is None."""
+        chunks = _make_openai_stream_chunks(["hi"], 10, 5)
+        client = MagicMock()
+        client.chat.completions.create.return_value = iter(chunks)
+        mock_cls.return_value = client
+
+        _call_openrouter(
+            "openrouter/nvidia/nemotron-3-super-120b-a12b:free",
+            None, "hello", 1024, 0.0,
+        )
+
+        call_kwargs = client.chat.completions.create.call_args[1]
+        messages = call_kwargs["messages"]
+        assert len(messages) == 1
+        assert messages[0]["role"] == "user"
+
+
+# ---------------------------------------------------------------------------
 # Timing tests
 # ---------------------------------------------------------------------------
 
@@ -519,6 +658,43 @@ class TestRetryAndRateLimiting:
 
         assert _rate_delays["gpt-4o-2024-11-20"] == original_delay * 2
 
+    @patch.dict(os.environ, {"OPENROUTER_API_KEY": "test-key"})
+    @patch("src.api_client.time.sleep")
+    @patch("src.api_client._call_openrouter")
+    @patch("src.api_client._apply_rate_limit")
+    def test_retries_on_openrouter_rate_limit(self, mock_rate, mock_call, mock_sleep):
+        """Retry logic retries on openai.RateLimitError for OpenRouter models."""
+        import openai as oai
+
+        error_response = MagicMock()
+        error_response.status_code = 429
+        error_response.headers = {}
+        error_response.json.return_value = {"error": {"message": "rate limited"}}
+        rate_error = oai.RateLimitError(
+            message="rate limited",
+            response=error_response,
+            body={"error": {"message": "rate limited"}},
+        )
+
+        success = APIResponse(
+            text="ok", input_tokens=1, output_tokens=1,
+            ttft_ms=1.0, ttlt_ms=2.0,
+            model="openrouter/nvidia/nemotron-3-super-120b-a12b:free",
+        )
+        mock_call.side_effect = [rate_error, rate_error, success]
+
+        _rate_delays.update({
+            "openrouter/nvidia/nemotron-3-super-120b-a12b:free": 0.5,
+        })
+
+        result = call_model(
+            "openrouter/nvidia/nemotron-3-super-120b-a12b:free", None, "hello", 100,
+        )
+
+        assert result.text == "ok"
+        assert mock_call.call_count == 3
+        assert mock_sleep.call_count >= 2
+
     @patch.dict(os.environ, {"ANTHROPIC_API_KEY": "test-key"})
     @patch("src.api_client.time.sleep")
     @patch("src.api_client._call_anthropic")
@@ -573,3 +749,14 @@ class TestAPIKeyValidation:
         """Missing OPENAI_API_KEY raises EnvironmentError."""
         with pytest.raises(EnvironmentError, match="OPENAI_API_KEY"):
             call_model("gpt-4o-2024-11-20", None, "test", 100)
+
+    @patch.dict(os.environ, {}, clear=True)
+    def test_openrouter_key_missing(self):
+        """Missing OPENROUTER_API_KEY raises EnvironmentError."""
+        with pytest.raises(EnvironmentError, match="OPENROUTER_API_KEY not set"):
+            _validate_api_keys("openrouter/nvidia/nemotron-3-super-120b-a12b:free")
+
+    @patch.dict(os.environ, {"OPENROUTER_API_KEY": "test-key"})
+    def test_openrouter_key_present(self):
+        """OPENROUTER_API_KEY present does not raise."""
+        _validate_api_keys("openrouter/nvidia/nemotron-3-super-120b-a12b:free")

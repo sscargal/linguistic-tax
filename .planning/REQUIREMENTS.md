@@ -78,6 +78,16 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **MFMT-04**: Each atomic test question includes all required fields: claim, variables, benchmarks, prompt count, models, cost, conversion method, statistical analysis, success criteria, pilot protocol
 - [x] **MFMT-05**: Organize experiment specs into topic-cluster files in docs/experiments/ with README index
 
+### Guided Setup Wizard
+
+- [ ] **SETUP-01**: Persist experiment configuration as JSON file (experiment_config.json) in project directory with sparse override pattern -- only user-changed values stored, missing keys fall back to ExperimentConfig defaults
+- [ ] **SETUP-02**: Validate config on load -- model strings match PRICE_TABLE keys, noise rates in [0,1], repetitions >= 1, temperature >= 0, data paths exist
+- [ ] **SETUP-03**: CLI entry point (src/cli.py) with argparse subparsers architecture extensible for Phase 14 config subcommands
+- [ ] **SETUP-04**: Interactive setup wizard (src/cli.py setup) guiding provider selection, model auto-fill from PREPROC_MODEL_MAP, path configuration, and config file generation
+- [ ] **SETUP-05**: API key validation via minimal test call (~$0.001) distinguishing auth errors from network/transient errors
+- [ ] **SETUP-06**: Environment prerequisite check -- Python >= 3.11, required packages installed, API key env vars set and non-empty
+- [ ] **SETUP-07**: Config-missing guard in run_experiment.py and pilot.py -- prints guidance message and exits if no config file found (does NOT auto-launch wizard)
+
 ## v2 Requirements
 
 Deferred to future release. Tracked but not in current roadmap.
@@ -158,12 +168,19 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MFMT-03 | Phase 11: Brainstorm micro-formatting test questions | Planned |
 | MFMT-04 | Phase 11: Brainstorm micro-formatting test questions | Planned |
 | MFMT-05 | Phase 11: Brainstorm micro-formatting test questions | Planned |
+| SETUP-01 | Phase 13: Guided setup wizard | Planned |
+| SETUP-02 | Phase 13: Guided setup wizard | Planned |
+| SETUP-03 | Phase 13: Guided setup wizard | Planned |
+| SETUP-04 | Phase 13: Guided setup wizard | Planned |
+| SETUP-05 | Phase 13: Guided setup wizard | Planned |
+| SETUP-06 | Phase 13: Guided setup wizard | Planned |
+| SETUP-07 | Phase 13: Guided setup wizard | Planned |
 
 **Coverage:**
-- v1 requirements: 41 total
-- Mapped to phases: 41
+- v1 requirements: 48 total
+- Mapped to phases: 48
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-19*
-*Last updated: 2026-03-24 after Phase 11 planning*
+*Last updated: 2026-03-24 after Phase 13 planning*

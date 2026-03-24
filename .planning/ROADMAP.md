@@ -196,13 +196,14 @@ Plans:
 
 ### Phase 13: Guided setup wizard for project configuration
 
-**Goal:** Brainstorm and potentially implement a guided setup wizard that helps new users get started quickly -- choose model provider, model(s), working directory, and other essential configuration through a simple Q&A flow instead of manually editing config files (manual config still supported)
-**Requirements**: TBD
+**Goal:** New users can run `python src/cli.py setup` to configure the toolkit through a guided Q&A flow -- select model provider and models, validate API keys, check environment prerequisites, and generate experiment_config.json with all configurable properties and sensible defaults. Manual config editing remains fully supported. CLI entry point with extensible subcommand architecture is established for Phase 14.
+**Requirements**: SETUP-01, SETUP-02, SETUP-03, SETUP-04, SETUP-05, SETUP-06, SETUP-07
 **Depends on:** Phase 12
-**Plans:** 0 plans
+**Plans:** 2 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 13 to break down)
+- [ ] 13-01-PLAN.md -- Config manager module: JSON config file I/O, sparse override merge with ExperimentConfig, validation rules
+- [ ] 13-02-PLAN.md -- CLI entry point with argparse subparsers, interactive setup wizard, environment checks, API key validation, config-missing guard
 
 ### Phase 14: CLI config subcommands for viewing and modifying settings
 

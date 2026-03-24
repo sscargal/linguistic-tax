@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 10-02-PLAN.md
-last_updated: "2026-03-24T18:04:21.195Z"
+stopped_at: Completed 11-01-PLAN.md
+last_updated: "2026-03-24T19:58:17.120Z"
 progress:
   total_phases: 15
   completed_phases: 10
-  total_plans: 22
-  completed_plans: 22
+  total_plans: 25
+  completed_plans: 23
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-24)
 
 **Core value:** Produce rigorous, reproducible experimental data showing how prompt noise degrades LLM accuracy and whether automated prompt optimization recovers it
-**Current focus:** Phase 10 — research-optimal-prompt-input-formats-for-whitepaper
+**Current focus:** Phase 11 — brainstorm-micro-formatting-test-questions-for-experiment-suite
 
 ## Current Position
 
-Phase: 10 (research-optimal-prompt-input-formats-for-whitepaper) — EXECUTING
-Plan: 2 of 2
+Phase: 11 (brainstorm-micro-formatting-test-questions-for-experiment-suite) — EXECUTING
+Plan: 2 of 3
 
 ## Performance Metrics
 
@@ -68,6 +68,7 @@ Plan: 2 of 2
 | Phase 09 P02 | 6min | 2 tasks | 6 files |
 | Phase 10 P01 | 3min | 1 tasks | 1 files |
 | Phase 10 P02 | 4min | 1 tasks | 1 files |
+| Phase 11 P01 | 6min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -109,6 +110,8 @@ Recent decisions affecting current work:
 - [Phase 09]: Reuse _make_openai_stream_chunks helper for OpenRouter mocks since both use OpenAI SDK format
 - [Phase 10]: Organized literature by 6 format categories; flagged punctuation removal as likely harmful; identified format-x-noise as novel contribution
 - [Phase 10]: Ranked H-FMT-01 (TOON), H-FMT-02 (XML), H-FMT-04 (punctuation) as HIGH priority; H-FMT-05 (format x noise) as stretch goal
+- [Phase 11]: Rule-based format conversion as default; LLM pre-processor only for AQ-TE-04 comparison
+- [Phase 11]: Free OpenRouter Nemotron as default model; immediate paid escalation for model-specific XML hypothesis (AQ-SM-01)
 
 ### Pending Todos
 
@@ -134,6 +137,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-24T18:00:34.085Z
-Stopped at: Completed 10-02-PLAN.md
+Last session: 2026-03-24T19:58:17.117Z
+Stopped at: Completed 11-01-PLAN.md
 Resume file: None

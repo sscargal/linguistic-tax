@@ -80,8 +80,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Guided Setup Wizard
 
-- [ ] **SETUP-01**: Persist experiment configuration as JSON file (experiment_config.json) in project directory with sparse override pattern -- only user-changed values stored, missing keys fall back to ExperimentConfig defaults
-- [ ] **SETUP-02**: Validate config on load -- model strings match PRICE_TABLE keys, noise rates in [0,1], repetitions >= 1, temperature >= 0, data paths exist
+- [x] **SETUP-01**: Persist experiment configuration as JSON file (experiment_config.json) in project directory with sparse override pattern -- only user-changed values stored, missing keys fall back to ExperimentConfig defaults
+- [x] **SETUP-02**: Validate config on load -- model strings match PRICE_TABLE keys, noise rates in [0,1], repetitions >= 1, temperature >= 0, data paths exist
 - [ ] **SETUP-03**: CLI entry point (src/cli.py) with argparse subparsers architecture extensible for Phase 14 config subcommands
 - [ ] **SETUP-04**: Interactive setup wizard (src/cli.py setup) guiding provider selection, model auto-fill from PREPROC_MODEL_MAP, path configuration, and config file generation
 - [ ] **SETUP-05**: API key validation via minimal test call (~$0.001) distinguishing auth errors from network/transient errors

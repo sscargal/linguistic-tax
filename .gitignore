@@ -5,6 +5,7 @@ results/
 # Python
 __pycache__/
 *.pyc
+.coverage
 .venv/
 venv/
 

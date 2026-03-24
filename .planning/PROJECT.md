@@ -29,6 +29,8 @@ Produce rigorous, reproducible experimental data showing how prompt noise degrad
 None — all v1 requirements validated.
 
 ### Recently Validated
+- ✓ Add OpenRouter as 4th model provider with free Nemotron model defaults, full test coverage — Phase 9
+- ✓ Expand test coverage to 80%+ line coverage (achieved 88.37%) with integration tests and QA script — Phase 8
 - ✓ Integrate OpenAI GPT-4o as full third target model (API client, config, pilot, figures) — Phase 7
 - ✓ Generate publication-quality figures (accuracy curves, quadrant plots, cost heatmaps, Kendall's tau) — Phase 6
 - ✓ Perform GLMM, bootstrap CI, McNemar's, and Kendall's tau analysis — Phase 5
@@ -49,13 +51,13 @@ None — all v1 requirements validated.
 - Pre-processor calls use cheap models (Haiku or Flash) to sanitize/compress before sending to target model
 - Each condition requires 5 repetitions for stability measurement (Consistency Rate)
 - Existing code structure already established in `src/` and `tests/` directories
-- API keys via environment variables: ANTHROPIC_API_KEY, GOOGLE_API_KEY, OPENAI_API_KEY
+- API keys via environment variables: ANTHROPIC_API_KEY, GOOGLE_API_KEY, OPENAI_API_KEY, OPENROUTER_API_KEY
 - Budget constraint: ~$15 for pilot run (20 prompts)
 
 ## Constraints
 
 - **Language**: Python 3.11+ only — no other languages
-- **APIs**: Direct SDK calls via `anthropic`, `google-genai`, and `openai` — no CLI wrappers
+- **APIs**: Direct SDK calls via `anthropic`, `google-genai`, `openai`, and OpenRouter (via `openai` with base_url override) — no CLI wrappers
 - **Storage**: SQLite only — no Postgres, no flat JSON files for results
 - **Reproducibility**: All randomness uses fixed seeds; all API calls use temperature=0.0
 - **Logging**: Python `logging` module only — no print statements
@@ -74,4 +76,4 @@ None — all v1 requirements validated.
 | 5 repetitions per condition | Balance statistical power with API cost | — Pending |
 
 ---
-*Last updated: 2026-03-23 after Phase 7 completion — OpenAI GPT-4o integrated as third model provider*
+*Last updated: 2026-03-24 after Phase 9 completion — OpenRouter provider with free Nemotron models added*

@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 08-02-PLAN.md
-last_updated: "2026-03-24T00:44:45.679Z"
+stopped_at: Completed 09-01-PLAN.md
+last_updated: "2026-03-24T17:17:19.457Z"
 progress:
   total_phases: 15
   completed_phases: 8
-  total_plans: 18
-  completed_plans: 18
+  total_plans: 20
+  completed_plans: 19
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-23)
 
 **Core value:** Produce rigorous, reproducible experimental data showing how prompt noise degrades LLM accuracy and whether automated prompt optimization recovers it
-**Current focus:** Phase 08 — write-unit-tests
+**Current focus:** Phase 09 — add-openrouter-support-with-free-model-defaults-nemotron
 
 ## Current Position
 
-Phase: 08 (write-unit-tests) — EXECUTING
-Plan: 2 of 3
+Phase: 09 (add-openrouter-support-with-free-model-defaults-nemotron) — EXECUTING
+Plan: 2 of 2
 
 ## Performance Metrics
 
@@ -64,6 +64,7 @@ Plan: 2 of 3
 | Phase 08 P03 | 8min | 1 tasks | 1 files |
 | Phase 08 P01 | 10min | 2 tasks | 6 files |
 | Phase 08 P02 | 4min | 2 tasks | 1 files |
+| Phase 09 P01 | 3min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -101,6 +102,7 @@ Recent decisions affecting current work:
 - [Phase 08]: In-process CLI testing via sys.argv patching for coverage attribution (subprocess tests don't count)
 - [Phase 08]: Mock factory fixtures in conftest.py for project-wide API response mocking reuse
 - [Phase 08]: No additional gap-closure tests needed; coverage already at 88% from plan 08-01
+- [Phase 09]: Reuse OpenAI SDK with base_url override for OpenRouter provider
 
 ### Pending Todos
 
@@ -126,6 +128,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-24T00:38:18.859Z
-Stopped at: Completed 08-02-PLAN.md
+Last session: 2026-03-24T17:17:19.453Z
+Stopped at: Completed 09-01-PLAN.md
 Resume file: None

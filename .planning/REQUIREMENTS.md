@@ -101,13 +101,13 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Pre-Execution Confirmation Gate
 
-- [ ] **GATE-COST**: Static cost estimation from PRICE_TABLE using average token counts per benchmark (HumanEval ~500in/200out, GSM8K ~300in/100out) with separate target model and pre-processor cost line items
-- [ ] **GATE-RUNTIME**: Runtime estimation from RATE_LIMIT_DELAYS x number of calls per model, displayed as wall-clock lower bound
-- [ ] **GATE-SUMMARY**: Structured pre-execution summary with aligned columns showing per-model/per-intervention/per-noise-type counts and cost estimates, numbers only (no bar charts)
-- [ ] **GATE-CONFIRM**: Three-way confirmation prompt (Yes/No/Modify) after summary display with input_fn injection for testability
-- [ ] **GATE-BUDGET**: --budget flag exits non-zero if estimated cost exceeds threshold, checked before --yes auto-accept
-- [ ] **GATE-PLAN**: Save pre-execution summary to results/execution_plan.json with timestamp, item counts, cost projection, models, filters
-- [ ] **GATE-RESUME**: Show completed vs remaining counts when resuming a partial run, with adjusted cost for remaining items only
+- [x] **GATE-COST**: Static cost estimation from PRICE_TABLE using average token counts per benchmark (HumanEval ~500in/200out, GSM8K ~300in/100out) with separate target model and pre-processor cost line items
+- [x] **GATE-RUNTIME**: Runtime estimation from RATE_LIMIT_DELAYS x number of calls per model, displayed as wall-clock lower bound
+- [x] **GATE-SUMMARY**: Structured pre-execution summary with aligned columns showing per-model/per-intervention/per-noise-type counts and cost estimates, numbers only (no bar charts)
+- [x] **GATE-CONFIRM**: Three-way confirmation prompt (Yes/No/Modify) after summary display with input_fn injection for testability
+- [x] **GATE-BUDGET**: --budget flag exits non-zero if estimated cost exceeds threshold, checked before --yes auto-accept
+- [x] **GATE-PLAN**: Save pre-execution summary to results/execution_plan.json with timestamp, item counts, cost projection, models, filters
+- [x] **GATE-RESUME**: Show completed vs remaining counts when resuming a partial run, with adjusted cost for remaining items only
 - [ ] **GATE-CLI-RUN**: `propt run` subcommand with --model, --limit, --retry-failed, --db, --yes, --budget, --dry-run, --intervention flags
 - [ ] **GATE-CLI-PILOT**: `propt pilot` subcommand with --yes, --budget, --dry-run, --db flags wrapping pilot.py
 - [ ] **GATE-DRYRUN**: --dry-run shows summary only and exits without executing (replaces old _show_dry_run)

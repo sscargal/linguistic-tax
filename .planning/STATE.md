@@ -157,6 +157,12 @@ None yet.
 - Phase 14 added: CLI config subcommands — display config as JSON/text/table, set/modify any property, list command highlights changes from defaults
 - Phase 15 added: Pre-execution experiment summary and confirmation gate — show cost/runtime/experiment count before running, accept/reject/modify flow, --yes flag for automation
 
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260325-qpc | Create Claude Code CLI skills for Linguistic Tax project | 2026-03-25 | 63cee47 | [260325-qpc-create-claude-code-cli-skills-for-lingui](./quick/260325-qpc-create-claude-code-cli-skills-for-lingui/) |
+
 ### Blockers/Concerns
 
 - Research flag: google-generativeai package in pyproject.toml is deprecated, must be replaced with google-genai before writing API code (Phase 3)
@@ -165,6 +171,7 @@ None yet.
 
 ## Session Continuity
 
+Last activity: 2026-03-25 - Completed quick task 260325-qpc: Create Claude Code CLI skills for Linguistic Tax project
 Last session: 2026-03-25T04:17:23.538Z
 Stopped at: Completed 12-03-PLAN.md
 Resume file: None

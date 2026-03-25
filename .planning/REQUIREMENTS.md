@@ -123,7 +123,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **DOC-03**: CLI reference documents all 9 subcommands (setup, show-config, set-config, reset-config, validate, diff, list-models, run, pilot) with flags verified against src/cli.py
 - [x] **DOC-04**: Getting-started guide with runnable end-to-end walkthrough from clone to viewing pilot results, plus additional walkthroughs for custom experiments and analyzing existing results
 - [x] **DOC-05**: Cross-linked documentation suite: README links to docs/, docs link to each other and to existing RDD/research/experiment docs
-- [ ] **DOC-06**: docs/README.md index page listing all documentation files with descriptions and links
+- [x] **DOC-06**: docs/README.md index page listing all documentation files with descriptions and links
 
 ## v2 Requirements
 

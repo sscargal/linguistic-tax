@@ -1,0 +1,43 @@
+{
+  "skill_name": "run-pilot",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "i want to start testing the experiment pipeline but don't want to burn through my whole API budget. can you run a small test first?",
+      "expected_output": "Suggests and executes the pilot with a dry-run first, shows cost estimate, then offers to run the actual pilot.",
+      "files": [],
+      "expectations": [
+        "Suggests running the pilot (20-prompt subset) rather than the full matrix",
+        "Shows the dry-run command first (propt pilot --dry-run)",
+        "Mentions cost estimation and budget checking",
+        "Explains what the pilot validates (API keys, grading, costs, noise injection)",
+        "Provides the actual execution command (propt pilot --yes or similar)"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "the pilot finished running. what should I do next to check if the results look good before scaling up?",
+      "expected_output": "Post-pilot validation checklist: check completeness, grading, costs, pass rates, then compute derived metrics and make go/no-go decision.",
+      "files": [],
+      "expectations": [
+        "Suggests checking pilot completeness (all 20 prompts have runs)",
+        "Suggests verifying grading (no ungraded runs)",
+        "Suggests checking cost data and projecting full-run cost",
+        "Suggests running compute_derived to populate derived metrics",
+        "Provides a go/no-go decision framework based on pilot results"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "i tried running propt pilot but it said 'No config found'. what do i need to do?",
+      "expected_output": "Diagnoses the missing config issue and walks through setup.",
+      "files": [],
+      "expectations": [
+        "Identifies the issue: config file not initialized",
+        "Suggests running propt setup to create the config",
+        "Mentions checking API keys are set as environment variables",
+        "Suggests re-running the pilot after setup completes"
+      ]
+    }
+  ]
+}

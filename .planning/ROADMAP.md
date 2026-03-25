@@ -218,10 +218,12 @@ Plans:
 
 ### Phase 15: Pre-execution experiment summary and confirmation gate
 
-**Goal:** Before executing experiments, display a summary of what will run -- cost projection, number of experiments, estimated runtime, models, noise conditions, and interventions included. Researcher can accept/reject, make changes, and re-execute. Includes a --yes flag to skip confirmation for automated/scripted runs
-**Requirements**: TBD
+**Goal:** Before executing experiments, display a comprehensive pre-execution summary (cost projection, experiment count, estimated runtime, models, noise conditions, interventions) with a confirmation gate. Researcher can accept/reject/modify filters before execution proceeds. Includes --yes flag for scripted runs, --budget threshold for cost gates, `propt run` and `propt pilot` CLI subcommands, tqdm progress bar during execution, and execution plan saving to JSON.
+**Requirements**: GATE-COST, GATE-RUNTIME, GATE-SUMMARY, GATE-CONFIRM, GATE-BUDGET, GATE-PLAN, GATE-RESUME, GATE-CLI-RUN, GATE-CLI-PILOT, GATE-DRYRUN, GATE-PROGRESS, GATE-WIRE, GATE-TQDM, GATE-TEST
 **Depends on:** Phase 14
-**Plans:** 0 plans
+**Plans:** 3 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 15 to break down)
+- [ ] 15-01-PLAN.md -- Core execution_summary module: cost estimation, runtime estimation, summary formatting, confirmation gate, execution plan saving
+- [ ] 15-02-PLAN.md -- CLI integration: propt run/pilot subcommands, confirmation gate wiring into run_experiment.py and pilot.py, tqdm progress bar, pyproject.toml
+- [ ] 15-03-PLAN.md -- Tests for execution_summary module and CLI run/pilot subcommand registration

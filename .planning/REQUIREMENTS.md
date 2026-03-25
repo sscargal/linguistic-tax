@@ -99,6 +99,23 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **CFG-ENTRY**: Register `propt` as pyproject.toml console_scripts entry point (`propt = "src.cli:main"`)
 - [x] **CFG-COMPLETE**: Shell tab completion for property names in set-config/show-config/reset-config via argcomplete
 
+### Pre-Execution Confirmation Gate
+
+- [ ] **GATE-COST**: Static cost estimation from PRICE_TABLE using average token counts per benchmark (HumanEval ~500in/200out, GSM8K ~300in/100out) with separate target model and pre-processor cost line items
+- [ ] **GATE-RUNTIME**: Runtime estimation from RATE_LIMIT_DELAYS x number of calls per model, displayed as wall-clock lower bound
+- [ ] **GATE-SUMMARY**: Structured pre-execution summary with aligned columns showing per-model/per-intervention/per-noise-type counts and cost estimates, numbers only (no bar charts)
+- [ ] **GATE-CONFIRM**: Three-way confirmation prompt (Yes/No/Modify) after summary display with input_fn injection for testability
+- [ ] **GATE-BUDGET**: --budget flag exits non-zero if estimated cost exceeds threshold, checked before --yes auto-accept
+- [ ] **GATE-PLAN**: Save pre-execution summary to results/execution_plan.json with timestamp, item counts, cost projection, models, filters
+- [ ] **GATE-RESUME**: Show completed vs remaining counts when resuming a partial run, with adjusted cost for remaining items only
+- [ ] **GATE-CLI-RUN**: `propt run` subcommand with --model, --limit, --retry-failed, --db, --yes, --budget, --dry-run, --intervention flags
+- [ ] **GATE-CLI-PILOT**: `propt pilot` subcommand with --yes, --budget, --dry-run, --db flags wrapping pilot.py
+- [ ] **GATE-DRYRUN**: --dry-run shows summary only and exits without executing (replaces old _show_dry_run)
+- [ ] **GATE-PROGRESS**: tqdm progress bar during execution showing completion %, items done/total, ETA, cost-so-far
+- [ ] **GATE-WIRE**: Confirmation gate integrated into both run_experiment.py run_engine() and pilot.py run_pilot()
+- [ ] **GATE-TQDM**: tqdm added to pyproject.toml dependencies
+- [ ] **GATE-TEST**: Unit tests for cost estimation, runtime estimation, summary formatting, confirmation gate, execution plan saving, and CLI subcommand registration
+
 ## v2 Requirements
 
 Deferred to future release. Tracked but not in current roadmap.
@@ -194,12 +211,26 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CFG-MODELS | Phase 14: CLI config subcommands | Planned |
 | CFG-ENTRY | Phase 14: CLI config subcommands | Planned |
 | CFG-COMPLETE | Phase 14: CLI config subcommands | Planned |
+| GATE-COST | Phase 15: Pre-execution confirmation gate | Planned |
+| GATE-RUNTIME | Phase 15: Pre-execution confirmation gate | Planned |
+| GATE-SUMMARY | Phase 15: Pre-execution confirmation gate | Planned |
+| GATE-CONFIRM | Phase 15: Pre-execution confirmation gate | Planned |
+| GATE-BUDGET | Phase 15: Pre-execution confirmation gate | Planned |
+| GATE-PLAN | Phase 15: Pre-execution confirmation gate | Planned |
+| GATE-RESUME | Phase 15: Pre-execution confirmation gate | Planned |
+| GATE-CLI-RUN | Phase 15: Pre-execution confirmation gate | Planned |
+| GATE-CLI-PILOT | Phase 15: Pre-execution confirmation gate | Planned |
+| GATE-DRYRUN | Phase 15: Pre-execution confirmation gate | Planned |
+| GATE-PROGRESS | Phase 15: Pre-execution confirmation gate | Planned |
+| GATE-WIRE | Phase 15: Pre-execution confirmation gate | Planned |
+| GATE-TQDM | Phase 15: Pre-execution confirmation gate | Planned |
+| GATE-TEST | Phase 15: Pre-execution confirmation gate | Planned |
 
 **Coverage:**
-- v1 requirements: 56 total
-- Mapped to phases: 56
+- v1 requirements: 70 total
+- Mapped to phases: 70
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-19*
-*Last updated: 2026-03-25 after Phase 14 planning*
+*Last updated: 2026-03-25 after Phase 15 planning*

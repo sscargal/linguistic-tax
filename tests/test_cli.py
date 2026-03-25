@@ -131,3 +131,145 @@ def test_main_set_config_routes():
             mock_handler.assert_called_once()
             args = mock_handler.call_args[0][0]
             assert args.pairs == ["temperature", "0.5"]
+
+
+# ---------------------------------------------------------------------------
+# Phase 15: run and pilot subcommand tests
+# ---------------------------------------------------------------------------
+
+
+def test_build_cli_has_run_subcommand():
+    """build_cli parser accepts 'run' subcommand."""
+    parser = build_cli()
+    args = parser.parse_args(["run"])
+    assert args.command == "run"
+
+
+def test_build_cli_has_pilot_subcommand():
+    """build_cli parser accepts 'pilot' subcommand."""
+    parser = build_cli()
+    args = parser.parse_args(["pilot"])
+    assert args.command == "pilot"
+
+
+def test_run_parser_default_flags():
+    """run subcommand has correct default values for all flags."""
+    parser = build_cli()
+    args = parser.parse_args(["run"])
+    assert args.model == "all"
+    assert args.limit is None
+    assert args.retry_failed is False
+    assert args.yes is False
+    assert args.budget is None
+    assert args.dry_run is False
+    assert args.intervention is None
+    assert args.db is None
+
+
+def test_run_parser_all_flags():
+    """run subcommand parses all flags correctly."""
+    parser = build_cli()
+    args = parser.parse_args([
+        "run",
+        "--model", "claude",
+        "--limit", "10",
+        "--retry-failed",
+        "--yes",
+        "--budget", "50",
+        "--dry-run",
+        "--intervention", "raw",
+        "--db", "test.db",
+    ])
+    assert args.model == "claude"
+    assert args.limit == 10
+    assert args.retry_failed is True
+    assert args.yes is True
+    assert args.budget == 50.0
+    assert args.dry_run is True
+    assert args.intervention == "raw"
+    assert args.db == "test.db"
+
+
+def test_pilot_parser_default_flags():
+    """pilot subcommand has correct default values."""
+    parser = build_cli()
+    args = parser.parse_args(["pilot"])
+    assert args.yes is False
+    assert args.budget is None
+    assert args.dry_run is False
+    assert args.db is None
+
+
+def test_pilot_parser_all_flags():
+    """pilot subcommand parses all flags correctly."""
+    parser = build_cli()
+    args = parser.parse_args([
+        "pilot",
+        "--yes",
+        "--budget", "100",
+        "--dry-run",
+        "--db", "pilot.db",
+    ])
+    assert args.yes is True
+    assert args.budget == 100.0
+    assert args.dry_run is True
+    assert args.db == "pilot.db"
+
+
+def test_run_parser_intervention_choices():
+    """run --intervention accepts valid choices and rejects invalid ones."""
+    parser = build_cli()
+    # Valid intervention
+    args = parser.parse_args(["run", "--intervention", "pre_proc_sanitize"])
+    assert args.intervention == "pre_proc_sanitize"
+
+    # Invalid intervention
+    with pytest.raises(SystemExit):
+        parser.parse_args(["run", "--intervention", "invalid"])
+
+
+def test_run_parser_model_choices():
+    """run --model accepts valid choices and rejects invalid ones."""
+    parser = build_cli()
+    # Valid model
+    args = parser.parse_args(["run", "--model", "openrouter"])
+    assert args.model == "openrouter"
+
+    # Invalid model
+    with pytest.raises(SystemExit):
+        parser.parse_args(["run", "--model", "invalid"])
+
+
+def test_build_cli_has_all_subcommands_including_new():
+    """build_cli parser accepts all 9 subcommands including run and pilot."""
+    parser = build_cli()
+    commands = [
+        ("setup", ["setup"]),
+        ("show-config", ["show-config"]),
+        ("set-config", ["set-config", "key", "val"]),
+        ("reset-config", ["reset-config", "key"]),
+        ("validate", ["validate"]),
+        ("diff", ["diff"]),
+        ("list-models", ["list-models"]),
+        ("run", ["run"]),
+        ("pilot", ["pilot"]),
+    ]
+    for expected_cmd, argv in commands:
+        args = parser.parse_args(argv)
+        assert args.command == expected_cmd, f"Failed for {expected_cmd}"
+
+
+def test_main_run_routes_to_handler():
+    """main with 'run --yes' calls handle_run."""
+    with patch("sys.argv", ["propt", "run", "--yes"]):
+        with patch("src.cli.handle_run") as mock_handler:
+            main()
+            mock_handler.assert_called_once()
+
+
+def test_main_pilot_routes_to_handler():
+    """main with 'pilot --yes' calls handle_pilot."""
+    with patch("sys.argv", ["propt", "pilot", "--yes"]):
+        with patch("src.cli.handle_pilot") as mock_handler:
+            main()
+            mock_handler.assert_called_once()

@@ -331,6 +331,22 @@ linguistic-tax/
 - [Prompt Format Research](docs/prompt_format_research.md) -- literature survey on format effects
 - [Experiment Specs](docs/experiments/README.md) -- micro-formatting test designs
 
+## Claude Code Skills
+
+This project includes 7 Claude Code skills that automate common research workflows. These skills are triggered automatically when you ask Claude Code about relevant topics.
+
+| Skill | Description | Example Triggers |
+|-------|-------------|------------------|
+| `check-results` | Inspect experiment progress, data quality, and cost tracking | "how's the experiment going", "check progress", "how much have we spent" |
+| `run-pilot` | Run the 20-prompt pilot experiment to validate the pipeline | "run pilot", "test run", "validate the pipeline" |
+| `run-experiment` | Execute the full experiment matrix or targeted subsets | "run experiments", "start the full run", "retry failed" |
+| `analyze` | Run the statistical analysis pipeline and interpret results against H1-H5 | "analyze results", "run the stats", "are the hypotheses supported" |
+| `generate-figures` | Generate publication-quality figures for the ArXiv paper | "make the figures", "generate plots", "accuracy curve" |
+| `validate-rdd` | Verify codebase implements the RDD specification correctly | "validate against RDD", "check RDD compliance" |
+| `write-section` | Draft LaTeX sections for the ArXiv paper from experiment data | "write the paper", "draft the intro", "generate LaTeX" |
+
+Skills are defined in `.claude/skills/` and each has a detailed SKILL.md with full process documentation.
+
 ## Glossary
 
 ### Research Concepts

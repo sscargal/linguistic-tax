@@ -7,9 +7,8 @@ How to set up the development environment, run tests, and extend the toolkit wit
 ```bash
 git clone https://github.com/<user>/linguistic-tax.git
 cd linguistic-tax
-python -m venv .venv && source .venv/bin/activate
-pip install -e .
-pytest tests/ -x -q    # Quick smoke test
+uv sync
+uv run pytest tests/ -x -q    # Quick smoke test
 ```
 
 **API keys** (set in your shell or `.env` file):

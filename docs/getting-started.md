@@ -5,6 +5,7 @@ This guide walks you from a fresh clone to viewing your first experimental resul
 ## Prerequisites
 
 - **Python >= 3.11** -- check with `python --version`
+- **[uv](https://docs.astral.sh/uv/)** -- install with `curl -LsSf https://astral.sh/uv/install.sh | sh`
 - **At least one API key** for a supported provider (see [Configuration](#configuration))
 - **~500 MB disk space** for dependencies
 - OpenRouter with free Nemotron models requires no API spend
@@ -14,9 +15,7 @@ This guide walks you from a fresh clone to viewing your first experimental resul
 ```bash
 git clone https://github.com/<user>/linguistic-tax.git
 cd linguistic-tax
-python -m venv .venv
-source .venv/bin/activate   # On Windows: .venv\Scripts\activate
-pip install -e .
+uv sync
 ```
 
 Verify the installation:
@@ -347,7 +346,7 @@ echo $ANTHROPIC_API_KEY   # Should not be empty
 
 **Python version errors** -- This toolkit requires Python >= 3.11 for match/case syntax and modern type hints. Check with `python --version`.
 
-**Import errors after install** -- Make sure you installed in editable mode (`pip install -e .`) and your virtual environment is activated.
+**Import errors after install** -- Run `uv sync` to ensure all dependencies are installed. uv manages its own virtual environment automatically.
 
 ## Next Steps
 

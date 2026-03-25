@@ -13,11 +13,10 @@ The toolkit implements a full factorial experiment across 4 model providers, 8 n
 ```bash
 git clone https://github.com/<user>/linguistic-tax.git
 cd linguistic-tax
-python -m venv .venv && source .venv/bin/activate
-pip install -e .
+uv sync
 export ANTHROPIC_API_KEY="sk-ant-..."   # At least one provider required
-propt setup
-propt pilot --dry-run
+uv run propt setup
+uv run propt pilot --dry-run
 ```
 
 ## Installation
@@ -25,20 +24,16 @@ propt pilot --dry-run
 ### Prerequisites
 
 - Python >= 3.11
+- **[uv](https://docs.astral.sh/uv/)** -- install with `curl -LsSf https://astral.sh/uv/install.sh | sh`
 - At least one LLM provider API key (see below)
 
 ### Setup
 
 ```bash
-# Clone and create virtual environment
+# Clone and install
 git clone https://github.com/<user>/linguistic-tax.git
 cd linguistic-tax
-python -m venv .venv
-source .venv/bin/activate    # Linux/macOS
-# .venv\Scripts\activate     # Windows
-
-# Install in editable mode (includes all dependencies)
-pip install -e .
+uv sync
 ```
 
 ### API Keys

@@ -80,9 +80,15 @@ None yet.
 - Research flag (Phase 18): OpenRouter /api/v1/models pricing schema is MEDIUM confidence — verify live before writing parser
 - Research flag (Phase 19): python-dotenv set_key() behavior on missing .env file needs verification before wizard implementation
 
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260325-w6g | Support Ctrl-C in the wizard and scripts | 2026-03-25 | d7e40b4 | [260325-w6g-support-ctrl-c-in-the-wizard-and-scripts](./quick/260325-w6g-support-ctrl-c-in-the-wizard-and-scripts/) |
+
 ## Session Continuity
 
-Last activity: 2026-03-25 - Roadmap created for v2.0
+Last activity: 2026-03-25 - Completed quick task 260325-w6g: Support Ctrl-C in the wizard and scripts
 Last session: 2026-03-25T23:05:28.300Z
 Stopped at: Phase 16 context gathered
 Resume file: .planning/phases/16-config-schema-and-defensive-fallbacks/16-CONTEXT.md

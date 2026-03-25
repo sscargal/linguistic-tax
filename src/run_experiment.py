@@ -501,18 +501,24 @@ def run_engine(args: argparse.Namespace, config: ExperimentConfig | None = None)
     # Process items with tqdm progress bar
     total = len(pending)
     cost_so_far = 0.0
-    with tqdm(total=total, desc="Experiments", unit="item") as pbar:
-        for i, item in enumerate(pending):
-            _process_item(item, conn, prompts_by_id, config, i, total)
-            # Query cost from last inserted row
-            row = conn.execute(
-                "SELECT total_cost_usd FROM experiment_runs WHERE run_id = ?",
-                (make_run_id(item),),
-            ).fetchone()
-            if row and row[0]:
-                cost_so_far += row[0]
-            pbar.set_postfix(cost=f"${cost_so_far:.2f}")
-            pbar.update(1)
+    try:
+        with tqdm(total=total, desc="Experiments", unit="item") as pbar:
+            for i, item in enumerate(pending):
+                _process_item(item, conn, prompts_by_id, config, i, total)
+                # Query cost from last inserted row
+                row = conn.execute(
+                    "SELECT total_cost_usd FROM experiment_runs WHERE run_id = ?",
+                    (make_run_id(item),),
+                ).fetchone()
+                if row and row[0]:
+                    cost_so_far += row[0]
+                pbar.set_postfix(cost=f"${cost_so_far:.2f}")
+                pbar.update(1)
+    except KeyboardInterrupt:
+        print("\nInterrupted. Saving progress...")
+        conn.close()
+        print(f"Completed {i} of {total} items.")
+        sys.exit(130)
 
     logger.info("Engine complete: %d items processed", total)
     conn.close()

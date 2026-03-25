@@ -162,6 +162,7 @@ None yet.
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 260325-qpc | Create Claude Code CLI skills for Linguistic Tax project | 2026-03-25 | 63cee47 | [260325-qpc-create-claude-code-cli-skills-for-lingui](./quick/260325-qpc-create-claude-code-cli-skills-for-lingui/) |
+| 260325-rvo | Document Claude Code skills in README.md and docs/README.md | 2026-03-25 | b5f5e45 | [260325-rvo-document-new-claude-code-skills-and-upda](./quick/260325-rvo-document-new-claude-code-skills-and-upda/) |
 
 ### Blockers/Concerns
 
@@ -171,7 +172,7 @@ None yet.
 
 ## Session Continuity
 
-Last activity: 2026-03-25 - Completed quick task 260325-qpc: Create Claude Code CLI skills for Linguistic Tax project
-Last session: 2026-03-25T04:17:23.538Z
-Stopped at: Completed 12-03-PLAN.md
+Last activity: 2026-03-25 - Completed quick task 260325-rvo: Document Claude Code skills in README.md and docs/README.md
+Last session: 2026-03-25T20:07:47Z
+Stopped at: Completed quick task 260325-rvo
 Resume file: None

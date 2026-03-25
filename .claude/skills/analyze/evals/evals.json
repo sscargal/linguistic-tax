@@ -1,0 +1,46 @@
+{
+  "skill_name": "analyze",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "the experiments finished running overnight. can you run the full analysis pipeline and tell me what the data shows? i want to know if our hypotheses are supported",
+      "expected_output": "Runs compute_derived then analyze_results all, interprets findings against H1-H5 with a hypothesis scorecard.",
+      "files": [],
+      "expectations": [
+        "Runs or suggests running compute_derived first (Stage 1)",
+        "Runs or suggests running analyze_results all (Stage 2)",
+        "Interprets results against the 5 hypotheses (H1-H5)",
+        "Presents a hypothesis scorecard with support status",
+        "Reports key metrics (R, RR, TR values)",
+        "Notes any surprising findings"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "i'm writing the results section of the paper and need to understand the GLMM output. what do the coefficients mean and which effects are significant?",
+      "expected_output": "Reads GLMM output, explains coefficients in plain English, identifies significant effects with odds ratios and CIs.",
+      "files": [],
+      "expectations": [
+        "Reads or runs the GLMM analysis",
+        "Explains what each coefficient represents in plain English",
+        "Identifies which effects are statistically significant",
+        "Reports odds ratios with confidence intervals",
+        "Explains the GLMM fallback chain if relevant (which level was used)",
+        "Connects findings to the paper's narrative"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "can you check if noise is a 'uniform tax' or a 'targeted tax'? I want to know if certain types of prompts are more vulnerable to noise than others",
+      "expected_output": "Runs Kendall's tau analysis and reports whether noise affects all prompts equally or disproportionately breaks some.",
+      "files": [],
+      "expectations": [
+        "Runs or reads Kendall's tau analysis",
+        "Explains what tau values mean (1.0 = uniform, <1.0 = targeted)",
+        "Reports tau values per noise level",
+        "Identifies whether the tax is uniform or targeted",
+        "If targeted, suggests which prompt characteristics are vulnerable"
+      ]
+    }
+  ]
+}

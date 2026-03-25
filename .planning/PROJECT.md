@@ -26,7 +26,20 @@ Produce rigorous, reproducible experimental data showing how prompt noise degrad
 - ✓ Run pilot experiment tooling (20 prompts across all conditions) with spot-check, cost projection, and structured verdict — Phase 4
 
 ### Active
-None — all v1 requirements validated.
+
+#### Current Milestone: v2.0 — Configurable Models and Dynamic Pricing
+
+**Goal:** Make models fully configurable at setup time with live pricing, flexible wizard flow, .env API key management, and adaptive experiment scope — so the toolkit works with any model, not just the four hardcoded ones.
+
+**Target features:**
+- Dynamic model configuration (free-text entry with sensible defaults)
+- Per-provider pricing APIs with offline fallback
+- Multi-provider setup wizard with target/preproc explanations
+- .env file creation for API keys
+- Config-driven PRICE_TABLE, PREPROC_MODEL_MAP, RATE_LIMIT_DELAYS
+- Enhanced `propt list-models` with live provider queries
+- Budget awareness at setup time
+- Experiment scope adapts to configured models
 
 ### Recently Validated
 - ✓ Comprehensive documentation and README for new users — root README.md, architecture docs, getting-started guide, analysis guide, contributing guide, docs index — Phase 12
@@ -81,4 +94,4 @@ None — all v1 requirements validated.
 | 5 repetitions per condition | Balance statistical power with API cost | — Pending |
 
 ---
-*Last updated: 2026-03-25 after Phase 12 completion — Comprehensive documentation and README for new users*
+*Last updated: 2026-03-25 after milestone v2.0 started — Configurable Models and Dynamic Pricing*

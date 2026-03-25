@@ -1,31 +1,33 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-status: unknown
-stopped_at: Completed quick task 260325-t52
-last_updated: "2026-03-25T21:02:03.611Z"
-last_activity: "2026-03-25 - Completed quick task 260325-sta: CPU-only PyTorch via uv source override"
+milestone: v2.0
+milestone_name: Configurable Models and Dynamic Pricing
+status: defining-requirements
+stopped_at: Milestone v2.0 started
+last_updated: "2026-03-25T21:32:35.946Z"
+last_activity: "2026-03-25 - Milestone v2.0 started"
 progress:
-  total_phases: 15
-  completed_phases: 15
-  total_plans: 35
-  completed_plans: 35
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-24)
+See: .planning/PROJECT.md (updated 2026-03-25)
 
 **Core value:** Produce rigorous, reproducible experimental data showing how prompt noise degrades LLM accuracy and whether automated prompt optimization recovers it
-**Current focus:** Phase 12 — comprehensive-documentation-and-readme-for-new-users
+**Current focus:** v2.0 — Configurable Models and Dynamic Pricing
 
 ## Current Position
 
-Phase: 12 (comprehensive-documentation-and-readme-for-new-users) — EXECUTING
-Plan: 3 of 3
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-03-25 — Milestone v2.0 started
 
 ## Performance Metrics
 

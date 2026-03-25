@@ -24,6 +24,7 @@ dependencies = [
     "tabulate>=0.9.0",
     "argcomplete>=3.0.0",
     "tqdm>=4.66.0",
+    "torch>=2.0.0",
 ]
 
 [project.scripts]
@@ -40,3 +41,11 @@ packages = ["src"]
 
 [tool.uv]
 package = true
+
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true

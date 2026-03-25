@@ -59,7 +59,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Running compute_cost() with an unknown model ID returns $0.00 and logs a warning instead of crashing with KeyError
   4. PRICE_TABLE, PREPROC_MODEL_MAP, and RATE_LIMIT_DELAYS are built from the loaded config at runtime, not from hardcoded module-level constants
   5. python-dotenv is installed and env_manager module can load/write .env files
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 16-01-PLAN.md -- ModelConfig dataclass, ModelRegistry class, default_models.json
+- [ ] 16-02-PLAN.md -- env_manager module and python-dotenv dependency
+- [ ] 16-03-PLAN.md -- ExperimentConfig v2, config migration, validate_config update, integration
 
 ### Phase 17: Registry Consumers
 **Goal**: Every module that previously imported hardcoded MODELS, PRICE_TABLE, PREPROC_MODEL_MAP, or RATE_LIMIT_DELAYS now reads from the ModelRegistry -- custom models flow through the entire pipeline without hitting allowlist rejections
@@ -102,7 +107,37 @@ Phases execute in numeric order: 16 -> 17 -> 18 -> 19
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 16. Config Schema and Defensive Fallbacks | v2.0 | 0/TBD | Not started | - |
+| 16. Config Schema and Defensive Fallbacks | v2.0 | 0/3 | Planning complete | - |
 | 17. Registry Consumers | v2.0 | 0/TBD | Not started | - |
 | 18. Pricing Client and Model Discovery | v2.0 | 0/TBD | Not started | - |
 | 19. Setup Wizard Overhaul | v2.0 | 0/TBD | Not started | - |
+
+### Phase 20: Update skills and agents in .claude using the skill-creator skill and re-run all optimizations and evaluations
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 19
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 20 to break down)
+
+### Phase 21: Update all documentation
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 20
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 21 to break down)
+
+### Phase 22: Experiment: All-caps and emphasis formatting effects on LLM attention
+
+**Goal:** Investigate whether all-caps words, bold/markdown emphasis, and capitalization patterns affect LLM attention and instruction-following. Test cases: "WILL" vs "will", "DO NOT" vs "**do not**" vs "Do **not**", sentence-initial capitalization effects.
+**Requirements**: TBD
+**Depends on:** Phase 21
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 22 to break down)

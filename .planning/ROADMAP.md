@@ -207,13 +207,14 @@ Plans:
 
 ### Phase 14: CLI config subcommands for viewing and modifying settings
 
-**Goal:** Add subcommands to display configuration as JSON, text, or terminal table, and allow users to set/modify any config property. The `list` (get) command shows all properties and highlights which have been changed from defaults, helping researchers understand which variables have been modified
-**Requirements**: TBD
+**Goal:** Researchers can use `propt` CLI subcommands (show-config, set-config, reset-config, validate, diff, list-models) to view, modify, validate, and diff experiment configuration without manual JSON editing. The `propt` command is registered as a pyproject.toml console_scripts entry point with shell tab completion for property names.
+**Requirements**: CFG-SHOW, CFG-SET, CFG-RESET, CFG-VALIDATE, CFG-DIFF, CFG-MODELS, CFG-ENTRY, CFG-COMPLETE
 **Depends on:** Phase 13
-**Plans:** 0 plans
+**Plans:** 2 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 14 to break down)
+- [ ] 14-01-PLAN.md -- Config subcommand handlers (show-config, set-config, reset-config, validate, diff, list-models), CLI registration, propt entry point, argcomplete
+- [ ] 14-02-PLAN.md -- Comprehensive tests for all config subcommand handlers and updated CLI registration
 
 ### Phase 15: Pre-execution experiment summary and confirmation gate
 

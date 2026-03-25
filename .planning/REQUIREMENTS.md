@@ -88,6 +88,17 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **SETUP-06**: Environment prerequisite check -- Python >= 3.11, required packages installed, API key env vars set and non-empty
 - [x] **SETUP-07**: Config-missing guard in run_experiment.py and pilot.py -- prints guidance message and exits if no config file found (does NOT auto-launch wizard)
 
+### CLI Config Subcommands
+
+- [ ] **CFG-SHOW**: show-config subcommand displaying all properties in terminal table with Value/Default columns, `*` modified indicator, `--json`/`--changed`/`--verbose` flags, and single-property query mode
+- [ ] **CFG-SET**: set-config subcommand accepting multiple key-value pairs with auto type coercion from ExperimentConfig defaults, immediate validation, sparse config file auto-creation, and change summary output
+- [ ] **CFG-RESET**: reset-config subcommand removing overrides from sparse config file, with `--all` flag to reset entire config to defaults
+- [ ] **CFG-VALIDATE**: validate subcommand running validate_config on current effective config with exit code 0/non-zero
+- [ ] **CFG-DIFF**: diff subcommand showing only properties that differ from defaults in a diff-like format
+- [ ] **CFG-MODELS**: list-models subcommand printing all valid model strings from PRICE_TABLE with pricing info
+- [ ] **CFG-ENTRY**: Register `propt` as pyproject.toml console_scripts entry point (`propt = "src.cli:main"`)
+- [ ] **CFG-COMPLETE**: Shell tab completion for property names in set-config/show-config/reset-config via argcomplete
+
 ## v2 Requirements
 
 Deferred to future release. Tracked but not in current roadmap.
@@ -175,12 +186,20 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SETUP-05 | Phase 13: Guided setup wizard | Planned |
 | SETUP-06 | Phase 13: Guided setup wizard | Planned |
 | SETUP-07 | Phase 13: Guided setup wizard | Planned |
+| CFG-SHOW | Phase 14: CLI config subcommands | Planned |
+| CFG-SET | Phase 14: CLI config subcommands | Planned |
+| CFG-RESET | Phase 14: CLI config subcommands | Planned |
+| CFG-VALIDATE | Phase 14: CLI config subcommands | Planned |
+| CFG-DIFF | Phase 14: CLI config subcommands | Planned |
+| CFG-MODELS | Phase 14: CLI config subcommands | Planned |
+| CFG-ENTRY | Phase 14: CLI config subcommands | Planned |
+| CFG-COMPLETE | Phase 14: CLI config subcommands | Planned |
 
 **Coverage:**
-- v1 requirements: 48 total
-- Mapped to phases: 48
+- v1 requirements: 56 total
+- Mapped to phases: 56
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-19*
-*Last updated: 2026-03-24 after Phase 13 planning*
+*Last updated: 2026-03-25 after Phase 14 planning*

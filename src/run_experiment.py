@@ -14,6 +14,8 @@ from collections.abc import Callable
 from datetime import datetime, timezone
 from typing import Any
 
+from tqdm import tqdm
+
 from src.api_client import APIResponse, call_model, _validate_api_keys
 from src.config_manager import find_config_path, CONFIG_FILENAME
 from src.config import (
@@ -24,6 +26,14 @@ from src.config import (
     derive_seed,
 )
 from src.db import init_database, insert_run, query_runs, save_grade_result
+from src.execution_summary import (
+    estimate_cost,
+    estimate_runtime,
+    format_summary,
+    confirm_execution,
+    save_execution_plan,
+    count_completed,
+)
 from src.grade_results import grade_run
 from src.noise_generator import inject_type_a_noise, inject_type_b_noise
 from src.prompt_compressor import (
@@ -364,36 +374,6 @@ def _process_item(
 
 
 # ---------------------------------------------------------------------------
-# Dry run
-# ---------------------------------------------------------------------------
-
-def _show_dry_run(items: list[dict[str, Any]]) -> None:
-    """Display a summary of what would be processed without making API calls.
-
-    Args:
-        items: List of experiment matrix items to be processed.
-    """
-    from collections import Counter
-
-    model_counts = Counter(item["model"] for item in items)
-    intervention_counts = Counter(item["intervention"] for item in items)
-
-    logger.info("=== DRY RUN ===")
-    logger.info("Total items: %d", len(items))
-    logger.info("")
-    logger.info("By model:")
-    for model, count in model_counts.most_common():
-        # Estimate cost: assume ~500 input tokens, ~200 output tokens per call
-        est_cost = count * compute_cost(model, 500, 200)
-        logger.info("  %s: %d items (est. $%.2f)", model, count, est_cost)
-    logger.info("")
-    logger.info("By intervention:")
-    for intervention, count in intervention_counts.most_common():
-        logger.info("  %s: %d items", intervention, count)
-    logger.info("=== END DRY RUN ===")
-
-
-# ---------------------------------------------------------------------------
 # Engine
 # ---------------------------------------------------------------------------
 
@@ -453,6 +433,12 @@ def run_engine(args: argparse.Namespace, config: ExperimentConfig | None = None)
         ]
         pending.extend(failed_items)
 
+    # Filter by intervention
+    if hasattr(args, "intervention") and args.intervention:
+        pending = [
+            item for item in pending if item["intervention"] == args.intervention
+        ]
+
     # Order by model (claude first, gemini second, shuffled within)
     pending = _order_by_model(pending, config.base_seed)
 
@@ -462,29 +448,71 @@ def run_engine(args: argparse.Namespace, config: ExperimentConfig | None = None)
 
     logger.info("Processing %d items", len(pending))
 
-    # Dry run check
+    # Confirmation gate
+    cost_estimate = estimate_cost(pending)
+    runtime_seconds = estimate_runtime(pending)
+    completed_count = len(completed_runs)
+    total_count = len(matrix)
+    summary = format_summary(
+        pending, completed_count, total_count, cost_estimate, runtime_seconds
+    )
+
+    # --dry-run: show summary and exit
     if args.dry_run:
-        _show_dry_run(pending)
+        print(summary)
         conn.close()
         return
+
+    # Confirmation prompt
+    yes_flag = getattr(args, "yes", False)
+    budget_flag = getattr(args, "budget", None)
+
+    decision = confirm_execution(
+        summary,
+        yes=yes_flag,
+        budget=budget_flag,
+        estimated_cost=cost_estimate["total_cost"],
+    )
+
+    if decision == "no":
+        print("Aborted.")
+        conn.close()
+        return
+    elif decision == "modify":
+        print(
+            "Modify filters by re-running with different "
+            "--model, --limit, or --intervention flags."
+        )
+        print("Use `propt set-config` for full configuration changes.")
+        conn.close()
+        return
+
+    # Save execution plan before running
+    filters: dict[str, Any] = {"model": args.model, "limit": args.limit}
+    if hasattr(args, "intervention"):
+        filters["intervention"] = args.intervention
+    save_execution_plan(pending, cost_estimate, runtime_seconds, filters=filters)
 
     # Validate API keys for models in pending items
     unique_models = set(item["model"] for item in pending)
     for model in unique_models:
         _validate_api_keys(model)
 
-    # Process items
+    # Process items with tqdm progress bar
     total = len(pending)
-    for i, item in enumerate(pending):
-        _process_item(item, conn, prompts_by_id, config, i, total)
-
-        # Periodic summary every 100 items
-        if (i + 1) % 100 == 0:
-            completed_so_far = i + 1
-            logger.info(
-                "--- Progress: %d/%d items processed ---",
-                completed_so_far, total,
-            )
+    cost_so_far = 0.0
+    with tqdm(total=total, desc="Experiments", unit="item") as pbar:
+        for i, item in enumerate(pending):
+            _process_item(item, conn, prompts_by_id, config, i, total)
+            # Query cost from last inserted row
+            row = conn.execute(
+                "SELECT total_cost_usd FROM experiment_runs WHERE run_id = ?",
+                (make_run_id(item),),
+            ).fetchone()
+            if row and row[0]:
+                cost_so_far += row[0]
+            pbar.set_postfix(cost=f"${cost_so_far:.2f}")
+            pbar.update(1)
 
     logger.info("Engine complete: %d items processed", total)
     conn.close()
@@ -540,6 +568,23 @@ def _build_parser() -> argparse.ArgumentParser:
         type=str,
         default=None,
         help="Override path to results database",
+    )
+    parser.add_argument(
+        "--yes",
+        action="store_true",
+        help="Auto-accept without prompting",
+    )
+    parser.add_argument(
+        "--budget",
+        type=float,
+        default=None,
+        help="Exit non-zero if cost exceeds threshold",
+    )
+    parser.add_argument(
+        "--intervention",
+        type=str,
+        default=None,
+        help="Filter to specific intervention",
     )
     return parser
 

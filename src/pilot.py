@@ -22,6 +22,13 @@ from scipy.stats import bootstrap as scipy_bootstrap
 from src.config import ExperimentConfig, MODELS, derive_seed
 from src.config_manager import find_config_path, CONFIG_FILENAME
 from src.db import query_runs
+from src.execution_summary import (
+    estimate_cost,
+    estimate_runtime,
+    format_summary,
+    confirm_execution,
+    save_execution_plan,
+)
 from src.noise_generator import inject_type_a_noise
 
 logger = logging.getLogger(__name__)
@@ -132,6 +139,8 @@ def run_pilot(
     db_path: str | None = None,
     select_only: bool = False,
     analyze_only: bool = False,
+    yes: bool = False,
+    dry_run: bool = False,
 ) -> dict[str, Any]:
     """Orchestrate the pilot workflow: selection, execution, analysis.
 
@@ -140,6 +149,8 @@ def run_pilot(
         db_path: Override path to results database.
         select_only: If True, only select prompts and return.
         analyze_only: If True, skip selection and execution, only analyze.
+        yes: If True, auto-accept confirmation without prompting.
+        dry_run: If True, show summary and exit without executing.
 
     Returns:
         Summary dict with pilot_prompt_ids, total_items, and status.
@@ -169,6 +180,49 @@ def run_pilot(
     filtered = filter_pilot_matrix(
         matrix_path=config.matrix_path,
         pilot_prompt_ids=pilot_ids,
+    )
+
+    # Confirmation gate for pilot
+    cost_estimate = estimate_cost(filtered)
+    runtime_seconds = estimate_runtime(filtered)
+    summary = format_summary(
+        filtered, 0, len(filtered), cost_estimate, runtime_seconds
+    )
+
+    if dry_run:
+        print(summary)
+        return {
+            "pilot_prompt_ids": pilot_ids,
+            "total_items": len(filtered),
+            "status": "dry_run",
+        }
+
+    decision = confirm_execution(
+        summary,
+        yes=yes,
+        budget=budget,
+        estimated_cost=cost_estimate["total_cost"],
+    )
+
+    if decision == "no":
+        print("Pilot aborted.")
+        return {
+            "pilot_prompt_ids": pilot_ids,
+            "total_items": len(filtered),
+            "status": "aborted",
+        }
+    elif decision == "modify":
+        print("Re-run with different parameters to modify the pilot.")
+        return {
+            "pilot_prompt_ids": pilot_ids,
+            "total_items": len(filtered),
+            "status": "modify",
+        }
+
+    save_execution_plan(
+        filtered, cost_estimate, runtime_seconds,
+        filters={"mode": "pilot"},
+        output_path="results/pilot_plan.json",
     )
 
     if not analyze_only:
@@ -1102,6 +1156,16 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Only analyze existing results, do not run experiment",
     )
+    parser.add_argument(
+        "--yes",
+        action="store_true",
+        help="Auto-accept without prompting",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show summary only, do not execute",
+    )
     return parser
 
 
@@ -1125,6 +1189,8 @@ def main() -> None:
         db_path=args.db,
         select_only=args.select_only,
         analyze_only=args.analyze_only,
+        yes=args.yes,
+        dry_run=args.dry_run,
     )
     logger.info("Pilot result: %s", result.get("status", "unknown"))
 

@@ -210,7 +210,7 @@ Plans:
 **Goal:** Researchers can use `propt` CLI subcommands (show-config, set-config, reset-config, validate, diff, list-models) to view, modify, validate, and diff experiment configuration without manual JSON editing. The `propt` command is registered as a pyproject.toml console_scripts entry point with shell tab completion for property names.
 **Requirements**: CFG-SHOW, CFG-SET, CFG-RESET, CFG-VALIDATE, CFG-DIFF, CFG-MODELS, CFG-ENTRY, CFG-COMPLETE
 **Depends on:** Phase 13
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 - [ ] 14-01-PLAN.md -- Config subcommand handlers (show-config, set-config, reset-config, validate, diff, list-models), CLI registration, propt entry point, argcomplete

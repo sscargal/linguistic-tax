@@ -67,13 +67,16 @@ Recent decisions affecting current work:
 
 ### Pending Todos
 
-None yet.
+- Investigate fine-tuned small LM as pre-processor (general)
 
 ### Roadmap Evolution
 
 - v2.0 roadmap: 4 phases (16-19) derived from 21 requirements at standard granularity
 - Dropped proposed Phase 20 (cross-cutting tests) — verification absorbed into each phase's success criteria
 - Phases 17 and 18 can execute in parallel after Phase 16
+- Phase 20 added: Update skills and agents in .claude using the skill-creator skill and re-run all optimizations and evaluations
+- Phase 21 added: Update all documentation
+- Phase 22 added: Experiment: All-caps and emphasis formatting effects on LLM attention
 
 ### Blockers/Concerns
 

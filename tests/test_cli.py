@@ -273,3 +273,33 @@ def test_main_pilot_routes_to_handler():
         with patch("src.cli.handle_pilot") as mock_handler:
             main()
             mock_handler.assert_called_once()
+
+
+# ---------------------------------------------------------------------------
+# KeyboardInterrupt handling tests (260325-w6g)
+# ---------------------------------------------------------------------------
+
+
+def test_main_ctrl_c_exits_130(capsys):
+    """Ctrl-C during main() prints 'Aborted.' to stderr and exits 130."""
+    import argparse
+
+    with patch.object(argparse.ArgumentParser, "parse_args", side_effect=KeyboardInterrupt):
+        with pytest.raises(SystemExit) as exc_info:
+            main()
+    assert exc_info.value.code == 130
+    captured = capsys.readouterr()
+    assert "Aborted." in captured.err
+
+
+def test_confirm_execution_ctrl_c_returns_no(capsys):
+    """Ctrl-C at confirmation prompt returns 'no' and prints 'Aborted.'."""
+    from src.execution_summary import confirm_execution
+
+    result = confirm_execution(
+        "summary",
+        input_fn=lambda _: (_ for _ in ()).throw(KeyboardInterrupt),
+    )
+    assert result == "no"
+    captured = capsys.readouterr()
+    assert "Aborted." in captured.out

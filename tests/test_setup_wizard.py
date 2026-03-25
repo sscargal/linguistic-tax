@@ -244,6 +244,25 @@ def test_wizard_auto_fills_preproc_model():
                 assert PREPROC_MODEL_MAP[model] is not None
 
 
+def test_wizard_ctrl_c_cancels_cleanly(capsys):
+    """Ctrl-C during wizard prints 'Setup cancelled.' and returns None."""
+    from src.setup_wizard import run_setup_wizard
+
+    args = SimpleNamespace(non_interactive=False)
+
+    def raise_interrupt(prompt=""):
+        raise KeyboardInterrupt
+
+    with patch("src.setup_wizard.check_environment", return_value=[
+        ("Python >= 3.11", True, "3.11.0"),
+    ]):
+        result = run_setup_wizard(args, input_fn=raise_interrupt)
+
+    assert result is None
+    captured = capsys.readouterr()
+    assert "Setup cancelled." in captured.out
+
+
 def test_wizard_interactive_with_model_override(tmp_path):
     """Wizard allows overriding the default model selection."""
     from src.setup_wizard import run_setup_wizard

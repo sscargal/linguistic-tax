@@ -114,7 +114,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **GATE-PROGRESS**: tqdm progress bar during execution showing completion %, items done/total, ETA, cost-so-far
 - [x] **GATE-WIRE**: Confirmation gate integrated into both run_experiment.py run_engine() and pilot.py run_pilot()
 - [x] **GATE-TQDM**: tqdm added to pyproject.toml dependencies
-- [ ] **GATE-TEST**: Unit tests for cost estimation, runtime estimation, summary formatting, confirmation gate, execution plan saving, and CLI subcommand registration
+- [x] **GATE-TEST**: Unit tests for cost estimation, runtime estimation, summary formatting, confirmation gate, execution plan saving, and CLI subcommand registration
 
 ## v2 Requirements
 

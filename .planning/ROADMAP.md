@@ -221,7 +221,7 @@ Plans:
 **Goal:** Before executing experiments, display a comprehensive pre-execution summary (cost projection, experiment count, estimated runtime, models, noise conditions, interventions) with a confirmation gate. Researcher can accept/reject/modify filters before execution proceeds. Includes --yes flag for scripted runs, --budget threshold for cost gates, `propt run` and `propt pilot` CLI subcommands, tqdm progress bar during execution, and execution plan saving to JSON.
 **Requirements**: GATE-COST, GATE-RUNTIME, GATE-SUMMARY, GATE-CONFIRM, GATE-BUDGET, GATE-PLAN, GATE-RESUME, GATE-CLI-RUN, GATE-CLI-PILOT, GATE-DRYRUN, GATE-PROGRESS, GATE-WIRE, GATE-TQDM, GATE-TEST
 **Depends on:** Phase 14
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 - [ ] 15-01-PLAN.md -- Core execution_summary module: cost estimation, runtime estimation, summary formatting, confirmation gate, execution plan saving

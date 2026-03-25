@@ -29,6 +29,7 @@ Produce rigorous, reproducible experimental data showing how prompt noise degrad
 None — all v1 requirements validated.
 
 ### Recently Validated
+- ✓ Comprehensive documentation and README for new users — root README.md, architecture docs, getting-started guide, analysis guide, contributing guide, docs index — Phase 12
 - ✓ Pre-execution experiment summary and confirmation gate — cost/runtime estimation, structured summary display, three-way confirmation (Y/N/M), --yes/--budget flags, propt run/pilot CLI subcommands, tqdm progress bar, execution plan saving — Phase 15
 - ✓ CLI config subcommands (show/set/reset/validate/diff/list-models) with JSON/text/table output, changed-from-defaults highlighting, and tab completion — Phase 14
 - ✓ Guided setup wizard for project configuration — interactive Q&A flow for model provider, models, API keys, paths; CLI entry point with argparse subparsers; config-missing guards — Phase 13
@@ -80,4 +81,4 @@ None — all v1 requirements validated.
 | 5 repetitions per condition | Balance statistical power with API cost | — Pending |
 
 ---
-*Last updated: 2026-03-25 after Phase 15 completion — Pre-execution experiment summary and confirmation gate*
+*Last updated: 2026-03-25 after Phase 12 completion — Comprehensive documentation and README for new users*

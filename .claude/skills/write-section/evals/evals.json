@@ -1,0 +1,48 @@
+{
+  "skill_name": "write-section",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "i need to start writing the paper. can you draft the methodology section? the experiments are done and i want to accurately describe what we did",
+      "expected_output": "Produces a LaTeX methodology section covering noise injection, compression, interventions, and experimental design with proper formatting.",
+      "files": [],
+      "expectations": [
+        "Reads the RDD for methodology specifications",
+        "Reads source code to verify actual implementation details",
+        "Produces valid LaTeX with proper packages and formatting",
+        "Covers all 4 methodology components: noise injection, compression, interventions, experiment design",
+        "Includes algorithm pseudocode or description for noise injection",
+        "References the exact model versions and reproducibility details",
+        "Uses proper citation format for referenced papers"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "write the abstract for our paper. keep it concise but make sure it captures the key finding about the combined sanitize+compress intervention",
+      "expected_output": "A concise LaTeX abstract following the problem-method-finding-implication structure.",
+      "files": [],
+      "expectations": [
+        "Follows problem → method → finding → implication structure",
+        "Mentions the linguistic tax concept",
+        "Describes the experimental scope (prompts, models, conditions)",
+        "Highlights the combined sanitize+compress finding",
+        "Keeps to approximately half a page",
+        "Uses proper LaTeX formatting"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "draft the results section. I want each finding to have a clear claim, supporting evidence from our data, and the statistical test backing it up. pull real numbers from the analysis output",
+      "expected_output": "A data-driven LaTeX results section organized by Finding 1-7 with real numbers and statistical evidence.",
+      "files": [],
+      "expectations": [
+        "Reads analysis output files for real numbers",
+        "Organizes by Finding 1-7 per the RDD outline",
+        "Each finding has: claim, evidence (table/figure), statistical test, interpretation",
+        "References figures with \\ref{} commands",
+        "Includes confidence intervals with quantitative claims",
+        "References the hypothesis scorecard (H1-H5)"
+      ]
+    }
+  ]
+}

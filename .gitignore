@@ -20,6 +20,9 @@ Thumbs.db
 # want to track planning docs in git)
 # .planning/
 
+# Skill eval workspaces (bulky eval artifacts)
+.claude/skills/*-workspace/
+
 # IDE
 .vscode/
 .idea/

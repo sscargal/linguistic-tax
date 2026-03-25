@@ -217,14 +217,18 @@ def main() -> None:
         format="%(levelname)s: %(message)s",
     )
 
-    parser = build_cli()
-    args = parser.parse_args()
+    try:
+        parser = build_cli()
+        args = parser.parse_args()
 
-    if args.command is None:
-        parser.print_help()
-        sys.exit(1)
+        if args.command is None:
+            parser.print_help()
+            sys.exit(1)
 
-    args.func(args)
+        args.func(args)
+    except KeyboardInterrupt:
+        print("\nAborted.", file=sys.stderr)
+        sys.exit(130)
 
 
 if __name__ == "__main__":

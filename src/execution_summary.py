@@ -320,16 +320,20 @@ def confirm_execution(
     if yes:
         return "yes"
 
-    while True:
-        choice = input_fn("[Y]es to run, [N]o to abort, [M]odify filters: ").strip().lower()
-        if choice in ("y", "yes"):
-            return "yes"
-        elif choice in ("n", "no"):
-            return "no"
-        elif choice in ("m", "modify"):
-            return "modify"
-        else:
-            print("Invalid choice. Enter Y, N, or M.")
+    try:
+        while True:
+            choice = input_fn("[Y]es to run, [N]o to abort, [M]odify filters: ").strip().lower()
+            if choice in ("y", "yes"):
+                return "yes"
+            elif choice in ("n", "no"):
+                return "no"
+            elif choice in ("m", "modify"):
+                return "modify"
+            else:
+                print("Invalid choice. Enter Y, N, or M.")
+    except KeyboardInterrupt:
+        print("\nAborted.")
+        return "no"
 
 
 def save_execution_plan(

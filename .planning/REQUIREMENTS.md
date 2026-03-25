@@ -116,6 +116,15 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **GATE-TQDM**: tqdm added to pyproject.toml dependencies
 - [x] **GATE-TEST**: Unit tests for cost estimation, runtime estimation, summary formatting, confirmation gate, execution plan saving, and CLI subcommand registration
 
+### Documentation
+
+- [ ] **DOC-01**: Comprehensive root README.md with research context, quick-start, full CLI reference for all 9 propt subcommands with flags and examples, sample terminal output, experiment design overview with Mermaid diagram, and glossary
+- [ ] **DOC-02**: Mermaid diagrams for pipeline architecture, data flow, experiment design, CLI command map, API call lifecycle sequence, and full experiment run sequence
+- [ ] **DOC-03**: CLI reference documents all 9 subcommands (setup, show-config, set-config, reset-config, validate, diff, list-models, run, pilot) with flags verified against src/cli.py
+- [ ] **DOC-04**: Getting-started guide with runnable end-to-end walkthrough from clone to viewing pilot results, plus additional walkthroughs for custom experiments and analyzing existing results
+- [ ] **DOC-05**: Cross-linked documentation suite: README links to docs/, docs link to each other and to existing RDD/research/experiment docs
+- [ ] **DOC-06**: docs/README.md index page listing all documentation files with descriptions and links
+
 ## v2 Requirements
 
 Deferred to future release. Tracked but not in current roadmap.
@@ -226,11 +235,18 @@ Which phases cover which requirements. Updated during roadmap creation.
 | GATE-TQDM | Phase 15: Pre-execution confirmation gate | Planned |
 | GATE-TEST | Phase 15: Pre-execution confirmation gate | Planned |
 
+| DOC-01 | Phase 12: Documentation | Planned |
+| DOC-02 | Phase 12: Documentation | Planned |
+| DOC-03 | Phase 12: Documentation | Planned |
+| DOC-04 | Phase 12: Documentation | Planned |
+| DOC-05 | Phase 12: Documentation | Planned |
+| DOC-06 | Phase 12: Documentation | Planned |
+
 **Coverage:**
-- v1 requirements: 70 total
-- Mapped to phases: 70
+- v1 requirements: 76 total
+- Mapped to phases: 76
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-19*
-*Last updated: 2026-03-25 after Phase 15 planning*
+*Last updated: 2026-03-25 after Phase 12 planning*

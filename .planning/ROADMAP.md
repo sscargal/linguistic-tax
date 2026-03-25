@@ -186,13 +186,15 @@ Plans:
 
 ### Phase 12: Comprehensive documentation and README for new users
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** Someone with zero context can understand, install, configure, and use this research toolkit using only the documentation -- comprehensive README.md with research context, CLI reference, and glossary; getting-started guide with runnable walkthroughs; architecture doc with Mermaid diagrams; analysis interpretation guide with SQLite queries; contributing guide with extension patterns; and docs/README.md index
+**Requirements**: DOC-01, DOC-02, DOC-03, DOC-04, DOC-05, DOC-06
 **Depends on:** Phase 11
-**Plans:** 0 plans
+**Plans:** 3 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 12 to break down)
+- [ ] 12-01-PLAN.md -- Root README.md: research context, quick-start, CLI reference, sample output, experiment design, glossary
+- [ ] 12-02-PLAN.md -- docs/architecture.md (module reference + 4 Mermaid diagrams) and docs/getting-started.md (3 walkthroughs + sequence diagram)
+- [ ] 12-03-PLAN.md -- docs/analysis-guide.md (statistical interpretation + SQLite queries), docs/contributing.md (dev setup + extension guides), docs/README.md (index)
 
 ### Phase 13: Guided setup wizard for project configuration
 

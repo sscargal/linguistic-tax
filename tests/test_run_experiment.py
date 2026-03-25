@@ -217,6 +217,8 @@ def _make_test_args(
     retry_failed: bool = False,
     dry_run: bool = False,
     db: str | None = None,
+    yes: bool = True,
+    budget: float | None = None,
 ) -> argparse.Namespace:
     """Build a mock args namespace for run_engine."""
     return argparse.Namespace(
@@ -225,6 +227,8 @@ def _make_test_args(
         retry_failed=retry_failed,
         dry_run=dry_run,
         db=db,
+        yes=yes,
+        budget=budget,
     )
 
 

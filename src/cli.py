@@ -8,6 +8,7 @@ import argparse
 import logging
 import sys
 
+from src.config import INTERVENTIONS
 from src.config_commands import (
     handle_show_config,
     handle_set_config,
@@ -18,6 +19,47 @@ from src.config_commands import (
     property_name_completer,
 )
 from src.setup_wizard import run_setup_wizard
+
+
+def _check_config_exists() -> None:
+    """Exit with guidance if no config file is found."""
+    from src.config_manager import find_config_path
+
+    if find_config_path() is None:
+        print(
+            "No config found. Run `propt setup` to configure "
+            "the toolkit before running experiments."
+        )
+        sys.exit(1)
+
+
+def handle_run(args: argparse.Namespace) -> None:
+    """Handle the 'run' subcommand by delegating to run_engine.
+
+    Args:
+        args: Parsed CLI arguments including model, limit, flags.
+    """
+    _check_config_exists()
+    from src.run_experiment import run_engine
+
+    run_engine(args)
+
+
+def handle_pilot(args: argparse.Namespace) -> None:
+    """Handle the 'pilot' subcommand by delegating to run_pilot.
+
+    Args:
+        args: Parsed CLI arguments including yes, budget, dry_run.
+    """
+    _check_config_exists()
+    from src.pilot import run_pilot
+
+    run_pilot(
+        budget=args.budget if args.budget is not None else 200.0,
+        db_path=args.db,
+        yes=args.yes,
+        dry_run=args.dry_run,
+    )
 
 
 def build_cli() -> argparse.ArgumentParser:
@@ -102,6 +144,60 @@ def build_cli() -> argparse.ArgumentParser:
         "list-models", help="List available models with pricing"
     )
     models_parser.set_defaults(func=handle_list_models)
+
+    # --- run ---
+    run_parser = subparsers.add_parser(
+        "run", help="Run experiments with confirmation gate"
+    )
+    run_parser.add_argument(
+        "--model",
+        choices=["claude", "gemini", "gpt", "openrouter", "all"],
+        default="all",
+        help="Filter to model provider",
+    )
+    run_parser.add_argument(
+        "--limit", type=int, default=None, help="Stop after N items"
+    )
+    run_parser.add_argument(
+        "--retry-failed", action="store_true", help="Reprocess failed items"
+    )
+    run_parser.add_argument(
+        "--db", type=str, default=None, help="Override database path"
+    )
+    run_parser.add_argument(
+        "--yes", action="store_true", help="Auto-accept without prompting"
+    )
+    run_parser.add_argument(
+        "--budget", type=float, default=None,
+        help="Exit non-zero if cost exceeds threshold",
+    )
+    run_parser.add_argument(
+        "--dry-run", action="store_true", help="Show summary only, do not execute"
+    )
+    run_parser.add_argument(
+        "--intervention", type=str, choices=list(INTERVENTIONS), default=None,
+        help="Filter to specific intervention",
+    )
+    run_parser.set_defaults(func=handle_run)
+
+    # --- pilot ---
+    pilot_parser = subparsers.add_parser(
+        "pilot", help="Run pilot validation with confirmation gate"
+    )
+    pilot_parser.add_argument(
+        "--yes", action="store_true", help="Auto-accept without prompting"
+    )
+    pilot_parser.add_argument(
+        "--budget", type=float, default=None,
+        help="Exit non-zero if cost exceeds threshold",
+    )
+    pilot_parser.add_argument(
+        "--dry-run", action="store_true", help="Show summary only, do not execute"
+    )
+    pilot_parser.add_argument(
+        "--db", type=str, default=None, help="Override database path"
+    )
+    pilot_parser.set_defaults(func=handle_pilot)
 
     # --- argcomplete ---
     try:

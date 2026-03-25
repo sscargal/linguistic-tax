@@ -1,0 +1,30 @@
+{
+  "skill_name": "generate-figures",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "i need to generate all the figures for the paper. the experiments are done and analysis is complete. where do the figures go and what will they look like?",
+      "expected_output": "Generates all 4 figure types, explains what each shows, and where they're saved.",
+      "files": [],
+      "expectations": [
+        "Runs or suggests python -m src.generate_figures all",
+        "Explains all 4 figure types (accuracy curves, quadrant scatter, cost heatmap, rank stability)",
+        "Tells user where figures are saved (figures/ directory)",
+        "Mentions both PDF and PNG output formats",
+        "Describes what to look for in each figure"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "the accuracy curves figure doesn't look right - the lines are all overlapping and hard to read. can you help me fix it?",
+      "expected_output": "Reads the figure generation code, suggests adjustments to improve readability.",
+      "files": [],
+      "expectations": [
+        "Reads src/generate_figures.py to understand current implementation",
+        "Suggests concrete adjustments (line styles, figure dimensions, alpha, markers)",
+        "Points to the specific function (generate_accuracy_curves)",
+        "Mentions the colorblind-safe palette requirement"
+      ]
+    }
+  ]
+}

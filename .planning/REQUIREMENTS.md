@@ -118,11 +118,11 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Documentation
 
-- [ ] **DOC-01**: Comprehensive root README.md with research context, quick-start, full CLI reference for all 9 propt subcommands with flags and examples, sample terminal output, experiment design overview with Mermaid diagram, and glossary
+- [x] **DOC-01**: Comprehensive root README.md with research context, quick-start, full CLI reference for all 9 propt subcommands with flags and examples, sample terminal output, experiment design overview with Mermaid diagram, and glossary
 - [ ] **DOC-02**: Mermaid diagrams for pipeline architecture, data flow, experiment design, CLI command map, API call lifecycle sequence, and full experiment run sequence
-- [ ] **DOC-03**: CLI reference documents all 9 subcommands (setup, show-config, set-config, reset-config, validate, diff, list-models, run, pilot) with flags verified against src/cli.py
+- [x] **DOC-03**: CLI reference documents all 9 subcommands (setup, show-config, set-config, reset-config, validate, diff, list-models, run, pilot) with flags verified against src/cli.py
 - [ ] **DOC-04**: Getting-started guide with runnable end-to-end walkthrough from clone to viewing pilot results, plus additional walkthroughs for custom experiments and analyzing existing results
-- [ ] **DOC-05**: Cross-linked documentation suite: README links to docs/, docs link to each other and to existing RDD/research/experiment docs
+- [x] **DOC-05**: Cross-linked documentation suite: README links to docs/, docs link to each other and to existing RDD/research/experiment docs
 - [ ] **DOC-06**: docs/README.md index page listing all documentation files with descriptions and links
 
 ## v2 Requirements

@@ -1,0 +1,45 @@
+{
+  "skill_name": "check-results",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "how's the experiment going? i kicked off a bunch of runs last night and want to see where things stand before I head into a meeting",
+      "expected_output": "A formatted overview showing total runs by status (completed/pending/failed), completion percentage, cost spent so far, and per-model breakdown. Should mention if the database doesn't exist yet.",
+      "files": [],
+      "expectations": [
+        "Queries results.db (or reports it doesn't exist)",
+        "Shows a status breakdown table (completed, pending, failed counts)",
+        "Shows per-model completion counts",
+        "Shows total cost spent in USD",
+        "Calculates and shows completion percentage",
+        "Estimates remaining cost if experiment is partially complete"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I'm worried we might have gaps in the experimental matrix. can you check if any noise_type x intervention x model combinations are missing or have fewer runs than expected? also flag anything with suspiciously high or low pass rates",
+      "expected_output": "A matrix gap analysis showing each cell's completion status, flagging under-filled cells and pass rate anomalies.",
+      "files": [],
+      "expectations": [
+        "Queries the matrix grouping by noise_type, intervention, model",
+        "Identifies cells with fewer than expected completed runs",
+        "Shows pass rates per condition and flags anomalies",
+        "Presents results in readable table format",
+        "Suggests targeted commands to fill gaps (e.g., propt run --model X)"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "check if the pilot run finished and tell me if the data looks clean enough to proceed with the full experiment. also check if we have any ungraded runs or missing cost data",
+      "expected_output": "A pilot status report plus data quality audit showing graded vs ungraded runs, missing fields, and a go/no-go recommendation.",
+      "files": [],
+      "expectations": [
+        "Checks pilot completion status (looks for pilot_prompts.json or uses heuristic)",
+        "Runs data quality checks: ungraded runs, missing costs, missing timing",
+        "Checks for duplicate run IDs",
+        "Gives a clear recommendation about whether to proceed",
+        "Suggests next steps based on findings"
+      ]
+    }
+  ]
+}

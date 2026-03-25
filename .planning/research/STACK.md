@@ -1,157 +1,209 @@
-# Stack Research
+# Stack Research: Configurable Models and Dynamic Pricing
 
-**Domain:** Python research toolkit for LLM prompt noise/optimization experiments
-**Researched:** 2026-03-19
-**Confidence:** HIGH
+**Domain:** Stack additions for dynamic model config, provider pricing APIs, .env management
+**Researched:** 2026-03-25
+**Confidence:** HIGH (verified against installed SDK source and live API responses)
 
-## Recommended Stack
+## Scope
 
-### Core Technologies
+This research covers ONLY the new libraries and integration patterns needed for milestone v2.0. The existing stack (anthropic, google-genai, openai, statsmodels, scipy, etc.) is validated and not re-researched here. See the original STACK.md commit for baseline stack decisions.
 
-| Technology | Version | Purpose | Why Recommended |
-|------------|---------|---------|-----------------|
-| Python | 3.11+ | Runtime | Already constrained by PROJECT.md. 3.11 has good typing support and `tomllib` built-in. No reason to require 3.12+. |
-| uv | latest | Package management | Already in use (uv.lock exists). Fastest Python package manager, handles venvs and lockfiles. |
-| SQLite (stdlib) | 3.x | Results storage | RDD mandates SQLite. No external dependency needed -- Python's `sqlite3` module is sufficient. Use WAL mode for concurrent reads during analysis. |
+## New Dependencies
 
-### LLM API Clients
+### Required Addition
 
 | Library | Version | Purpose | Why Recommended |
 |---------|---------|---------|-----------------|
-| anthropic | >=0.86.0 | Claude API calls | Official SDK. Pin minimum to current release. Provides structured response objects, automatic retries, token counting. |
-| google-genai | >=1.66.0 | Gemini API calls | **CRITICAL: The `google-generativeai` package in pyproject.toml is DEPRECATED (support ended Nov 2025). Must migrate to `google-genai`.** This is the official replacement SDK. Pin to 1.66.0 (1.67.0 has a typing-extensions bug). |
+| python-dotenv | >=1.2.0 | Load `.env` files into `os.environ` | De facto standard for `.env` management in Python. Zero dependencies. The wizard needs to write API keys to `.env` and have them available without manual `export`. Latest is 1.2.2. Simple API: `dotenv_values(".env")` for reading, `set_key(".env", key, val)` for writing. |
 
-### Statistical Analysis
+### NOT Needed (Existing Dependencies Suffice)
 
-| Library | Version | Purpose | Why Recommended |
-|---------|---------|---------|-----------------|
-| statsmodels | >=0.14.4 | GLMM, logistic regression | RDD's primary analysis is GLMM via `BinomialBayesMixedGLM`. Also provides BH correction (`multipletests`). Current stable is 0.14.6. Limitation: statsmodels GLMM only supports independent random effects -- sufficient for this study's crossed design but worth noting. |
-| scipy | >=1.14.0 | McNemar's test, bootstrap CIs | `scipy.stats` has `mcnemar` (added in 1.7+) and `bootstrap` (added in 1.9+). Mature, well-tested. |
-| pandas | >=2.2.0 | Data manipulation | De facto standard for tabular data. Needed for aggregation, pivoting results from SQLite into analysis-ready form. |
-| numpy | >=1.26.0 | Numerical computation | Transitive dependency of everything above, but pin explicitly for reproducibility. |
-
-### Evaluation and Grading
-
-| Library | Version | Purpose | Why Recommended |
-|---------|---------|---------|-----------------|
-| bert-score | >=0.3.13 | Semantic similarity | RDD requires BERTScore for comparing clean vs. noisy outputs. Latest is 0.3.13. Pulls in PyTorch and transformers as dependencies -- this is the heaviest dependency in the stack but there is no lightweight alternative for contextual embedding similarity. |
-
-### Token Counting
-
-| Library | Version | Purpose | Why Recommended |
-|---------|---------|---------|-----------------|
-| tiktoken | >=0.12.0 | Token counting for cost estimation | OpenAI's BPE tokenizer. Use for approximate token counts when estimating costs before API calls. Both Anthropic and Google SDKs also return actual token counts in responses -- use those for logged metrics. |
-
-### Visualization
-
-| Library | Version | Purpose | Why Recommended |
-|---------|---------|---------|-----------------|
-| matplotlib | >=3.9.0 | Publication-quality figures | Standard for ArXiv papers. Supports LaTeX rendering in labels. |
-| seaborn | >=0.13.0 | Statistical plots | Built on matplotlib. Excellent for heatmaps (experiment matrix), violin plots (distribution of scores), and pair plots. |
-
-### Development and Testing
-
-| Tool | Purpose | Notes |
-|------|---------|-------|
-| pytest | >=8.0 | Test runner | Use `pytest -v` for verbose, `pytest -k pilot` for pilot suite |
-| ruff | latest | Linting + formatting | Replaces flake8 + black + isort. Single tool, fast. Configure in pyproject.toml. |
-| mypy | latest | Type checking | Project requires type hints on all functions. Use `--strict` mode. |
+| Capability | Why No New Library |
+|---|---|
+| Anthropic model listing | `anthropic.Anthropic.models.list()` already in SDK v0.86.0. Returns `ModelInfo` with `id`, `display_name`, `max_tokens`. No pricing -- use fallback table. |
+| Google model listing | `genai.Client.models.list()` already in SDK v1.68.0. Returns `Model` with `name`, `displayName`, `inputTokenLimit`, `outputTokenLimit`. No pricing -- use fallback table. |
+| OpenAI model listing | `openai.OpenAI.models.list()` already in SDK v2.29.0. Returns model IDs. No pricing -- use fallback table. |
+| OpenRouter model listing + pricing | `httpx.get("https://openrouter.ai/api/v1/models")` returns pricing per model. `httpx` v0.28.1 is already a transitive dependency of both `anthropic` and `openai` SDKs. No new install needed. |
+| HTTP requests for pricing fallback | `httpx` (transitive, already available) covers any HTTP needs. Do NOT add `requests`. |
+| Config file management | `json` stdlib + existing `config_manager.py` handles everything. The config structure just needs new fields, not new serialization. |
+| Dataclass extensions | `dataclasses` stdlib. The `models` list field uses standard Python types (`list[dict]`). No need for pydantic or attrs. |
 
 ## Installation
 
 ```bash
-# Using uv (already set up)
-uv add anthropic google-genai statsmodels scipy pandas numpy
-uv add bert-score tiktoken matplotlib seaborn
-uv add --dev pytest ruff mypy
+# Single new dependency
+uv add "python-dotenv>=1.2.0"
+```
 
-# CRITICAL: Remove deprecated package
-uv remove google-generativeai
+That is it. One package.
+
+## Provider Pricing API Analysis
+
+**Critical finding:** None of the three major LLM providers expose pricing via their SDK model-listing endpoints. Only OpenRouter does.
+
+### Anthropic (`client.models.list()`)
+- **Returns:** `id`, `display_name`, `created_at`, `max_tokens`, `max_input_tokens`, `capabilities`
+- **No pricing fields.** Anthropic publishes pricing on their website only.
+- **Strategy:** Use hardcoded PRICE_TABLE as primary source. `models.list()` useful for validation ("does this model ID exist?") and for `propt list-models` display.
+
+### Google (`client.models.list()`)
+- **Returns:** `name`, `displayName`, `description`, `inputTokenLimit`, `outputTokenLimit`, `supportedActions`
+- **No pricing fields.** Google publishes pricing on their website only.
+- **Strategy:** Same as Anthropic -- fallback table, use `models.list()` for validation and listing.
+
+### OpenAI (`client.models.list()`)
+- **Returns:** model `id` and metadata. No pricing.
+- **Strategy:** Same -- fallback table, use for validation.
+
+### OpenRouter (`GET /api/v1/models`)
+- **Returns pricing!** Each model has `pricing.prompt` and `pricing.completion` as strings (USD per token, e.g., `"0.0000002"`).
+- **Strategy:** Fetch live pricing from this endpoint. Convert per-token to per-1M-token format to match PRICE_TABLE structure. This is the ONLY provider where live pricing retrieval works.
+- **Access:** Use `httpx.get()` directly (already available). No API key required for the models endpoint.
+
+### Recommended Pricing Architecture
+
+```
+PRICE_TABLE resolution order:
+1. Live API pricing (OpenRouter only -- other providers don't expose it)
+2. User config overrides (from experiment_config.json)
+3. Hardcoded fallback defaults (current PRICE_TABLE values)
+4. $0.00 with warning (truly unknown model)
+```
+
+This means the `PRICE_TABLE` dict is no longer a constant -- it becomes a function that merges sources at config load time. The hardcoded values remain as offline fallback for Anthropic, Google, and OpenAI models.
+
+## python-dotenv Integration Pattern
+
+### How It Fits the Existing Code
+
+Currently, API keys are read via `os.environ.get("ANTHROPIC_API_KEY")` throughout the codebase. python-dotenv loads `.env` values INTO `os.environ`, so **no existing code changes are needed** for key retrieval. The integration point is:
+
+1. **On app startup** (in `cli.py` `main()`): Call `load_dotenv()` before any config or API client initialization.
+2. **In setup wizard**: When user provides an API key, call `set_key(".env", "ANTHROPIC_API_KEY", value)` to persist it.
+
+```python
+# In cli.py main(), add at top:
+from dotenv import load_dotenv
+load_dotenv()  # Loads .env into os.environ -- existing os.environ.get() calls just work
+
+# In setup_wizard.py, when user provides a key:
+from dotenv import set_key
+set_key(".env", env_var, user_provided_key)
+```
+
+### .env File Safety
+
+- Add `.env` to `.gitignore` (verify it's already there or add it)
+- The wizard should create `.env` only when the user provides keys interactively
+- Never overwrite existing `.env` values without confirmation
+
+## Config Structure Changes (No New Dependencies)
+
+The `ExperimentConfig` frozen dataclass needs a new `models` field. This uses only stdlib types:
+
+```python
+@dataclass(frozen=True)
+class ModelConfig:
+    """Configuration for a single model provider."""
+    provider: str           # "anthropic", "google", "openai", "openrouter"
+    target_model: str       # e.g., "claude-sonnet-4-20250514"
+    preproc_model: str      # e.g., "claude-haiku-4-5-20250514"
+    input_price_per_1m: float = 0.0
+    output_price_per_1m: float = 0.0
+    preproc_input_price_per_1m: float = 0.0
+    preproc_output_price_per_1m: float = 0.0
+    rate_limit_delay: float = 0.2
+
+@dataclass(frozen=True)
+class ExperimentConfig:
+    # ... existing fields ...
+    models: tuple[ModelConfig, ...] = ()  # New: list of configured models
+```
+
+Using a nested frozen dataclass keeps immutability guarantees. Serialization to/from JSON is handled by `dataclasses.asdict()` (already used in config_manager.py) and manual reconstruction.
+
+**JSON representation:**
+```json
+{
+  "models": [
+    {
+      "provider": "anthropic",
+      "target_model": "claude-sonnet-4-20250514",
+      "preproc_model": "claude-haiku-4-5-20250514",
+      "input_price_per_1m": 3.00,
+      "output_price_per_1m": 15.00,
+      "preproc_input_price_per_1m": 1.00,
+      "preproc_output_price_per_1m": 5.00,
+      "rate_limit_delay": 0.2
+    }
+  ]
+}
 ```
 
 ## Alternatives Considered
 
-| Recommended | Alternative | When to Use Alternative |
-|-------------|-------------|-------------------------|
-| statsmodels GLMM | R's lme4 via rpy2 | If statsmodels GLMM fails to converge (RDD risk register mentions this). lme4 has more robust optimization. But adds R as a dependency -- only use as fallback. |
-| statsmodels GLMM | pymer4 (Python wrapper for lme4) | Same as above but slightly easier interface. Still requires R installation. |
-| subprocess sandbox for HumanEval | Docker containers | If running on a shared machine or need stronger isolation. For a single-researcher local setup, subprocess with timeout + resource limits is sufficient. |
-| bert-score | sentence-transformers cosine similarity | If BERTScore is too slow. Lighter weight but less established in the literature. RDD specifically requires BERTScore, so not recommended. |
-| google-genai | litellm | If you want a unified API across providers. Adds abstraction overhead and a third-party dependency for only 2 providers. Not worth it. |
-| tiktoken | anthropic SDK's built-in counting | Anthropic SDK returns token counts in responses. tiktoken is only needed for pre-call estimation and cost projection. Could skip if you only need post-call counts. |
+| Recommended | Alternative | Why Not |
+|-------------|-------------|---------|
+| python-dotenv | environs | Heavier (wraps marshmallow), adds validation layer we don't need. python-dotenv is dependency-free and does exactly one thing. |
+| python-dotenv | Manual `.env` parsing | Fragile. python-dotenv handles quoting, multiline values, comments, export prefixes. Not worth reimplementing. |
+| Hardcoded pricing fallback | Scraping provider pricing pages | Fragile, breaks on HTML changes, violates ToS. The three providers that don't expose API pricing update prices rarely -- manual fallback table is fine. |
+| httpx for OpenRouter pricing | `requests` | httpx is already installed (transitive dep). Adding `requests` means two HTTP libraries for no benefit. |
+| Nested dataclass for ModelConfig | Plain dict | Dataclass gives type safety, IDE autocomplete, and `asdict()` serialization. Worth the small added structure. |
+| Nested dataclass for ModelConfig | pydantic BaseModel | Adds a heavy dependency for a simple config object. stdlib dataclasses are sufficient. Project already uses dataclasses throughout. |
+| `tuple[ModelConfig, ...]` field | `list[ModelConfig]` | ExperimentConfig is frozen. Tuples are immutable, lists are not. Using tuple maintains the frozen contract. |
 
-## What NOT to Use
+## What NOT to Add
 
-| Avoid | Why | Use Instead |
-|-------|-----|-------------|
-| `google-generativeai` | **Deprecated. Support ended Nov 30, 2025.** No access to recent Gemini features. Will not receive security patches. | `google-genai` (the official replacement SDK) |
-| LangChain | Massive dependency tree, unnecessary abstraction for direct API calls. This project sends prompts and logs responses -- no chains, agents, or RAG needed. | Direct `anthropic` and `google-genai` SDK calls |
-| OpenAI SDK | Not in scope. RDD specifies Claude and Gemini only. Adding a third provider increases experiment matrix without adding to the paper's contribution. | N/A |
-| RestrictedPython | CVE-2025-22153 (critical sandbox escape). Not designed for full code execution. | `subprocess` with timeout, resource limits, and temp directories for HumanEval execution |
-| Jupyter notebooks for experiments | Non-reproducible, hard to version control, can't be run by autonomous agent. | Python scripts with `logging` module, results in SQLite |
-| `print()` for logging | PROJECT.md explicitly forbids it. No log levels, no file output, no structured logging. | Python `logging` module |
-| JSON files for results | PROJECT.md and RDD forbid it. Cannot query, no ACID guarantees, doesn't scale to 20K runs. | SQLite with schema from RDD |
-| black / flake8 / isort (separately) | Three tools doing what one tool does. Configuration sprawl. | ruff (single tool, faster, compatible settings) |
+| Avoid | Why | What to Do Instead |
+|-------|-----|-------------------|
+| `litellm` | Unified LLM API wrapper. Adds ~50 transitive dependencies, abstracts away provider-specific behavior we need to measure. | Keep direct SDK calls per provider. |
+| `pydantic` | Config validation library. Overkill for this project's simple config. Adds large dependency tree. | Use stdlib dataclasses + manual validation in `validate_config()`. |
+| `requests` | HTTP library. `httpx` is already available as transitive dependency. | Use `httpx` for the one HTTP call needed (OpenRouter pricing). |
+| `dynaconf` / `omegaconf` | Config management libraries. Add complexity for a project that stores config in one JSON file. | Keep existing `config_manager.py` pattern with JSON + dataclass. |
+| `keyring` | System keychain integration for secrets. Over-engineered for a single-researcher CLI tool. | `.env` file via python-dotenv. |
+| Any caching library | For pricing data. Pricing changes rarely and is fetched once at setup/list-models time. | Simple dict in memory during the session. No persistence needed beyond the config file. |
 
-## Stack Patterns by Domain
+## Integration Points
 
-**For HumanEval code execution (sandboxing):**
-- Use `subprocess.run()` with `timeout=30` seconds
-- Execute in a temporary directory (`tempfile.mkdtemp()`)
-- Redirect stdout/stderr to capture test results
-- Kill process group on timeout (`os.killpg`)
-- Do NOT use `exec()` or `eval()` -- always subprocess
+### Where New Code Touches Existing Code
 
-**For GSM8K math grading:**
-- Regex extraction of final numerical answer
-- Normalize: strip commas, whitespace, dollar signs, percent signs
-- Compare as floats with tolerance (e.g., `abs(a - b) < 0.001`)
-- Log both extracted and expected values for debugging
+| Existing File | Change Type | What Changes |
+|---|---|---|
+| `src/config.py` | **Extend** | Add `ModelConfig` dataclass. Add `models` field to `ExperimentConfig`. Keep flat fields for backward compat. Add `build_price_table()` function that derives PRICE_TABLE from config. |
+| `src/config_manager.py` | **Extend** | `load_config()` needs to deserialize `models` list into `ModelConfig` tuples. `validate_config()` changes model validation from "reject unknown" to "warn unknown". |
+| `src/setup_wizard.py` | **Major rewrite** | Multi-provider flow, free-text model entry, API key collection with `.env` writing, budget estimation display. |
+| `src/cli.py` | **Minor** | Add `load_dotenv()` call at startup. Enhance `list-models` subcommand to query live APIs. |
+| `src/run_experiment.py` | **Minor** | Derive MODELS tuple from config instead of importing constant. |
+| `pyproject.toml` | **Add dependency** | Add `python-dotenv>=1.2.0`. |
+| `.gitignore` | **Verify/add** | Ensure `.env` is listed. |
 
-**For API call retry/resilience:**
-- Both SDKs have built-in retry with exponential backoff
-- Set `max_retries=3` on client initialization
-- Log every retry attempt with the `logging` module
-- Implement a global rate limiter if hitting API limits (use `time.sleep` with jitter)
+### What Does NOT Change
 
-**For GLMM convergence issues (RDD risk):**
-- Start with `BinomialBayesMixedGLM` from statsmodels
-- If convergence fails, fall back to `MixedLM` (linear approximation)
-- If that fails, fall back to logistic regression with clustered standard errors
-- Document which method was used in the results
+- API client code (anthropic, google-genai, openai SDKs) -- same call patterns
+- Grading modules -- model-agnostic
+- Analysis modules -- model-agnostic
+- Noise generation -- model-agnostic
+- Database schema -- already stores model name as string
 
 ## Version Compatibility
 
-| Package A | Compatible With | Notes |
-|-----------|-----------------|-------|
-| bert-score >=0.3.13 | torch >=1.0, transformers >=4.0 | Pulls in ~2GB of dependencies. Install once, cache the model. First run downloads DeBERTa by default. |
-| statsmodels >=0.14.4 | scipy >=1.8, pandas >=1.4, numpy >=1.22 | All compatible with our pinned versions. |
-| google-genai >=1.66.0 | Python >=3.9 | Avoid 1.67.0 (typing-extensions bug). |
-| anthropic >=0.86.0 | Python >=3.9 | httpx-based, no requests dependency. |
-
-## Critical Migration Note
-
-The existing `pyproject.toml` uses `google-generativeai>=0.8.0`. This package was **permanently discontinued on November 30, 2025**. The migration to `google-genai` involves:
-
-1. Change the import from `import google.generativeai as genai` to `from google import genai`
-2. Client initialization changes from `genai.configure(api_key=...)` to `client = genai.Client(api_key=...)`
-3. Model calls change from `model.generate_content(...)` to `client.models.generate_content(model=..., contents=...)`
-4. Response structure differs -- test thoroughly during migration
-
-Since no code exists yet (src/ only has `__init__.py`), this is a clean start -- use `google-genai` from day one.
+| Package | Compatible With | Notes |
+|---------|-----------------|-------|
+| python-dotenv 1.2.2 | Python >=3.9 | Zero dependencies. No conflicts possible. |
+| anthropic 0.86.0 `models.list()` | Any anthropic >=0.40.0 | Models API has been stable since early SDK versions. |
+| google-genai 1.68.0 `models.list()` | Any google-genai >=1.0.0 | Core SDK feature, stable. |
+| openai 2.29.0 `models.list()` | Any openai >=1.0.0 | Stable since v1 rewrite. |
+| httpx 0.28.1 | Already installed | Transitive dep of anthropic + openai. Do NOT pin explicitly -- let SDK manage it. |
 
 ## Sources
 
-- [Anthropic Python SDK releases](https://github.com/anthropics/anthropic-sdk-python/releases) -- version 0.86.0 confirmed (2026-03-18)
-- [google-generativeai deprecation notice](https://ai.google.dev/gemini-api/docs/libraries) -- support ended Nov 30, 2025, migrate to google-genai
-- [google-genai PyPI](https://pypi.org/project/google-genai/) -- version 1.67.0 current, 1.66.0 recommended due to bug
-- [statsmodels GLMM docs](https://www.statsmodels.org/stable/mixed_glm.html) -- BinomialBayesMixedGLM for binary outcomes, version 0.14.6
-- [bert-score PyPI](https://pypi.org/project/bert-score/) -- version 0.3.13 latest
-- [tiktoken PyPI](https://pypi.org/project/tiktoken/) -- version 0.12.0 latest
-- [RestrictedPython CVE-2025-22153](https://www.sentinelone.com/vulnerability-database/cve-2025-22153/) -- critical sandbox escape, avoid for code execution
-- [Migrating to google-genai SDK](https://medium.com/google-cloud/migrating-to-the-new-google-gen-ai-sdk-python-074d583c2350) -- migration guide
-- RDD v4.0 Section 18 (Tools & Infrastructure) -- statsmodels, scipy, scikit-learn, bert-score specified
+- Anthropic SDK v0.86.0 `ModelInfo` schema: verified via `anthropic.types.ModelInfo.model_json_schema()` -- fields: id, display_name, created_at, max_tokens, max_input_tokens, capabilities. **No pricing.**
+- Google genai SDK v1.68.0 `Model` schema: verified via `types.Model.model_json_schema()` -- fields: name, displayName, inputTokenLimit, outputTokenLimit, etc. **No pricing.**
+- OpenAI SDK v2.29.0 `models.list()`: verified via `dir(client.models)` -- standard list/retrieve. **No pricing.**
+- OpenRouter `/api/v1/models` endpoint: verified via live HTTP call -- returns `pricing.prompt` and `pricing.completion` per model as USD-per-token strings.
+- python-dotenv: latest version 1.2.2 confirmed via `uv pip install --dry-run python-dotenv`.
+- httpx 0.28.1: confirmed installed as transitive dependency via `uv pip show httpx`.
 
 ---
-*Stack research for: LLM prompt noise/optimization research toolkit*
-*Researched: 2026-03-19*
+*Stack research for: Configurable Models and Dynamic Pricing milestone*
+*Researched: 2026-03-25*

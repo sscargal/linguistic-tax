@@ -1,186 +1,209 @@
 # Project Research Summary
 
-**Project:** Linguistic Tax -- LLM Prompt Noise/Optimization Research Toolkit
-**Domain:** Empirical NLP research pipeline (ArXiv paper)
-**Researched:** 2026-03-19
+**Project:** Configurable Models and Dynamic Pricing (Linguistic Tax v2.0)
+**Domain:** Python CLI research toolkit — extending hardcoded model config to dynamic, user-configurable model selection with live pricing
+**Researched:** 2026-03-25
 **Confidence:** HIGH
 
 ## Executive Summary
 
-This project is a batch-processing research pipeline that measures how typos, ESL grammatical errors, and verbose prompts degrade LLM reasoning accuracy, then tests whether lightweight interventions (sanitization, compression, prompt repetition) can recover lost performance. The standard approach for this type of empirical NLP study is a deterministic pipeline: curate benchmark prompts, inject controlled noise, send prompts through multiple LLM APIs with full instrumentation, auto-grade results, and run rigorous statistical analysis. The RDD (v4.0) is a thorough spec that already addresses most design questions -- the implementation task is to build exactly what it describes, not to invent new approaches.
+This milestone transforms a hardcoded 4-model research toolkit into a flexible, user-configurable system. The core challenge is that six module-level constants in `config.py` (MODELS, PRICE_TABLE, PREPROC_MODEL_MAP, RATE_LIMIT_DELAYS, and related structures) are imported at module load time across 10+ source files, and must become config-driven without breaking backward compatibility with existing saved configs or the existing test suite. The recommended approach is a `ModelRegistry` pattern: introduce a `ModelConfig` dataclass and `ModelRegistry` class that wrap all per-model lookups, built from config at runtime rather than resolved at import time. Only one new external dependency is needed (`python-dotenv`), and only OpenRouter exposes pricing via API — the other three major providers (Anthropic, Google, OpenAI) require a curated hardcoded fallback table.
 
-The recommended approach is a sequential, module-per-file Python pipeline with SQLite as the single integration point between stages. The stack is well-constrained: Python 3.11+, direct Anthropic and Google SDK calls (no LangChain), statsmodels for GLMM, and subprocess-based sandboxing for code execution. One critical migration is required immediately: the `google-generativeai` package in `pyproject.toml` is deprecated (support ended Nov 2025) and must be replaced with `google-genai`. Since no code exists yet beyond `__init__.py`, this is a clean start with no migration cost.
+The most important design decision is the migration strategy: the new `models: tuple[dict, ...]` field in `ExperimentConfig` must coexist with the existing flat per-provider fields (`claude_model`, `gemini_model`, etc.) so that configs saved by the current version continue to load correctly. Build order is critical — the foundation (ModelConfig, ModelRegistry, env_manager) must be in place before any consumer is updated, with existing tests passing as a gate between phases. The setup wizard requires a heavy rewrite to support free-text model entry, multi-provider flows, and `.env` file creation, but this work is well-defined and all infrastructure is buildable from stdlib plus the one new dependency.
 
-The top risks are: (1) HumanEval sandbox security -- executing 16,000+ LLM-generated code snippets requires robust process isolation, not just timeouts; (2) GSM8K grading fragility -- regex extraction of numerical answers produces false positives/negatives that can invalidate results; (3) noise injection corrupting prompt semantics at 20% noise level, confounding noise resilience with specification change; and (4) multiple comparisons inflation across hundreds of statistical tests. All four risks are manageable with upfront investment in validation (test suites for grading, semantic similarity checks for noise, BH correction built into the analysis pipeline from day one).
+The biggest risk is not the new features themselves but the cross-cutting nature of the change: nine critical pitfalls were identified, most stemming from the same root cause — module-level constants that conflate "models we ship defaults for" with "models that are valid to use." Defensive fallbacks (`compute_cost()` returning $0.00 with a warning for unknown models instead of raising `KeyError`) must land in Phase 1, before any dynamic pricing work, because they are prerequisites for custom models to function at all. Security considerations (API keys in `.env` not `experiment_config.json`, correct file permissions, masked key display) must be addressed in the wizard phase.
 
 ## Key Findings
 
 ### Recommended Stack
 
-The stack is Python-native with two external API integrations. No web framework, no orchestration layer, no message queue. The heaviest dependency is `bert-score` (pulls in PyTorch + transformers at ~2GB) but it is required by the RDD for the compression study. All other dependencies are standard scientific Python.
+The existing stack requires only one new addition. `python-dotenv>=1.2.0` is the single new dependency — it handles `.env` loading into `os.environ` (so no existing `os.environ.get()` calls need changing) and provides `set_key()` for wizard-side key persistence. All three major LLM SDKs (`anthropic 0.86.0`, `google-genai 1.68.0`, `openai 2.29.0`) already support `client.models.list()` for model discovery. `httpx 0.28.1` is already installed as a transitive dependency and can be used directly for the one HTTP call needed (OpenRouter pricing fetch) — adding `requests` would be redundant.
 
 **Core technologies:**
-- **Python 3.11+ / uv:** Runtime and package management already in use. No reason to upgrade to 3.12+.
-- **anthropic >= 0.86.0:** Official Claude SDK. Pin minimum version for structured responses and automatic retries.
-- **google-genai >= 1.66.0:** Official Gemini SDK (replaces deprecated `google-generativeai`). Avoid 1.67.0 due to typing-extensions bug.
-- **statsmodels >= 0.14.4:** GLMM via `BinomialBayesMixedGLM`, BH correction via `multipletests`. Fallback to `MixedLM` or logistic regression if convergence fails.
-- **SQLite (stdlib):** Results storage. WAL mode for concurrent reads during analysis. No external DB dependency.
-- **subprocess sandbox:** HumanEval/MBPP code execution. Docker/firejail for stronger isolation if needed. Never `exec()` in the main process.
+- `python-dotenv>=1.2.0`: `.env` load/write — de facto standard, zero dependencies, single `load_dotenv()` + `set_key()` API
+- `httpx` (transitive, already installed): OpenRouter pricing fetch — avoid adding `requests` when `httpx` is already present
+- stdlib `dataclasses`: `ModelConfig` and updated `ExperimentConfig` — project already uses frozen dataclasses throughout; no pydantic needed
+- `anthropic 0.86.0` / `google-genai 1.68.0` / `openai 2.29.0` `models.list()`: live model discovery — all stable SDK features, no new installs
 
-**Critical action:** Replace `google-generativeai` with `google-genai` in `pyproject.toml` before writing any code. The import path, client initialization, and response structure all differ.
+**What NOT to add:** `litellm` (50+ transitive deps), `pydantic` (overkill for simple config), `requests` (httpx already available), `dynaconf`/`omegaconf` (complexity for a single JSON config file), `keyring` (over-engineered for a single-researcher CLI).
 
 ### Expected Features
 
-**Must have (table stakes -- reviewers reject without these):**
-- Deterministic noise injection with fixed seeds (Type A character-level at 5/10/20%, Type B ESL syntactic)
-- Standard benchmark evaluation (HumanEval, MBPP, GSM8K -- 200 prompts)
-- Automated pass/fail grading (sandboxed code execution + regex math grading)
-- Multiple model comparison (Claude Sonnet + Gemini 1.5 Pro, pinned versions)
-- 5 repetitions per condition at temperature=0.0
-- GLMM with BH correction (not just t-tests)
-- Clean prompt baselines
-- Full experiment logging (every API call: tokens, timing, cost, pass/fail)
-- Pilot study (20 prompts) before full run
+**Must have (P1 — this milestone):**
+- Config models list structure (`ExperimentConfig` gets `models` field) — keystone on which all other P1 features depend
+- Config-driven PRICE_TABLE, PREPROC_MODEL_MAP, RATE_LIMIT_DELAYS — derived from config at load time, not hardcoded constants
+- Relaxed model validation (warn, not reject) — prerequisite for free-text model entry to be useful
+- Free-text model entry in wizard with sensible defaults shown
+- Multi-provider wizard flow (configure 1-4 providers iteratively)
+- `.env` file creation via python-dotenv for API keys
+- Experiment scope adapts to configured models (MODELS derived from config)
 
-**Should have (differentiators -- what makes this paper publishable):**
-- Stability-Correctness 4-quadrant decomposition (Robust/Confidently-Wrong/Lucky/Broken)
-- ESL penalty quantification with linguistic validation
-- Head-to-head comparison of 5 intervention strategies
-- Net cost-benefit analysis with token ROI
-- Compression study as independent contribution
-- Kendall's tau rank-order stability analysis
+**Should have (P2 — same milestone if time permits):**
+- Enhanced `propt list-models` with live API queries (model IDs + context windows; pricing NOT available from Anthropic/Google/OpenAI APIs)
+- Budget awareness shown at end of wizard (reuses existing `execution_summary.py` infrastructure — low marginal effort)
+- Model validation ping at setup (verify model ID + API key work together)
 
-**Defer (post-paper):**
-- Additional models (GPT-4, Llama)
-- Meta-prompting intervention
-- British English variant study
-- Interactive UI or web dashboard
+**Defer (v2.x / v3+):**
+- OpenRouter live pricing integration — only provider with API-accessible pricing; add when curated fallback table becomes stale
+- Model capability filtering in list-models
+- Web-scraped pricing for Anthropic/OpenAI/Google — fragile, maintenance burden
+- Config migration tool (not needed until a second schema change)
+
+**Critical finding on pricing:** Anthropic, OpenAI, and Google SDKs do NOT return pricing from their `models.list()` endpoints. Only OpenRouter includes `pricing.prompt` and `pricing.completion` in their `/api/v1/models` response. For the other three providers, a curated hardcoded fallback PRICE_TABLE is the only viable pricing source.
 
 ### Architecture Approach
 
-A flat, sequential batch pipeline with SQLite as the integration point. Five stages flow left-to-right: data preparation (noise generation + matrix building), intervention routing, API execution with instrumentation, grading, and post-hoc analysis. Each stage is a standalone Python module in a flat `src/` layout (10-12 files, no packages). The experiment matrix is materialized as a JSON file of self-contained work items; the execution engine processes items one-by-one and skips already-completed items for resumability.
+The target architecture replaces six parallel hardcoded dicts/tuples in `config.py` with a `ModelRegistry` class built from config at runtime. Two new source files are introduced (`src/pricing_client.py` for per-provider model listing and OpenRouter pricing, `src/env_manager.py` for `.env` I/O), and the existing `ExperimentConfig` frozen dataclass gains a `models: tuple[dict, ...]` field. The backward compatibility strategy — when `models` is empty (default), derive the registry from existing flat fields; when populated, use `models` as source of truth — ensures existing configs continue to work without migration.
 
 **Major components:**
-1. **Noise Generator** -- inject Type A (character) and Type B (ESL syntactic) noise with deterministic seeds
-2. **Intervention Router** -- dispatch to Raw/Self-Correct/Pre-Proc Sanitize/Sanitize+Compress/Repetition
-3. **Execution Engine** -- iterate matrix, call intervention + API + grader, write to SQLite
-4. **Grader** -- HumanEval sandbox execution + GSM8K regex extraction (separate implementations behind common interface)
-5. **Derived Metrics** -- post-execution computation of CR, quadrant classification, cost rollups (idempotent, separate from execution)
-6. **Statistical Analysis** -- GLMM, bootstrap CIs, McNemar's, Kendall's tau, BH correction
+1. `ModelConfig` dataclass + `ModelRegistry` class (in `config.py`) — single source of truth replacing four parallel hardcoded dicts; built from config at runtime, never at import time
+2. `src/env_manager.py` (new) — `.env` load/write utilities wrapping python-dotenv; called once at CLI entry point only
+3. `src/pricing_client.py` (new) — per-provider model listing; OpenRouter live pricing; hardcoded fallback for Anthropic/Google/OpenAI
+4. `setup_wizard.py` (major rewrite) — free-text model entry, multi-provider loop, API key collection with `.env` writing, budget preview
+5. `config_manager.py` (modified) — relaxed validation (warn not error); handles new `models` field serialization; backward-compat migration from flat fields
+
+**Key patterns to follow:**
+- Registry with fallback defaults: unknown models get $0.00 + logged warning, not a crash
+- Backward-compatible config evolution: new structured field alongside existing flat fields; use new when present, fall back to flat fields for old configs
+- Provider abstraction in `pricing_client.py`: uniform interface, differing implementations per provider
+- Never resolve constants at module import time; always build registry at runtime entry points and pass explicitly
 
 ### Critical Pitfalls
 
-1. **HumanEval sandbox security** -- LLM-generated code can contain infinite loops, fork bombs, or file I/O. Use subprocess with timeout + resource limits + process group kill. Stress-test with adversarial code before pilot.
-2. **GSM8K regex extraction fragility** -- models produce answers in varied formats (prose, LaTeX, units). Use two-stage extraction with fallback regex and number normalization. Build a 20+ variant test suite before pilot.
-3. **Noise corrupts semantics at 20%** -- character mutations can change prompt meaning, not just surface form. Run semantic similarity checks on noisy prompts; protect semantically critical terms; manually review a sample at 20% noise.
-4. **Multiple comparisons inflation** -- hundreds of tests at alpha=0.05 produce ~25 spurious significant results. Apply BH correction across ALL reported p-values in a single call. Build correction into the analysis pipeline, not as a post-hoc step.
-5. **Seed management across pipeline** -- global `random.seed()` breaks when modules interact. Use independent `random.Random(seed)` instances per randomness source with a seed registry in config.
+1. **Frozen dataclass schema migration breaks existing saved configs** — Add explicit migration: if loaded config has old flat fields but no `models` list, auto-construct `models` from flat fields. Write round-trip tests covering old-format configs. Must be Phase 1's first deliverable.
+
+2. **MODELS tuple used as hard allowlist in 4+ modules** — `pilot.py`, `compute_derived.py`, `setup_wizard.py`, and `config_manager.py` all use `MODELS` as a validation gate. Custom models are accepted at setup but rejected during pilot runs and silently excluded from analysis. Replace with config-driven model list across ALL consumption sites — track as a cross-file checklist, not a single-file change.
+
+3. **`compute_cost()` raises KeyError for unknown models, crashing mid-experiment** — Change to return 0.0 with a logged warning for unknown models instead of raising. This defensive fallback must land in Phase 1, before any dynamic pricing work, because it is a prerequisite for custom models to function.
+
+4. **PREPROC_MODEL_MAP crash during experiment execution, not setup** — Custom target models without a preproc mapping pass setup and `raw`/`self_correct` runs, then crash mid-experiment when hitting a sanitize intervention — potentially after hundreds of successful API calls. The wizard must require explicit target + preproc pairing; `get_preproc_model()` must consult config first.
+
+5. **`.env` loaded with wrong precedence or not loaded at all** — Use `load_dotenv(override=False)` so `.env` fills in missing vars only, never overrides shell-set ones. Call exactly once at the CLI entry point. After writing a key to `.env` in the wizard, also set `os.environ[key] = value` so it is live in the current process.
+
+6. **Module-level constant copies ignore runtime config** — `api_client.py` copies `RATE_LIMIT_DELAYS` at import; `setup_wizard.py` builds `PROVIDERS` dict at import; `pilot.py` builds `_VALID_MODELS` at import. All freeze hardcoded defaults permanently. Replace with functions that read from config or pass config explicitly.
+
+7. **String prefix routing in `api_client.py` breaks for non-standard model IDs** — Store explicit `provider` field alongside model in config; route by provider field, not `model.startswith("claude")`. Keep prefix detection only as a backward-compat fallback.
+
+8. **Pricing API calls block or crash the setup wizard** — Set 5-second timeouts on all pricing API calls, wrap in try/except, fall back to hardcoded table. Write config atomically (build full dict, validate, then write). Never block setup completion on pricing data.
+
+9. **Experiment matrix assumes fixed 4-model count** — Filter matrix items by configured models before execution. Consider generating matrix at runtime from config rather than treating the pre-generated JSON as an immutable artifact.
 
 ## Implications for Roadmap
 
-Based on research, suggested phase structure:
+Based on the dependency graph across all four research files, the build order is strictly determined by what must be in place before other components can function and what can change existing behavior. All phases must pass existing tests before proceeding to the next.
 
-### Phase 1: Foundation and Data Infrastructure
+### Phase 1: Foundation — Config Schema and Defensive Fallbacks
 
-**Rationale:** Everything downstream depends on the database schema, configuration, noise generators, and benchmark prompts. These have zero external dependencies and can be fully unit-tested without API calls.
-**Delivers:** Config module, SQLite schema + helpers, noise generators (Type A + B), benchmark prompt curation (200 prompts), experiment matrix builder.
-**Addresses:** Deterministic noise injection, clean baselines, seed management, benchmark curation.
-**Avoids:** Seed management pitfall (establish seed registry from day one), noise semantic corruption pitfall (build semantic similarity checks into noise generator validation).
+**Rationale:** All other phases depend on the `ModelConfig`/`ModelRegistry` abstraction and the defensive `compute_cost()` fallback. These must land first and must not change any existing behavior. This phase is the keystone identified in FEATURES.md; pitfalls 1, 2, 3, 4, 7, and 9 all require groundwork here.
 
-### Phase 2: API Clients and Grading
+**Delivers:** `ModelConfig` dataclass, `ModelRegistry` class with `defaults()` classmethod wrapping current hardcoded values, `models` field added to `ExperimentConfig`, backward-compat migration in `load_config()` (auto-construct `models` from flat fields when `models` is empty), relaxed model validation (warn not error), `compute_cost()` returning 0.0 with warning for unknown models, `src/env_manager.py`, `python-dotenv` added to `pyproject.toml`, `experiment_config.json` added to `.gitignore`.
 
-**Rationale:** The API client and grading modules are the two highest-risk components (security, reliability, cost) and must be hardened before any experiment runs. Building them before the execution engine allows isolated testing.
-**Delivers:** Unified API client (Anthropic + Gemini) with full instrumentation, HumanEval sandbox grader, GSM8K regex grader, grading test suites.
-**Addresses:** Multiple model comparison, automated grading, full experiment logging.
-**Avoids:** HumanEval sandbox security pitfall (stress-test before pilot), GSM8K regex pitfall (validate against format variants), API rate limit pitfall (build proactive rate limiting).
+**Addresses:** Config models list structure (P1 keystone), relaxed model validation (P1), defensive pricing fallback.
 
-### Phase 3: Interventions and Execution Engine
+**Avoids:** Pitfalls 1 (schema migration), 2 (MODELS allowlist — pattern decided here), 3 (KeyError crash), 4 (PREPROC crash — structure defined), 7 (prefix routing — provider field added to schema), 9 (matrix assumption — model list now config-driven).
 
-**Rationale:** With foundation, API client, and grading in place, the execution engine is a thin orchestrator. Interventions (compressor, repeater, self-correct prefix, pre-processor pipeline) must be built before the engine can process the full matrix.
-**Delivers:** Prompt compressor, prompt repeater, intervention router, execution engine with resumability, pre-processor pipeline (cheap model calls).
-**Addresses:** 5 intervention strategies, pilot study capability, cost tracking.
-**Avoids:** Coupling intervention logic into execution engine (keep separate), pre-processor cost accounting pitfall (log all costs from first call), prompt repetition cost pitfall (track doubled input tokens).
+**Test gate:** All existing tests pass. `ModelRegistry.defaults()` returns identical data to current hardcoded dicts. Round-trip test: save old-format config, load with new code, assert no data loss. `compute_cost("novel-model-xyz", 1000, 500)` returns 0.0 with a warning log.
 
-### Phase 4: Pilot Validation
+### Phase 2: Registry Consumers — Swap Imports to Registry
 
-**Rationale:** The pilot (20 prompts, all conditions) is the cheapest way to validate the entire pipeline end-to-end before committing to the $300-500 full run. Every pitfall prevention strategy must be verified here.
-**Delivers:** Pilot results in SQLite, validated grading accuracy, cost estimates for full run, baseline CR measurements, confirmation that noise does not corrupt semantics excessively.
-**Addresses:** Pilot study requirement, cost control, pipeline validation.
-**Avoids:** All pitfalls are verified at pilot scale. Specific checks: seed determinism (rerun produces identical output), grading accuracy (manual spot-check), cost projections (within budget), sandbox containment (no escapes during pilot).
+**Rationale:** Once the registry exists (Phase 1), consumers can be updated one by one without changing behavior. This is the lowest-risk phase — identical outputs, better structure. Must complete before Phase 4 (the wizard needs consumers ready to accept registry instances).
 
-### Phase 5: Full Experiment Execution
+**Delivers:** `prompt_compressor.py`, `execution_summary.py`, `api_client.py`, and `run_experiment.py` updated to accept registry parameter. Standalone `compute_cost()` kept with deprecation warning for backward compat. Module-level constant copies (`_rate_delays`, etc.) replaced with registry lookups.
 
-**Rationale:** With a validated pipeline, execute the full ~20,000-call matrix. This is a multi-hour unattended run requiring robust logging, resumability, and rate limiting.
-**Delivers:** Complete results database (~20K rows), all 5 repetitions for all conditions, comprehensive cost and timing logs.
-**Addresses:** All table-stakes features exercised at full scale.
-**Avoids:** API rate limit bias (randomize prompt order, interleave models), model version drift (pin exact version strings), cost overrun (monitor against pilot projections).
+**Addresses:** Config-driven PREPROC_MODEL_MAP, RATE_LIMIT_DELAYS, PRICE_TABLE (wired into consumers).
 
-### Phase 6: Analysis and Figures
+**Avoids:** Pitfall 6 (module-level stale constants resolved for all consumer modules in this phase).
 
-**Rationale:** All analysis requires complete (or near-complete) experimental data. GLMM fits across the full dataset; partial analysis is only valid for pilot checks.
-**Delivers:** Derived metrics (CR, quadrants, cost rollups), GLMM results, bootstrap CIs, McNemar's tests, Kendall's tau, BH-corrected p-values, publication-quality figures.
-**Addresses:** All differentiator features (4-quadrant decomposition, ESL penalty quantification, cost-benefit analysis, rank-order stability), compression study (BERTScore).
-**Avoids:** Multiple comparisons pitfall (single BH correction across all tests), temperature non-determinism pitfall (report baseline CR and measure degradation relative to it).
+**Test gate:** All existing tests pass. Behavior identical to Phase 1. Custom model name through the sanitize intervention pipeline does not raise ValueError.
+
+### Phase 3: Pricing Client — Live Model Discovery
+
+**Rationale:** Independent of Phase 2 (no shared dependencies), but benefits from the registry being in place. Enables the `propt list-models` enhancement and the budget preview needed in the wizard (Phase 4). All pricing fetches must include defensive fallbacks from the first line of code.
+
+**Delivers:** `src/pricing_client.py` with per-provider `list_models()` and `fetch_pricing()`. OpenRouter live pricing (the only provider that exposes it via API — others return model IDs only). Hardcoded fallback for Anthropic/Google/OpenAI. Updated `config_commands.py` `handle_list_models()`.
+
+**Addresses:** Enhanced `propt list-models` (P2), OpenRouter pricing groundwork for v2.x.
+
+**Avoids:** Pitfall 8 (pricing API failures — all calls have 5s timeout + try/except + fallback; config written atomically).
+
+**Test gate:** `propt list-models` shows live model availability from provider APIs. Mocked timeout responses fall back gracefully to hardcoded prices with a clear warning message.
+
+### Phase 4: Setup Wizard Overhaul — User-Facing Changes
+
+**Rationale:** Depends on Phases 1 (registry and env_manager), 2 (consumers ready), and 3 (pricing client for budget preview). The wizard is the heaviest rewrite and the most user-visible change. Security requirements — API keys in `.env` not in config JSON, correct `.env` file permissions, masked key display — must be addressed here.
+
+**Delivers:** Free-text model entry with defaults shown, multi-provider loop (1-4 providers), API key collection writing to `.env` via `env_manager`, model validation ping, budget preview using existing `execution_summary.py` infrastructure, explanatory text for target vs. preproc model distinction. `cli.py` updated to call `env_manager.load_dotenv()` at startup with `override=False`.
+
+**Addresses:** Free-text model entry (P1), multi-provider wizard flow (P1), `.env` file creation (P1), budget awareness (P2), model validation ping (P2), target/preproc explanation text.
+
+**Avoids:** Pitfall 5 (`.env` precedence — `override=False`, called once at entry point, key also set in current process). Security pitfalls (keys only in `.env`, never in config JSON; `chmod 0o600` on `.env`; masked key display; `experiment_config.json` in `.gitignore`).
+
+**Test gate:** Full wizard flow works with free-text model names not in hardcoded defaults. `.env` created with correct permissions (0o600). `propt run` works after fresh `.env` creation in a new shell session (not just during wizard session). Setting a key in shell env and running wizard does not overwrite it.
+
+### Phase 5: Experiment Scope Adaptation — Matrix and Pilot
+
+**Rationale:** Final phase; depends on Phase 2 (registry consumers) and Phase 4 (wizard populates models config). Lowest risk since the registry infrastructure is already in place; this phase wires up the entry points that iterate over configured models.
+
+**Delivers:** `scripts/generate_matrix.py`, `pilot.py`, `compute_derived.py` use `registry.get_models()` instead of `MODELS` tuple. `cli.py --model flag` accepts configured provider names dynamically. Matrix filtered to configured models before execution.
+
+**Addresses:** Experiment scope adapts to config (P1 — final wiring), dynamic model list in compute_derived and pilot.
+
+**Avoids:** Pitfall 9 (matrix assumes 4 models — now filtered to configured models). Remaining instances of pitfall 2 (MODELS as allowlist in `pilot.py` and `compute_derived.py`).
+
+**Test gate:** Matrix generation adapts to 1, 2, and 4 configured providers. Pilot runs with subset of providers without "Unknown model" errors. Analysis output contains exactly the configured models, no more.
 
 ### Phase Ordering Rationale
 
-- **Phases 1-2 are parallelizable internally** but must both complete before Phase 3. Noise generators, API clients, and graders have no dependencies on each other.
-- **Phase 3 depends on Phases 1-2** because the execution engine orchestrates noise generation, intervention routing, API calls, and grading.
-- **Phase 4 (pilot) is a hard gate.** No full run without successful pilot. This is the cheapest place to find bugs.
-- **Phase 5 is the longest elapsed-time phase** (~5-10 hours of API calls) but the least code to write -- just running the validated pipeline.
-- **Phase 6 modules can be scaffolded during Phase 5** (define interfaces, write tests against mock data) but final analysis requires complete results.
+- Phases 1 and 2 are zero-risk (new code paths, identical behavior); Phase 1 must come first because all later phases depend on the registry abstraction
+- Phase 3 is independent of Phase 2 but is sequenced third because the wizard (Phase 4) needs the pricing client for budget preview
+- Phase 4 is sequenced after 1, 2, and 3 because it needs all infrastructure in place and carries the most security requirements
+- Phase 5 is last because it depends on the wizard (Phase 4) having populated the `models` config field
+- This ordering mirrors the "Suggested Build Order" in ARCHITECTURE.md and the "Phase to address" annotations in PITFALLS.md, with no contradictions between the two
 
 ### Research Flags
 
-Phases likely needing deeper research during planning:
-- **Phase 2 (Grading):** HumanEval sandbox isolation patterns vary significantly by platform. May need Docker vs. firejail vs. subprocess decision. GSM8K regex edge cases need comprehensive test data.
-- **Phase 3 (Interventions):** The prompt compressor's behavior with a cheap LLM (Haiku/Flash) needs prompt engineering research. What system prompt produces reliable sanitization without semantic drift?
-- **Phase 6 (Analysis):** GLMM convergence is a known risk (RDD risk register). If statsmodels fails, fallback to R's lme4 via rpy2 adds significant complexity. Research the convergence characteristics of `BinomialBayesMixedGLM` on binary data with crossed random effects.
+Phases with well-documented patterns (standard implementation, skip deeper research):
+- **Phase 1 (Foundation):** Frozen dataclass extension and backward-compat migration are well-documented Python patterns. The specific fields, types, and migration logic are fully specified in ARCHITECTURE.md and PITFALLS.md.
+- **Phase 2 (Registry Consumers):** Mechanical parameter threading. No open design decisions.
+- **Phase 5 (Scope Adaptation):** Straightforward wiring once Phases 1-4 are complete.
 
-Phases with standard patterns (skip research-phase):
-- **Phase 1 (Foundation):** SQLite schema design, JSON loading, random seed management -- all well-documented patterns.
-- **Phase 4 (Pilot):** Just running the pipeline at small scale. No new patterns.
-- **Phase 5 (Full Run):** Same as pilot, longer. Rate limiting and retry are well-documented.
+Phases that may benefit from targeted research during planning:
+- **Phase 3 (Pricing Client):** OpenRouter `/api/v1/models` response schema is noted as MEDIUM confidence in ARCHITECTURE.md (sourced from training data, not verified live during research). Verify the exact `pricing.prompt`/`pricing.completion` field structure and units (per-token strings vs. per-1M floats) against a live call before writing the parser.
+- **Phase 4 (Wizard):** Two python-dotenv edge cases need verification against the actual installed version: (1) does `set_key()` create the `.env` file if it does not exist? (2) what exactly happens when `override=False` and a key is already in `os.environ`? Verify these before writing the wizard.
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | All libraries verified against PyPI with current versions. Critical finding: `google-generativeai` deprecation is confirmed. `google-genai` 1.67.0 bug is documented. |
-| Features | HIGH | Feature landscape mapped against 6+ competing papers (PromptBench, MulTypo, TextFlint, PromptSuite). Table stakes vs. differentiators clearly delineated. |
-| Architecture | HIGH | Batch pipeline pattern is standard for empirical research. No novel architectural decisions needed. The RDD and CLAUDE.md already constrain most choices. |
-| Pitfalls | HIGH | All 10 pitfalls sourced from published papers, CVE databases, or documented API behavior. Temperature non-determinism, benchmark contamination, and sandbox security are well-studied. |
+| Stack | HIGH | All SDK fields verified via live introspection of installed packages. python-dotenv behavior verified. Only one MEDIUM finding: OpenRouter pricing schema from training data, not a live call. |
+| Features | HIGH | Derived from direct codebase analysis (grep for all MODELS importers, field introspection of all three SDKs). Priority ordering is clear from dependency graph. |
+| Architecture | HIGH | Component boundaries and data flow derived from reading all source files. Build order validated against pitfall analysis — no contradictions. |
+| Pitfalls | HIGH | All 9 pitfalls are grounded in specific line numbers in the existing codebase. Not speculative. |
 
 **Overall confidence:** HIGH
 
 ### Gaps to Address
 
-- **GLMM convergence behavior:** statsmodels `BinomialBayesMixedGLM` may struggle with the specific crossed random effects structure in this study. Validate during pilot analysis. Have R/lme4 fallback plan ready but do not build it unless needed.
-- **Gemini safety filter behavior on noisy prompts:** Noisy prompts with garbled text may trigger Gemini's safety filters. The rate of `SAFETY_BLOCK` responses is unknown until pilot. If substantial (>5%), this introduces missing data that complicates analysis.
-- **Pre-processor prompt engineering:** The system prompt for the cheap-model sanitizer/compressor is not specified in the RDD. Its effectiveness depends heavily on prompt design. Needs iteration during Phase 3.
-- **Code execution grading throughput:** At 5-10 seconds per HumanEval execution with ~10,000 code outputs, grading alone takes 14-28 hours if done post-hoc. The architecture research recommends inline grading (interleaved with API wait times) but this increases execution engine complexity. Decision needed in Phase 3 planning.
+- **OpenRouter pricing schema:** Noted as MEDIUM confidence (training data, not verified live). Before writing `pricing_client.py`, make a single live HTTP call to `https://openrouter.ai/api/v1/models` and verify `pricing.prompt` / `pricing.completion` field structure and units.
+- **python-dotenv `set_key()` on a missing `.env` file:** Verify whether it creates the file automatically and what the default permissions are. Affects wizard implementation in Phase 4.
+- **`experiment_config.json` in `.gitignore`:** PITFALLS.md notes it is NOT currently gitignored. This is a security gap — it does not store API keys today, but add it to `.gitignore` during Phase 1 as a precaution.
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- RDD v4.0 (`docs/RDD_Linguistic_Tax_v4.md`) -- authoritative project spec
-- [Anthropic Python SDK](https://github.com/anthropics/anthropic-sdk-python/releases) -- v0.86.0 confirmed
-- [google-genai PyPI](https://pypi.org/project/google-genai/) -- v1.66.0 recommended, 1.67.0 bug documented
-- [statsmodels GLMM docs](https://www.statsmodels.org/stable/mixed_glm.html) -- BinomialBayesMixedGLM
-- [RestrictedPython CVE-2025-22153](https://www.sentinelone.com/vulnerability-database/cve-2025-22153/) -- critical, avoid
+- Anthropic SDK v0.86.0 — `ModelInfo` field verification via `anthropic.types.ModelInfo.model_json_schema()`: `id`, `display_name`, `created_at`, `max_tokens`, `max_input_tokens`, `capabilities`. No pricing fields.
+- Google genai SDK v1.68.0 — `Model` field verification via `types.Model.model_json_schema()`: `name`, `displayName`, `inputTokenLimit`, `outputTokenLimit`. No pricing fields.
+- OpenAI SDK v2.29.0 — `models.list()` verified via `dir(client.models)`: `id`, `created`, `object`, `owned_by`. No pricing fields.
+- python-dotenv 1.2.2 — confirmed available via `uv pip install --dry-run python-dotenv`
+- httpx 0.28.1 — confirmed installed as transitive dependency via `uv pip show httpx`
+- Direct codebase analysis — all 10 source files that import model constants, specific line numbers for each pitfall
 
 ### Secondary (MEDIUM confidence)
-- [Non-Determinism of "Deterministic" LLM Settings (ArXiv 2408.04667)](https://arxiv.org/html/2408.04667v5)
-- [GSM8K-Platinum](https://gradientscience.org/gsm8k-platinum/) -- contamination and label errors
-- [Pitfalls of Evaluating Language Models (ArXiv 2507.00460)](https://arxiv.org/abs/2507.00460)
-- [Simulating Training Data Leakage (ArXiv 2505.24263)](https://arxiv.org/html/2505.24263v1) -- 5-14% HumanEval score inflation
-- [A Statistical Approach to Model Evals (Anthropic)](https://www.anthropic.com/research/statistical-approach-to-model-evals)
-- [PromptBench (Microsoft)](https://github.com/microsoft/promptbench)
+- OpenRouter `/api/v1/models` endpoint — returns `pricing.prompt` and `pricing.completion` per-token strings. Verified via live HTTP call per STACK.md; noted as training-data source in ARCHITECTURE.md. Treat as MEDIUM until confirmed during Phase 3 implementation.
 
 ### Tertiary (LOW confidence)
-- Pre-processor cost overhead estimate (20-40% hidden costs) -- single source, needs validation against actual API billing
-- google-genai 1.67.0 typing-extensions bug -- community reports, not in official changelog
+- None identified. All research findings are grounded in either live SDK introspection or direct source code analysis.
 
 ---
-*Research completed: 2026-03-19*
+*Research completed: 2026-03-25*
 *Ready for roadmap: yes*

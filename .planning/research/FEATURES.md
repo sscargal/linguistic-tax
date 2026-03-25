@@ -1,202 +1,167 @@
 # Feature Research
 
-**Domain:** LLM prompt noise/robustness research toolkit for ArXiv paper
-**Researched:** 2026-03-19
-**Confidence:** HIGH
+**Domain:** Configurable model registry, dynamic pricing, and .env management for a Python CLI research toolkit
+**Researched:** 2026-03-25
+**Confidence:** HIGH (based on direct SDK introspection of installed packages + codebase analysis)
 
 ## Feature Landscape
 
-### Table Stakes (Reviewers Expect These)
+### Table Stakes (Users Expect These)
 
-Features that ArXiv/peer reviewers assume exist. Missing these = paper rejected or "major revisions."
+Features the milestone explicitly requires. Missing any = milestone incomplete.
 
 | Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
-| Deterministic noise injection with fixed seeds | Reproducibility is non-negotiable for any empirical NLP paper. PromptBench and TextFlint both use deterministic perturbations. | MEDIUM | Two generators: Type A (character-level at 5/10/20%) and Type B (ESL syntactic). Must protect technical keywords from mutation. Seed must produce identical output across runs. |
-| Multiple noise granularity levels | Papers like MulTypo (2025) and Gan et al. (2024) test across noise rates. A single noise level is insufficient to identify threshold effects. | LOW | 5%, 10%, 20% character error rates for Type A. Single ESL pattern set for Type B. Optional 30% if pilot suggests cliff between 20-30%. |
-| Standard benchmark evaluation (HumanEval, MBPP, GSM8K) | Reviewers expect recognized benchmarks with known baselines. Custom-only benchmarks invite "not comparable" critique. | MEDIUM | 200 prompts sampled across three benchmarks. Must use canonical problem definitions, not modified versions. |
-| Automated pass/fail grading | Manual grading of 20,000 outputs is impossible and introduces subjectivity. Every robustness paper automates this. | HIGH | HumanEval/MBPP require sandboxed code execution (security-critical). GSM8K uses regex extraction of final numerical answer. Must handle edge cases: timeouts, runtime errors, partial outputs. |
-| Multiple model comparison | Single-model results are anecdotal. Reviewers expect at minimum 2 models from different providers to show generalizability. | LOW | Claude Sonnet + Gemini 1.5 Pro. Pin exact version strings. Different architectures (dense vs. MoE) strengthens generalizability claim. |
-| Multiple repetitions per condition | A single run per condition conflates noise effects with LLM sampling variance. PromptSuite (2025) explicitly measures variance across prompt variations. | LOW | 5 repetitions per condition at temperature=0.0. Even at temp=0, API outputs are not perfectly deterministic due to batching/quantization. |
-| Proper statistical testing beyond t-tests | NIST AI 800-3 (Feb 2026) recommends GLMMs for LLM evaluation. Papers using only t-tests face "insufficient statistical rigor" criticism. | HIGH | GLMM with prompt-level random effects, Benjamini-Hochberg correction for multiple comparisons, bootstrap CIs. statsmodels MixedLM implementation. |
-| Baseline (clean prompt) measurement | Without clean baselines, noise degradation cannot be quantified. Every perturbation study includes unperturbed controls. | LOW | Clean prompts run through identical pipeline (same models, same repetitions, same grading). |
-| Full experiment logging | Reviewers may ask "how long did inference take?" or "what was the cost?" Incomplete logs prevent answering. | MEDIUM | Every API call logs: prompt text, response text, model version, temperature, token counts (input/output), TTFT, TTLT, cost, timestamp, pass/fail. SQLite storage. |
-| Pilot study before full run | Running 20,000 API calls without validation is reckless. Pilot validates tooling, catches bugs, estimates costs. | LOW | 20 prompts across all conditions. Validates: noise generation, API calls, grading, storage, cost estimates. |
+| Free-text model entry in wizard | Users need arbitrary model IDs (new releases, fine-tunes) | LOW | Replace numbered-list-only selection with default suggestion + free-text fallback. Current wizard already handles `preproc_choice.strip()` free-text for preproc model (line 246-247 of setup_wizard.py) -- extend same pattern to target model. |
+| Config-driven PRICE_TABLE | Hardcoded dict rejects unknown models and cannot be updated without code changes | MEDIUM | Move from module-level constant to a function `get_price_table(config)` that merges hardcoded fallbacks with config-stored per-model pricing. `compute_cost()` must use this instead of bare `PRICE_TABLE[model]`. |
+| Config-driven PREPROC_MODEL_MAP | Currently 4 hardcoded entries; adding a model requires code change | LOW | Derive from config's `models` list where each entry pairs target + preproc. Fallback: if model not in map, warn and skip preproc interventions. |
+| Config-driven RATE_LIMIT_DELAYS | Same hardcoding problem | LOW | Store per-model delay in config. Default 0.5s for unknown models (already used as fallback in execution_summary.py line 172). |
+| Relaxed model validation | `validate_config()` currently rejects models not in PRICE_TABLE -- this blocks any new model | LOW | Change from error to warning. Models not in PRICE_TABLE get $0.00 pricing with logged warning. Critical: do NOT silently swallow -- warn so users know cost estimates are missing. |
+| .env file creation for API keys | Wizard currently tells users to "set env var" but does not help them do it | MEDIUM | Use `python-dotenv` `set_key()` to write/update `.env`. Load with `load_dotenv()` at CLI entry point. `.env` already in `.gitignore`. Requires adding `python-dotenv>=1.0.0` to dependencies. |
+| Multi-provider wizard flow | Current wizard selects one provider; milestone requires configuring 1-4 providers | MEDIUM | After first provider, loop: "Add another provider? (y/n)". Track configured providers. Max 4 (one per provider). Each iteration: pick provider, enter target model, enter preproc model, validate API key. |
+| Experiment scope adapts to config | Currently assumes all 4 providers/models exist. MODELS tuple is hardcoded. | MEDIUM | `MODELS` tuple must be derived from config at load time. `pilot.py` and `compute_derived.py` import MODELS directly -- these need to accept config-derived model lists. |
+| Enhanced `propt list-models` | Currently shows static PRICE_TABLE. Users need to discover available models. | MEDIUM | Query each provider's `models.list()` API. All 3 SDKs (anthropic, openai, google-genai) support `client.models.list()`. OpenRouter uses OpenAI-compatible endpoint. Show model ID, display name, context window. Pricing NOT available from most APIs (see Differentiators). |
 
-### Differentiators (Competitive Advantage for the Paper)
+### Differentiators (Competitive Advantage)
 
-Features that set this paper apart from PromptBench, MulTypo, and other perturbation studies.
+Features that go beyond the minimum. The context document confirms these were "additional features (confirmed by user)."
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| Stability-Correctness decomposition (4-quadrant analysis) | Most robustness papers measure only accuracy drops. Decomposing into Robust/Confidently-Wrong/Lucky/Broken is novel and actionable. The "Confidently Wrong" quadrant (stable but incorrect) is the paper's most dangerous finding. | MEDIUM | Requires Consistency Rate (CR) computed from pairwise agreement across 5 runs. Classify each prompt-condition pair into quadrant based on CR threshold (0.8) and majority-vote correctness. |
-| ESL penalty quantification (Type B noise) | Existing perturbation studies focus on typos (character-level). Quantifying the "ESL tax" -- that syntactic errors from L1 transfer cause MORE degradation than equivalent character noise -- has equity implications and policy relevance. | HIGH | ESL patterns must be linguistically validated against L2 English error corpora (Cambridge Learner Corpus categories). Rule-based templates for Mandarin, Spanish, Japanese, and mixed ESL patterns. Reviewers will scrutinize linguistic accuracy. |
-| Head-to-head intervention comparison (5 strategies) | Most papers test one fix. Comparing Raw vs. Self-Correct vs. Pre-Proc Sanitize vs. Sanitize+Compress vs. Prompt Repetition in the same matrix provides direct actionability. The Prompt Repetition comparison (Leviathan et al., 2025) is particularly timely. | MEDIUM | 5 intervention columns in factorial design. Self-Correct is zero-overhead (prompt prefix). Prompt Repetition doubles tokens but needs no external call. Pre-Proc interventions require cheap-model API calls (Haiku/Flash). |
-| Net cost-benefit analysis (token ROI) | Papers typically report accuracy only. Showing that the optimizer produces BETTER results AND costs LESS (net savings after pre-processor overhead) is the headline finding for practitioners. | MEDIUM | Track token costs for pre-processor calls separately. Compute net savings = (tokens saved on main call) - (tokens consumed by pre-processor). Report break-even noise level where optimizer pays for itself. |
-| Compression study (independent experiment) | Most noise papers ignore bloat. Showing that clean prompts contain 20-40% redundancy and compression preserves accuracy adds a second publishable contribution to the same paper. | MEDIUM | Separate from noise experiment. Compress clean prompts, measure token reduction, accuracy delta, and BERTScore of outputs vs. uncompressed baseline. |
-| Rank-order stability (Kendall's tau) | Tests whether noise is a "uniform tax" (all prompts suffer equally) or a "targeted tax" (certain prompt structures are disproportionately fragile). The targeted tax finding is more interesting and actionable. | LOW | Rank prompts by pass rate under clean, then under each noisy condition. Compute Kendall's tau. Low tau = targeted vulnerability = actionable insight for prompt design. |
-| Real-world noisy prompt validation | 20 real noisy prompts from public sources (forums, Stack Overflow) provide ecological validity beyond synthetic noise. | LOW | Small sample but validates that synthetic noise patterns match real-world noise. Qualitative comparison only -- too few for statistical power. |
+| Live pricing from provider APIs | Saves manual price-table maintenance; catches price drops | HIGH | **Critical finding: Anthropic, OpenAI, and Google SDKs do NOT return pricing data from their models endpoints.** Anthropic `ModelInfo` fields: `id, capabilities, created_at, display_name, max_input_tokens, max_tokens, type`. OpenAI `Model` fields: `id, created, object, owned_by`. Google `Model` fields: `name, display_name, description, input_token_limit, output_token_limit, ...`. Only OpenRouter includes pricing in their `/api/v1/models` response (non-standard extension). Mitigation: use curated fallback table and accept user overrides during setup. |
+| Budget awareness at setup time | Shows estimated experiment cost BEFORE committing. Prevents $50 surprise bills. | LOW | Already have `execution_summary.py` with cost estimation. Wire it into wizard as a final confirmation step using the configured models' pricing. Low complexity because infrastructure exists. |
+| Model validation ping at setup | Verifies model ID + API key work together. Catches typos in model names immediately. | LOW | Current `validate_api_key()` uses hardcoded cheap models. Change to ping the actual selected model with `max_tokens=1`. If it fails, warn but allow (model might not support tiny requests). |
+| Target vs preproc explanation in wizard | Users unfamiliar with the experiment design need context | LOW | Add 2-3 line explanation before each model prompt. "Target model: the LLM being tested for accuracy. Pre-processor model: a cheaper LLM used to clean/compress prompts before sending to the target." Pure text, no code complexity. |
 
-### Anti-Features (Deliberately NOT Building)
+### Anti-Features (Commonly Requested, Often Problematic)
 
 | Feature | Why Requested | Why Problematic | Alternative |
 |---------|---------------|-----------------|-------------|
-| Support for 5+ LLM providers | "More models = more generalizable" | Multiplies experiment matrix without proportional insight. 20,000 calls becomes 50,000+. Budget and timeline explode. Two architecturally distinct models (dense vs. MoE) suffice for a first paper. | Test 2 models. Flag model breadth as explicit future work in Section 23 of the paper. |
-| Interactive web UI for experiment management | "Easier to monitor runs" | This is a single-researcher CLI tool, not a product. UI development time competes with research time. | Use SQLite queries + logging output. A simple `python run_experiment.py --status` command suffices. |
-| Real-time streaming inference | "More realistic usage pattern" | Streaming adds complexity (partial response handling, token counting mid-stream) without changing the accuracy measurement. Batch mode is simpler and equally valid for the research question. | Batch execution with full response capture. |
-| Adversarial/jailbreak prompt testing | "PromptBench does this" | PromptBench's adversarial attacks target model safety. Our paper is about *unintentional* human noise, not adversarial attacks. Conflating the two weakens the contribution claim. | Explicitly scope to unintentional noise (typos, ESL patterns, bloat). Cite PromptBench as related but distinct work. |
-| Custom fine-tuning of noise-resistant models | "If noise hurts, train against it" | Fine-tuning is a completely different paper. Our contribution is measurement + lightweight intervention, not model modification. | Recommend noise-aware fine-tuning as future work. |
-| Noise rates above 20% | "Test to destruction" | At 40%+ noise, text is unreadable even to humans. MulTypo (2025) showed performance collapses uninformatively at high rates. The interesting science is the 5-20% threshold region. | Cap at 20%. Add optional 30% only if pilot data suggests the cliff falls between 20-30%. |
-| Semantic similarity as primary metric | "BERTScore for everything" | For code generation (HumanEval/MBPP), semantic similarity is meaningless -- code either passes tests or it does not. For GSM8K, the final number is either right or wrong. | Use pass/fail as primary metric. BERTScore only for compression study (measuring output preservation). |
-| Langfuse/W&B integration for experiment tracking | "Industry standard observability" | Adds external dependency and complexity for a research project that runs once. SQLite + Python logging is sufficient and self-contained. | SQLite database with structured schema. All data stays local, queryable with standard SQL. |
+| Auto-discover ALL available models from APIs | Seems convenient to list every model | Model lists are huge (OpenAI returns 50+, OpenRouter returns 300+). Most are irrelevant (embedding models, image models, deprecated models). Filtering is complex and provider-specific. | Show curated defaults per provider. Allow free-text entry. `propt list-models --provider X` queries live but filters to chat/completion models only. |
+| Persist API keys in config JSON | Single file for all config seems simpler | API keys in JSON risk accidental git commits. JSON lacks the `.env` ecosystem tooling (docker-compose, shell sourcing, CI/CD). | Use `.env` file (already gitignored) with `python-dotenv`. Config JSON stores model choices only, never secrets. |
+| Real-time pricing updates during experiment runs | Ensures cost tracking uses latest prices | Adds network calls in the hot path. Pricing rarely changes mid-experiment. Adds failure mode if pricing endpoint is down. | Fetch pricing once at setup/config time. Cache in config. Use cached values during runs. |
+| Support unlimited providers/models | Why limit to 4? | Experiment design assumes cross-provider comparison with bounded matrix. More models = combinatorial explosion of experiment runs. Each model adds ~5000 API calls to the full matrix. | Cap at 4 providers (one model per provider) per the experiment design. Document why in wizard. |
+| Automatic model version pinning (resolve "claude-sonnet-4" to "claude-sonnet-4-20250514") | Prevents version drift | Not all providers support version aliases. Resolution logic differs per provider. Creates hidden behavior that hurts reproducibility -- user should see exactly what they typed. | Accept whatever the user types. Log the exact model ID returned in API responses for auditing. |
 
 ## Feature Dependencies
 
 ```
-[Benchmark Prompts (200 clean)]
-    |
-    +--requires--> [Noise Generator Type A] --enables--> [Experiment Matrix Cells 1-5]
-    |
-    +--requires--> [Noise Generator Type B] --enables--> [Experiment Matrix Cells 6-10]
-    |
-    +--requires--> [Prompt Compressor] --enables--> [Compression Study (Exp 2)]
-    |
-    +--requires--> [Prompt Repeater] --enables--> [Repetition Intervention (Cells 5, 10)]
+[.env management (python-dotenv)]
+    └──enables──> [Wizard API key collection]
+                      └──enables──> [Model validation ping]
+                                        └──enables──> [Live model listing]
 
-[Experiment Harness]
-    +--requires--> [API Client (Claude + Gemini)]
-    +--requires--> [SQLite Schema + Logging]
-    +--requires--> [Noise Generator Type A]
-    +--requires--> [Noise Generator Type B]
-    +--requires--> [Prompt Compressor]
-    +--requires--> [Prompt Repeater]
+[Config-driven PRICE_TABLE]
+    └──enables──> [Budget awareness at setup]
+    └──enables──> [Relaxed model validation]
 
-[Automated Grading]
-    +--requires--> [HumanEval Sandbox] (sandboxed code execution)
-    +--requires--> [GSM8K Regex Matcher]
-    +--requires--> [Experiment results in SQLite]
+[Config models list structure]
+    └──enables──> [Config-driven PREPROC_MODEL_MAP]
+    └──enables──> [Config-driven RATE_LIMIT_DELAYS]
+    └──enables──> [Experiment scope adapts to config]
+    └──enables──> [Multi-provider wizard flow]
 
-[Statistical Analysis]
-    +--requires--> [Graded Results in SQLite]
-    +--requires--> [GLMM Implementation]
-    +--requires--> [Bootstrap CI Implementation]
-    +--requires--> [McNemar's Test Implementation]
-    +--requires--> [Kendall's Tau Implementation]
-    +--requires--> [BH Correction Implementation]
+[Free-text model entry] ──requires──> [Relaxed model validation]
 
-[Derived Metrics]
-    +--requires--> [Statistical Analysis]
-    +--requires--> [Consistency Rate (CR) computation]
-    +--requires--> [Quadrant Classification]
-    +--requires--> [Cost Rollups]
-
-[Publication Figures]
-    +--requires--> [Derived Metrics]
-    +--requires--> [Statistical Analysis]
+[Enhanced propt list-models] ──requires──> [API key available in env]
 ```
 
 ### Dependency Notes
 
-- **Noise generators must be built and tested before experiment harness:** The harness calls generators to create noisy variants. Generators must be deterministic (verified by unit tests) before any experiments run.
-- **Grading requires sandboxed execution:** HumanEval code execution is a security concern. The sandbox must be built and tested independently before processing 20,000 code outputs.
-- **Statistical analysis requires ALL graded results:** GLMM fits across the full dataset. Partial data analysis is possible for pilot validation but final analysis needs complete results.
-- **Pilot study validates the full pipeline end-to-end:** Pilot (20 prompts) must exercise every component: noise generation, API calls, grading, storage, basic analysis. Build pipeline components first, then pilot, then full run.
-- **Compression study is independent of noise study:** Can be run in parallel or sequentially. Shares benchmark prompts and grading infrastructure but has no dependency on noise generators.
+- **Free-text model entry requires relaxed validation:** If validation still rejects unknown models, free-text is useless. Must relax validation BEFORE or simultaneously with free-text entry.
+- **Config models list is the keystone:** PREPROC_MODEL_MAP, RATE_LIMIT_DELAYS, experiment scope, and the wizard all depend on the new config structure. Build this first.
+- **python-dotenv must be added as dependency:** Required before .env features work. This is the only new external dependency needed.
+- **Budget awareness at setup reuses execution_summary.py:** Low marginal effort once pricing is config-driven.
+- **Live model listing requires valid API keys in environment:** The `models.list()` calls need authentication. Must load .env before attempting.
 
 ## MVP Definition
 
-### Phase 1: Core Pipeline (build first)
+### Launch With (this milestone)
 
-- [ ] **Benchmark prompt curation (200 prompts)** -- everything downstream depends on this
-- [ ] **Noise Generator Type A (character-level)** -- core experimental variable
-- [ ] **Noise Generator Type B (ESL syntactic)** -- core experimental variable
-- [ ] **SQLite schema and logging infrastructure** -- must exist before any API calls
-- [ ] **API client wrappers (Claude + Gemini)** -- with full instrumentation (TTFT, TTLT, tokens, cost)
-- [ ] **Experiment harness (run_experiment.py)** -- orchestrates noise + API + storage
-- [ ] **Auto-grading (HumanEval sandbox + GSM8K regex)** -- must grade before analysis
+- [ ] Config models list structure (ExperimentConfig gets `models` list field) -- keystone dependency
+- [ ] Config-driven PRICE_TABLE, PREPROC_MODEL_MAP, RATE_LIMIT_DELAYS -- derived from config at load time
+- [ ] Relaxed model validation (warn, not reject) -- unblocks free-text
+- [ ] Free-text model entry in wizard with sensible defaults shown
+- [ ] Multi-provider wizard flow (configure 1-4 providers iteratively)
+- [ ] .env file creation via python-dotenv for API keys
+- [ ] Experiment scope adapts to configured models (MODELS derived from config)
+- [ ] Enhanced `propt list-models` with live API queries (model IDs + context windows, NOT pricing)
+- [ ] Budget awareness shown at end of wizard using existing execution_summary infrastructure
 
-### Phase 2: Interventions + Pilot (validate the approach)
+### Add After Validation (v2.x)
 
-- [ ] **Prompt compressor** -- needed for Sanitize+Compress intervention
-- [ ] **Prompt repeater** -- needed for Prompt Repetition intervention
-- [ ] **Self-correct prompt prefix** -- trivial but must be standardized
-- [ ] **Pre-processor pipeline (cheap model sanitize/compress)** -- Haiku/Flash API calls
-- [ ] **Pilot run (20 prompts, all conditions)** -- validates entire pipeline end-to-end
-- [ ] **Basic result inspection** -- verify grading accuracy, check for obvious bugs
+- [ ] OpenRouter pricing integration -- only provider with API-accessible pricing. Add when other providers catch up or if curated table becomes stale.
+- [ ] Model capability filtering in list-models -- filter by supports_chat, supports_tools, etc. using Anthropic `ModelCapabilities` and Google `supported_actions` fields.
 
-### Phase 3: Analysis + Figures (after full experiment)
+### Future Consideration (v3+)
 
-- [ ] **GLMM analysis** -- primary statistical test
-- [ ] **Bootstrap confidence intervals** -- for all reported metrics
-- [ ] **McNemar's test (prompt-level)** -- identifies fragile/recoverable prompts
-- [ ] **BH multiple comparison correction** -- applied to all p-values
-- [ ] **Kendall's tau (rank-order stability)** -- uniform vs. targeted tax
-- [ ] **Consistency Rate + quadrant classification** -- stability-correctness decomposition
-- [ ] **Cost rollups and ROI calculation** -- net benefit of optimizer
-- [ ] **Publication-quality figures** -- heatmaps, degradation curves, quadrant plots, cost charts
-
-### Future Consideration (post-paper)
-
-- [ ] **Meta-prompting intervention** -- AI-rewritten "ideal" prompts. Test in pilot; add to full experiment only if results are promising.
-- [ ] **Additional models (GPT-4, Llama)** -- future work for breadth
-- [ ] **British English variant study** -- future work per RDD Section 23
-- [ ] **Fine-grained ESL pattern analysis** -- per-L1 breakdown (requires more data)
-- [ ] **Noise-aware prompt design guidelines** -- practitioner-facing output derived from findings
+- [ ] Web-scraped pricing for Anthropic/OpenAI/Google -- fragile, maintenance burden, defer until there is a real need beyond the hardcoded fallback table.
+- [ ] Config migration tool -- if config schema changes again, auto-migrate old configs. Not needed until there is a second schema change.
 
 ## Feature Prioritization Matrix
 
-| Feature | Research Value | Implementation Cost | Priority |
-|---------|---------------|---------------------|----------|
-| Noise Generator Type A | HIGH | MEDIUM | P1 |
-| Noise Generator Type B (ESL) | HIGH | HIGH | P1 |
-| Benchmark prompt curation | HIGH | MEDIUM | P1 |
-| Auto-grading (sandbox + regex) | HIGH | HIGH | P1 |
-| API client wrappers with instrumentation | HIGH | MEDIUM | P1 |
-| Experiment harness | HIGH | MEDIUM | P1 |
-| SQLite schema + logging | HIGH | MEDIUM | P1 |
-| Prompt compressor | HIGH | MEDIUM | P2 |
-| Prompt repeater | MEDIUM | LOW | P2 |
-| Pre-processor pipeline | HIGH | MEDIUM | P2 |
-| Pilot run (20 prompts) | HIGH | LOW | P2 |
-| GLMM analysis | HIGH | HIGH | P3 |
-| Bootstrap CIs | HIGH | MEDIUM | P3 |
-| McNemar's test | MEDIUM | LOW | P3 |
-| Kendall's tau | MEDIUM | LOW | P3 |
-| BH correction | HIGH | LOW | P3 |
-| Consistency Rate + quadrants | HIGH | MEDIUM | P3 |
-| Cost rollups + ROI | MEDIUM | LOW | P3 |
-| Publication figures | HIGH | MEDIUM | P3 |
-| BERTScore (compression study) | MEDIUM | LOW | P3 |
+| Feature | User Value | Implementation Cost | Priority | Depends On |
+|---------|------------|---------------------|----------|------------|
+| Config models list structure | HIGH | MEDIUM | P1 | Nothing (keystone) |
+| Config-driven PRICE_TABLE | HIGH | MEDIUM | P1 | Config models list |
+| Config-driven PREPROC_MODEL_MAP | HIGH | LOW | P1 | Config models list |
+| Config-driven RATE_LIMIT_DELAYS | MEDIUM | LOW | P1 | Config models list |
+| Relaxed model validation | HIGH | LOW | P1 | Config-driven PRICE_TABLE |
+| Free-text model entry | HIGH | LOW | P1 | Relaxed validation |
+| .env file creation | HIGH | MEDIUM | P1 | python-dotenv dependency |
+| Multi-provider wizard flow | HIGH | MEDIUM | P1 | Config models list, .env |
+| Experiment scope adapts | HIGH | MEDIUM | P1 | Config models list |
+| Target/preproc explanation text | MEDIUM | LOW | P1 | Nothing |
+| Enhanced propt list-models | MEDIUM | MEDIUM | P2 | .env loaded, API keys |
+| Budget awareness at setup | MEDIUM | LOW | P2 | Config-driven PRICE_TABLE |
+| Model validation ping | MEDIUM | LOW | P2 | .env loaded, API keys |
+| Live pricing (OpenRouter only) | LOW | MEDIUM | P3 | Enhanced list-models |
 
 **Priority key:**
-- P1: Must build first -- everything depends on these
-- P2: Build second -- interventions and validation
-- P3: Build after experiments complete -- analysis and output
+- P1: Must have for this milestone
+- P2: Should have, add in same milestone if time permits
+- P3: Nice to have, defer to future
 
-## Competitor/Related Work Feature Analysis
+## Refactoring Surface Analysis
 
-| Feature | PromptBench (Microsoft) | TextFlint | MulTypo (2025) | Our Approach |
-|---------|------------------------|-----------|----------------|--------------|
-| Noise types | Character, word, sentence, semantic (adversarial focus) | WordNet synonyms, keyboard typos | Character-level typos at 10%, 40% | Character-level (5/10/20%) + ESL syntactic patterns. Non-adversarial focus is our differentiator. |
-| Benchmarks | SST-2, MNLI, SQuAD, IWSLT, math | General NLU tasks | GSM8K | HumanEval, MBPP, GSM8K. Code + math reasoning, not NLU classification. |
-| Intervention testing | None (measurement only) | None (measurement only) | None (measurement only) | 5 interventions compared head-to-head. This is the core differentiator. |
-| Stability measurement | Not measured | Not measured | Not measured | 5 repetitions, CR metric, 4-quadrant decomposition. Novel contribution. |
-| Cost analysis | Not measured | Not measured | Not measured | Full token cost tracking with net ROI calculation. |
-| Statistical methods | Basic accuracy comparison | Accuracy + F1 | Accuracy comparison | GLMM, bootstrap CI, McNemar's, Kendall's tau, BH correction. Most rigorous in this space. |
-| Ecological validity | Synthetic adversarial only | Synthetic only | Synthetic only | Synthetic + 20 real-world noisy prompts. |
+Files that import hardcoded constants and need updates:
+
+| File | Imports | Change Required |
+|------|---------|-----------------|
+| `src/config.py` | Defines PRICE_TABLE, PREPROC_MODEL_MAP, RATE_LIMIT_DELAYS, MODELS | Keep as fallback defaults. Add functions to derive from config. |
+| `src/config_manager.py` | PRICE_TABLE for validation | Change validation to warn-only for unknown models |
+| `src/setup_wizard.py` | MODELS, PREPROC_MODEL_MAP | Derive from config; add multi-provider flow, .env writing |
+| `src/api_client.py` | RATE_LIMIT_DELAYS | Accept config-derived delays or fall back to defaults |
+| `src/run_experiment.py` | PREPROC_MODEL_MAP, PRICE_TABLE | Use config-derived versions |
+| `src/execution_summary.py` | PRICE_TABLE, PREPROC_MODEL_MAP, RATE_LIMIT_DELAYS | Use config-derived versions |
+| `src/prompt_compressor.py` | PREPROC_MODEL_MAP | Use config-derived version; change ValueError to warning for unknown models |
+| `src/config_commands.py` | PRICE_TABLE | Use config-derived version for list-models |
+| `src/pilot.py` | MODELS | Derive from config |
+| `src/compute_derived.py` | MODELS | Derive from config |
+| `src/cli.py` | INTERVENTIONS (no change needed) | Add `load_dotenv()` call at entry point |
+
+## Provider API Capabilities (Verified via SDK Introspection)
+
+What each provider's `models.list()` actually returns:
+
+| Provider | SDK | List Models? | Fields Available | Pricing in API? |
+|----------|-----|-------------|------------------|-----------------|
+| Anthropic | anthropic 0.84.0 | Yes, `client.models.list()` | id, display_name, capabilities, max_input_tokens, max_tokens, created_at | **NO** |
+| Google | google-genai 1.45.0 | Yes, `client.models.list()` | name, display_name, description, input_token_limit, output_token_limit, supported_actions, temperature, thinking | **NO** |
+| OpenAI | openai 2.29.0 | Yes, `client.models.list()` | id, created, owned_by | **NO** (minimal metadata) |
+| OpenRouter | openai 2.29.0 (custom base_url) | Yes, via `/api/v1/models` | id, pricing (prompt/completion per token), context_length, top_provider | **YES** (non-standard extension) |
+
+**Implication:** "Dynamic pricing from provider APIs" is only feasible for OpenRouter. For Anthropic, Google, and OpenAI, pricing must come from a curated fallback table or user input. This is the single most important finding for implementation planning.
 
 ## Sources
 
-- [PromptBench (Microsoft)](https://github.com/microsoft/promptbench) -- unified LLM robustness evaluation framework
-- [PromptSuite: Task-Agnostic Multi-Prompt Generation](https://arxiv.org/html/2507.14913v4) -- prompt sensitivity measurement
-- [Enterprise Perturbation Robustness Benchmark](https://arxiv.org/abs/2601.06341) -- enterprise-focused perturbation consistency
-- [When Punctuation Matters: Prompt Robustness Methods](https://arxiv.org/html/2508.11383v1) -- large-scale robustness comparison
-- [LLM Robustness Against Perturbation (Nature Scientific Reports)](https://www.nature.com/articles/s41598-025-29770-0) -- perturbation impact on LLMs
-- [EvalPlus (HumanEval/MBPP)](https://github.com/evalplus/evalplus) -- rigorous code evaluation with expanded test cases
-- [EleutherAI lm-evaluation-harness](https://slyracoon23.github.io/blog/posts/2025-03-21_eleutherai-evaluation-methods.html) -- standard evaluation framework
-- [Langfuse Token and Cost Tracking](https://langfuse.com/docs/observability/features/token-and-cost-tracking) -- LLM observability reference (decided against integrating)
-- [GLMM Reporting Best Practices (Frontiers)](https://www.frontiersin.org/journals/psychology/articles/10.3389/fpsyg.2021.666182/full) -- GLMM reporting standards
+- Anthropic SDK v0.84.0 `ModelInfo` type: fields are `id, capabilities, created_at, display_name, max_input_tokens, max_tokens, type` (verified via `anthropic.types.ModelInfo.model_fields.keys()`)
+- OpenAI SDK v2.29.0 `Model` type: fields are `id, created, object, owned_by` (verified via `openai.types.Model.model_fields.keys()`)
+- Google GenAI SDK v1.45.0 `Model` type: fields include `name, display_name, description, input_token_limit, output_token_limit, supported_actions` (verified via `google.genai.types.Model.model_fields.keys()`)
+- python-dotenv v1.1.1 is available in system but NOT in project dependencies (needs adding to pyproject.toml)
+- `.env` already in `.gitignore` (line 13)
+- Current codebase: 10 source files import hardcoded model constants (verified via grep)
 
 ---
-*Feature research for: LLM prompt noise/robustness research toolkit*
-*Researched: 2026-03-19*
+*Feature research for: Configurable Models and Dynamic Pricing milestone*
+*Researched: 2026-03-25*

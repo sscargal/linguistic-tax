@@ -1,256 +1,243 @@
 # Pitfalls Research
 
-**Domain:** LLM prompt noise/optimization benchmarking research
-**Researched:** 2026-03-19
-**Confidence:** HIGH (domain-specific, verified against multiple sources and the RDD)
+**Domain:** Adding configurable models, dynamic pricing, and .env management to an existing frozen-dataclass Python CLI research toolkit
+**Researched:** 2026-03-25
+**Confidence:** HIGH (based on direct codebase analysis of all affected modules)
 
 ## Critical Pitfalls
 
-### Pitfall 1: Temperature=0 Does Not Guarantee Determinism
+### Pitfall 1: Frozen Dataclass Schema Migration Breaks Existing Saved Configs
 
 **What goes wrong:**
-Researchers assume `temperature=0` produces identical outputs across runs, then design analysis assuming perfect reproducibility. In reality, both Anthropic and Google explicitly state that temperature=0 does not guarantee deterministic outputs. Floating-point non-associativity in GPU matrix operations, batch size variation under different server loads, and Mixture-of-Experts routing variability all introduce run-to-run variance even with greedy decoding. This means the 5 repetitions per condition in the RDD will NOT produce identical outputs even on clean prompts -- and the experiment must be designed to expect this.
+`ExperimentConfig` is `frozen=True` with flat per-provider fields (`claude_model`, `gemini_model`, `openai_model`, `openrouter_model`, `openrouter_preproc_model`). The plan adds a `models` list field containing dicts. But `load_config()` in `config_manager.py` lines 62-72 filters JSON keys to `fields(ExperimentConfig)` names and has tuple coercion logic that checks `isinstance(getattr(defaults, field.name), tuple)`. If the new `models` field is typed as `tuple[dict, ...]`, the coercion will tuple-ify it correctly, but if typed as `list[dict]`, it will be left as-is inside a frozen dataclass (type mismatch). More critically: existing `experiment_config.json` files saved by the current version lack the `models` key entirely. If old flat fields are removed or ignored in favor of `models`, those configs silently lose the user's model selections and fall back to defaults.
 
 **Why it happens:**
-The mental model "temperature=0 = argmax = deterministic" is mathematically correct for single-device, single-request inference but breaks under the distributed, batched inference that cloud APIs use. Researchers treat API calls like function calls and expect referential transparency.
+The load path was designed for flat scalar/tuple fields only. Adding nested structures (list of dicts) requires rethinking serialization, but the existing code "looks like it works" because unknown keys are silently ignored (line 64).
 
 **How to avoid:**
-- The RDD already accounts for this by requiring 5 repetitions and measuring stability (Consistency Rate) as an independent dimension. This is correct.
-- Do NOT use exact string matching to determine if two runs "agree." Use semantic equivalence: for code, functional equivalence via test passing; for math, numerical answer equivalence.
-- Log the full response text for every repetition, not just pass/fail. Post-hoc analysis may need to distinguish "same wrong answer 5 times" from "different wrong answers."
-- Accept that CR < 1.0 on clean prompts is EXPECTED, not a bug. Report baseline CR for clean prompts and measure noise-induced CR degradation relative to that baseline.
+1. Add an explicit migration function: if a loaded config has old flat fields but no `models` list, auto-construct `models` from the flat fields. Test this path explicitly.
+2. Keep the `models` field typed as `tuple[dict, ...]` to match frozen dataclass idiom, or use `field(default_factory=tuple)` since mutable defaults in frozen dataclasses are a footgun.
+3. Update `load_config()` to handle nested dict structures -- do NOT rely on existing tuple coercion for the models field.
+4. Write a round-trip test: save config with new `models` field, load back, assert equality. Also test loading an OLD config file that only has flat fields.
 
 **Warning signs:**
-- Clean prompt baseline shows CR = 1.0 across all prompts (suspiciously perfect -- likely a grading bug hiding variation)
-- Stability analysis shows no difference between clean and noisy conditions (the measurement may not be granular enough)
+- `load_config()` returns defaults when you expected saved values
+- Tests pass with fresh configs but fail loading configs saved by the previous version
+- `validate_config()` errors on configs that previously passed
 
 **Phase to address:**
-Experiment harness implementation -- the execution layer must log full responses and compute CR correctly from the start. Retrofitting this is expensive.
+Phase 1 (Config Schema Extension) -- must be the very first change, before any feature touches the config.
 
 ---
 
-### Pitfall 2: GSM8K Regex Answer Extraction Produces False Positives and False Negatives
+### Pitfall 2: MODELS Tuple Used as Hard Allowlist in 4+ Modules
 
 **What goes wrong:**
-GSM8K answers are typically extracted using regex matching for the `#### [number]` pattern. LLMs frequently deviate from this format: they may produce the correct numerical answer embedded in prose ("The answer is 42"), use LaTeX formatting (`\boxed{42}`), include units ("42 dollars"), or produce the answer in a different notation ("42.0" vs "42"). Strict regex misses correct answers (false negatives). Loose regex matches intermediate calculations or wrong numbers that happen to appear in the expected format (false positives). Research from ICLR 2025 shows regex-based evaluation methods produce unreliable rankings that can flip model ordering.
+The `MODELS` tuple in `config.py` line 94 is imported and used as a hard validation gate across the codebase:
+- **pilot.py line 274:** `_VALID_MODELS = set(MODELS)` -- rejects any model not in the tuple during data quality audit, flagging custom models as "Unknown model" issues
+- **compute_derived.py line 482:** iterates `for model in MODELS:` to compute quadrant migrations -- custom models are silently excluded from ALL analysis output
+- **setup_wizard.py lines 30-47:** `PROVIDERS` dict builds model lists by filtering `MODELS` with `startswith()` -- custom models never appear in wizard choices
+- **config_manager.py lines 138-151:** `validate_config()` rejects models not in `PRICE_TABLE` -- custom models fail validation
+
+If you make models configurable but forget to update ALL consumption points, custom models are accepted during setup but rejected during pilot runs, excluded from analysis, or fail validation.
 
 **Why it happens:**
-Different models and different prompt phrasings elicit different output formats. Instruction-tuned models may follow the `####` convention when explicitly prompted but deviate when the prompt is noisy or compressed. The noise injection itself may corrupt or remove format instructions, causing the model to free-form its answer.
+Module-level constants evaluated at import time create implicit contracts. `MODELS` conflates two concepts: "models we ship defaults for" and "models that are valid to use." These are now different things.
 
 **How to avoid:**
-- Use a TWO-STAGE extraction: (1) regex for `####` pattern, (2) fallback regex for last number in response, (3) flag ambiguous cases for manual review.
-- Normalize extracted numbers: strip commas, convert fractions/percentages, handle negative signs, treat "42.0" and "42" as equivalent.
-- Include the answer format instruction in the PROTECTED portion of prompts (not subject to noise injection). If noise corrupts the format instruction, you are measuring "can the model follow a corrupted format instruction" not "can the model do math with a noisy prompt."
-- Run a validation pass: for every prompt graded "fail," check if the correct numerical answer appears ANYWHERE in the response. Log the discrepancy rate. If it exceeds 5%, your grading is unreliable.
-- Consider using the `math_verify` parser or an LLM-based answer extractor as a secondary check on a random sample.
+1. Replace `MODELS` with a function `get_configured_models(config: ExperimentConfig) -> tuple[str, ...]` that derives the list from config.
+2. Grep for every import of `MODELS`: `from src.config import.*MODELS` appears in `compute_derived.py`, `pilot.py`, `setup_wizard.py`. Update each.
+3. Change `_VALID_MODELS` in `pilot.py` to derive from config or accept any non-empty string.
+4. Change `validate_config()` to warn (not error) for models not in PRICE_TABLE.
+5. Track this as a cross-cutting concern with a checklist, not a single-file change.
 
 **Warning signs:**
-- Accuracy drops sharply on noisy prompts but manual inspection shows the model got the right answer in non-standard format
-- One model scores much lower than expected because it uses a different answer format
-- Compression intervention changes accuracy not because reasoning changed but because format instructions were compressed away
+- `propt pilot --model custom-model` fails with "Unknown model" despite setup accepting it
+- Analysis output silently missing data for custom models
+- Validation errors on valid custom config after setup
 
 **Phase to address:**
-Grading module implementation. Must be validated BEFORE the pilot run, not after. Build a test suite of 20+ known GSM8K responses in various formats and verify the extractor handles all of them.
+Phase 1 (Config Schema) -- define how MODELS is derived. Must track all consumption sites as a checklist across ALL phases.
 
 ---
 
-### Pitfall 3: HumanEval Sandbox Security and Execution Reliability
+### Pitfall 3: compute_cost() Raises KeyError for Unknown Models, Crashing Mid-Experiment
 
 **What goes wrong:**
-HumanEval requires executing arbitrary LLM-generated code. Two failure modes: (1) Security -- generated code can perform file I/O, network calls, infinite loops, or fork bombs that escape or crash the sandbox. (2) Reliability -- generated code may have correct logic but fail due to missing imports, wrong function signatures, or environment differences (Python version, available libraries). The OpenAI HumanEval repo itself warns: "This program exists to run untrusted model-generated code. Users are strongly encouraged not to do so outside of a robust security sandbox."
+`compute_cost()` in `config.py` line 155 does `prices = PRICE_TABLE[model]` with no fallback. A custom model not in the price table causes a `KeyError` that crashes execution. This affects 3 call sites:
+- `execution_summary.py` line 142: cost estimation before runs -- setup phase crashes
+- `run_experiment.py`: cost logging during runs -- mid-experiment crash after spending money
+- `pilot.py`: cost auditing after runs -- post-analysis crash
+
+The worst case: the experiment runs 500 API calls successfully, then crashes on cost computation, and the user loses confidence in the tooling.
 
 **Why it happens:**
-Noisy prompts may cause the model to generate code with unusual imports, system calls, or infinite loops that it would not produce with clean prompts. The 20% noise level especially may produce prompts ambiguous enough that the model generates exploratory or defensive code patterns. At scale (16,000+ code executions), even rare pathological outputs become likely.
+When PRICE_TABLE was hardcoded to match MODELS exactly, a KeyError was impossible. Once models are user-configurable, missing price entries become the common case.
 
 **How to avoid:**
-- Use Docker containers or `firejail` with restricted capabilities: no network, read-only filesystem except `/tmp`, memory limit (256MB), CPU time limit (10 seconds per test case).
-- Use `subprocess` with `timeout` parameter rather than `exec()` in the main process. Never `eval()` or `exec()` LLM-generated code in the grading process itself.
-- Pre-validate generated code before execution: check for obvious dangerous patterns (`os.system`, `subprocess`, `open(`, `import socket`, `while True`). Log but still execute in sandbox -- the check is for telemetry, not blocking.
-- Set `ulimit` restrictions: max file size, max processes, max open files.
-- Handle execution failures gracefully: timeout = fail (not crash), import error = fail (not crash), syntax error = fail (not crash). Every execution must produce a result row in SQLite.
+1. Change `compute_cost()` to return 0.0 with a logged warning for unknown models instead of raising KeyError. Add a `get_price(model) -> dict` that returns `{"input_per_1m": 0.0, "output_per_1m": 0.0}` as fallback.
+2. Update `estimate_cost()` in `execution_summary.py` which also calls `compute_cost()` -- ensure fallback propagates.
+3. Show a clear warning at setup time: "Pricing unavailable for model X, cost estimates will show $0.00."
+4. This defensive fallback must land BEFORE any dynamic pricing work, since it is a prerequisite for custom models to work at all.
 
 **Warning signs:**
-- Grading process hangs or crashes during batch execution
-- Disk fills up from generated code writing files
-- Memory usage spikes during code execution phases
-- Some prompts consistently cause timeouts (may indicate the noisy prompt is triggering infinite-loop code)
+- `KeyError` stack traces mentioning `PRICE_TABLE` during `propt run` or `propt pilot`
+- Cost estimates showing $0.00 without any warning (silent failure)
 
 **Phase to address:**
-Grading module implementation. The sandbox must be built and stress-tested before pilot. Run the sandbox against 50 adversarial code snippets (infinite loops, fork bombs, large allocations) to verify containment.
+Phase 1 (Config Schema) -- defensive fallback in `compute_cost()` is a prerequisite for any custom model to work. Phase 2 (Dynamic Pricing) fills in the actual prices.
 
 ---
 
-### Pitfall 4: Multiple Comparisons Inflation Without Correction
+### Pitfall 4: PREPROC_MODEL_MAP Hard Lookup Crashes During Experiment Execution, Not Setup
 
 **What goes wrong:**
-The experiment design produces hundreds of statistical tests: 200 prompts x 8 cells x 2 models x multiple pairwise comparisons. At alpha=0.05 without correction, you expect ~5% false positives. With 500 tests, that is 25 spurious "significant" results. Researchers then cherry-pick the significant ones for the paper, producing claims that do not replicate. This is the most common statistical mistake in LLM evaluation papers.
+`prompt_compressor.py` line 73 raises `ValueError("No pre-processor model mapping for: {main_model}")` if the model is not in `PREPROC_MODEL_MAP`. This only triggers for `pre_proc_sanitize` and `pre_proc_sanitize_compress` interventions. A custom target model without a preproc mapping passes setup, passes `raw` and `self_correct` runs, then crashes mid-experiment when it hits a sanitize intervention -- potentially after hundreds of successful API calls and dollars spent.
 
 **Why it happens:**
-The RDD correctly specifies Benjamini-Hochberg correction (Section 7.6), but implementation is where it breaks. Common errors: (1) applying BH correction within each sub-analysis but not across the entire paper, (2) running BH on p-values from different test types (GLMM coefficients mixed with McNemar's), (3) reporting uncorrected p-values in tables with a footnote about correction rather than reporting corrected values.
+The mapping was built for exactly 4 models. The error is "correct" for the old world but there is no path for user-configured preproc models to enter the map. The failure is delayed because sanitize interventions appear later in the matrix.
 
 **How to avoid:**
-- Define the "family" of comparisons BEFORE running any tests. The RDD should specify: "All pairwise comparisons reported in the paper constitute a single family for BH correction."
-- Use `statsmodels.stats.multitest.multipletests(method='fdr_bh')` on the FULL vector of p-values from ALL tests reported in the paper, not per-section.
-- Report BOTH raw and adjusted p-values in supplementary tables. Main text uses adjusted only.
-- For the GLMM, the fixed-effect p-values are already controlled within the model. BH correction applies to the post-hoc pairwise comparisons (McNemar's tests across prompts).
-- Pre-register the analysis plan: which comparisons will be run, which correction method, what alpha level. This prevents post-hoc test shopping.
+1. The new `models` config structure MUST pair target + preproc models explicitly. The wizard must ask for both.
+2. Change `get_preproc_model()` to consult the config's models list, falling back to the hardcoded map.
+3. Validate at setup time: if a target model lacks a preproc model, warn IMMEDIATELY.
+4. Add a test: configure a novel model pair, run through the sanitize intervention, verify no crash.
 
 **Warning signs:**
-- Many results are "significant at p<0.05" but marginal (p=0.03-0.05)
-- After BH correction, most results lose significance (the original findings were noise)
-- Different analysis scripts apply different correction scopes
+- `ValueError: No pre-processor model mapping` during experiment runs but NOT during setup
+- Only fails on `pre_proc_sanitize*` interventions -- may not appear in quick smoke tests
 
 **Phase to address:**
-Statistical analysis module implementation. The correction must be built into the analysis pipeline, not applied manually after the fact.
+Phase 1 (Config Schema) -- require target + preproc pairing in the models list. Phase 2 -- make PREPROC_MODEL_MAP config-driven.
 
 ---
 
-### Pitfall 5: Noise Injection Corrupts Semantics, Not Just Surface Form
+### Pitfall 5: .env File Created But Never Loaded, or Loads with Wrong Precedence
 
 **What goes wrong:**
-Character-level noise at 20% can change the MEANING of a prompt, not just its surface form. "Sort the list in ascending order" with noise might become "Sort the list in descending order" if mutations hit the right characters. Similarly, ESL patterns can introduce genuine ambiguity: "Write function that sort list" is ambiguous about whether to sort in-place or return a new list. The experiment then measures "model fails on ambiguous prompt" rather than "model fails on noisy prompt" -- a confound.
+The plan says "store API key in .env file" but the codebase reads keys via `os.environ.get()` everywhere (`api_client.py` lines 48-58, `setup_wizard.py` line 109). Two failure modes:
+1. `.env` is created but `python-dotenv` is never called -- keys exist on disk but not in the process. User thinks they configured keys but experiments fail with "API key not set."
+2. `.env` IS loaded with `override=True` -- it silently overrides keys the user set in their shell profile, causing "I changed my key but it still uses the old one."
 
 **Why it happens:**
-The noise generator treats all non-keyword characters as equally mutable. But some characters carry more semantic weight than others. The RDD's keyword protection helps but does not fully solve the problem: "ascending" is not a programming keyword but is semantically critical.
+`.env` files and shell environment variables are independent systems. Without clear precedence rules and explicit load timing, they conflict in subtle, session-dependent ways.
 
 **How to avoid:**
-- After noise injection, run a semantic similarity check between the noisy prompt and the clean prompt. If similarity drops below a threshold (e.g., 0.90 by embedding cosine similarity), flag the prompt for manual review.
-- For the 20% noise level especially, manually review a random sample of 20 noisy prompts to verify the INTENT is preserved even if the surface form is degraded.
-- Consider protecting "semantically critical" non-keyword terms (directional words, quantifiers, negation words) from mutation. Document this as a design decision.
-- In analysis, control for semantic drift: if a noisy prompt's intent has changed, the accuracy drop is not attributable to noise resilience but to specification change.
+1. Use `python-dotenv` with `override=False` -- `.env` fills in MISSING vars only, never overrides shell-set ones.
+2. Load `.env` exactly once, early, in the CLI entry point (not in library code or tests).
+3. Document precedence: shell env vars > `.env` file > no value.
+4. In the wizard, when the user provides a key AND the env var is already set, ask: "ANTHROPIC_API_KEY is already set. Save to .env anyway? (Environment variable takes precedence.)"
+5. Never overwrite `.env` -- use `dotenv.set_key()` or read-modify-write to preserve existing keys.
 
 **Warning signs:**
-- Accuracy at 20% noise drops dramatically more than the 5% and 10% curve would predict (the "cliff" may be a semantic corruption artifact, not a noise tolerance threshold)
-- Manual review of failed 20% prompts reveals the model answered the mutated question correctly -- it just was not the original question anymore
-- The noise generator produces prompts that a human would also answer differently from the clean version
+- API key validation passes during wizard but fails during `propt run`
+- User changes key in `.env` but experiments use old shell-exported key
+- Tests that mock `os.environ` break because `python-dotenv` loads before the mock
 
 **Phase to address:**
-Noise generator implementation and validation. Must include a semantic preservation check before the pilot run.
+Phase 3 (Setup Wizard Enhancement) -- must decide `.env` loading strategy before writing the first key.
 
 ---
 
-### Pitfall 6: Pre-Processor Cost Accounting Ignores Hidden Costs
+### Pitfall 6: Provider Pricing API Calls Block or Crash the Setup Wizard
 
 **What goes wrong:**
-The ROI calculation for the Sanitize+Compress intervention only counts the pre-processor's input/output tokens. But API calls have additional costs: (1) per-request overhead and minimum charges, (2) retry costs when the pre-processor call fails or times out, (3) latency cost (wall-clock time doubles because you make two sequential API calls), (4) the pre-processor may INCREASE token count if it "helpfully" expands abbreviations or adds context. Research shows hidden costs account for 20-40% of total LLM operational expenses beyond raw token fees.
+Querying provider pricing APIs during setup introduces network dependency. These calls can timeout (corporate proxies, slow DNS), return unexpected formats (API schema changes), require auth (some pricing endpoints need a valid key), or be rate-limited. If errors are not caught, the wizard crashes mid-flow. Worst case: wizard partially completes, writes an incomplete config, then crashes -- leaving a broken state that confuses the user on next run.
 
 **Why it happens:**
-The RDD's cost model (Section 6) focuses on token-level accounting. But the paper's headline claim -- "net positive ROI" -- requires total-cost accounting. Reviewers will immediately ask about latency, retry overhead, and edge cases where the optimizer makes things worse.
+Setup code is written with "happy path" assumptions. Developers test with working internet and valid keys. Real users have intermittent connectivity, proxies, and provider-specific quirks.
 
 **How to avoid:**
-- Log EVERYTHING for every pre-processor call: wall-clock time, TTFT, TTLT, input tokens, output tokens, HTTP status code, retry count, cost.
-- Compute "optimizer overhead" as: pre-processor cost + retry costs + any cases where the optimized prompt is LONGER than the original.
-- Report the DISTRIBUTION of overhead, not just the mean. If 95% of prompts save tokens but 5% increase token count, report both.
-- Include a "break-even analysis": at what noise level does the optimizer's accuracy recovery justify its cost? Below that noise level, the optimizer is a net cost.
-- Track latency separately: even if token cost is net positive, if latency doubles, that matters for the paper's practical recommendations.
+1. Set aggressive timeouts on all pricing API calls (5 seconds max).
+2. Wrap every pricing call in try/except and fall back to hardcoded PRICE_TABLE values.
+3. Never block setup completion on pricing data -- pricing is nice-to-have, not required.
+4. Write config atomically: build the full dict, validate, THEN write. Never write partial configs.
+5. Show clear feedback: "Fetching pricing from Anthropic... failed (timeout), using cached pricing."
 
 **Warning signs:**
-- Mean token savings looks great but median is near zero (skewed by a few very verbose prompts)
-- Pre-processor retry rate exceeds 5% (cost model is wrong)
-- Pre-processor occasionally returns a longer prompt than the input
+- Setup wizard hangs for 30+ seconds
+- "Connection refused" or "timeout" errors during `propt setup`
+- Config file exists but has missing or null fields
 
 **Phase to address:**
-Experiment harness implementation. Cost logging must be comprehensive from the first API call. The analysis module must compute total cost, not just token cost.
+Phase 2 (Dynamic Pricing APIs) -- defensive fetching from the start. Never write a pricing fetch without timeout and fallback in the same function.
 
 ---
 
-### Pitfall 7: Data Contamination in HumanEval and GSM8K Benchmarks
+### Pitfall 7: api_client.py Provider Detection via String Prefix Breaks for Non-Standard Model IDs
 
 **What goes wrong:**
-Both HumanEval and GSM8K are widely known benchmarks that are almost certainly present in the training data of Claude and Gemini. Research shows all tested LLMs exhibit a 5-14 percentage point drop in pass@1 on decontaminated HumanEval variants compared to the original, strongly indicating memorization. This means your "clean prompt baseline" may be artificially HIGH because the model has memorized the answers. When you inject noise, you are not just testing noise resilience -- you are testing whether noise breaks the model's pattern-matching to memorized solutions.
+`_validate_api_keys()` in `api_client.py` lines 48-58 routes models using `model.startswith("claude")`, `startswith("gemini")`, `startswith("gpt")`, `startswith("openrouter/")`. Custom models with non-standard naming (e.g., Google's `models/gemini-2.5-pro`, or a hypothetical `anthropic/claude-next`) either route to the wrong provider, fail to match any condition (silently skipping key validation), or use the wrong SDK entirely.
 
 **Why it happens:**
-These benchmarks are public, widely reproduced in blog posts, GitHub repos, and training corpora. The models have seen them. This is a known issue in the field, and GSM8K-Platinum was specifically created to address GSM8K contamination by fixing label errors in the original dataset.
+String prefix matching was adequate for exactly 4 known patterns. User-configurable models have arbitrary naming.
 
 **How to avoid:**
-- Acknowledge contamination risk explicitly in the paper. This is standard practice and reviewers will expect it.
-- Frame the finding correctly: "We measure noise sensitivity on prompts where models achieve high baseline performance. Contamination may inflate baselines but does not invalidate the RELATIVE degradation under noise." The key metric is the DELTA, not the absolute level.
-- Include the 20 real-world noisy prompts (Section 9.1 of the RDD) as a contamination-free validation set. These are novel prompts not in any training corpus.
-- Consider testing on MBPP (less contaminated than HumanEval) as a robustness check. The RDD already includes MBPP.
-- Report whether the noise sensitivity curve differs between "easy" prompts (likely memorized) and "hard" prompts (less likely memorized). If noise breaks memorized solutions more than genuine reasoning, that is itself an interesting finding.
+1. Store the provider alongside the model in config: `{"provider": "anthropic", "target_model": "...", ...}`.
+2. Route API calls by the explicit provider field, not model name prefix.
+3. Keep prefix detection only as a fallback heuristic for backward compat.
+4. Test with a model name that matches NO prefix pattern -- verify it uses the explicit provider or raises a clear error.
 
 **Warning signs:**
-- Clean baseline accuracy is suspiciously high (>95% on HumanEval for both models)
-- Noise sensitivity is HIGHER on "easy" prompts than "hard" ones (noise disrupts memorization pattern-matching)
-- Models produce solutions that are character-for-character identical to known HumanEval solutions in the clean condition
+- API calls silently use the wrong SDK
+- "API key not set" errors when the key IS set (wrong provider matched)
+- No validation at all for models with non-standard prefixes
 
 **Phase to address:**
-Benchmark curation and pilot analysis. Acknowledge in the paper from the start. Use pilot results to assess contamination severity.
+Phase 1 (Config Schema) -- provider must be stored with the model. Phase 4 (API Client) -- routing must use provider field.
 
 ---
 
-### Pitfall 8: Seed Management Across the Full Pipeline
+### Pitfall 8: Experiment Matrix Assumes Fixed 4-Model Count
 
 **What goes wrong:**
-The project has multiple sources of randomness that all need deterministic seeds: noise generation, prompt sampling, experiment ordering, bootstrap resampling in analysis. A common mistake is seeding the noise generator but not the experiment scheduler, so prompts run in different orders across runs, hitting different API server states and potentially different model versions within an update window. Another mistake: using the same seed for all noise levels, producing correlated mutations across conditions.
+The experiment matrix in `data/experiment_matrix.json` is pre-generated with entries for all 4 hardcoded models. If the user only configures 2 providers, running the matrix attempts API calls for unconfigured models, fails on missing keys, and either crashes or skips entries unpredictably. If the matrix IS regenerated for 2 models, existing results in `results.db` from previous runs (with 4 models) may become orphaned or cause analysis confusion.
 
 **Why it happens:**
-Python's random module uses a global state. Calling `random.seed(42)` in one module does not prevent another module from reseeding or consuming random numbers. NumPy and Python `random` have separate states. Researchers test seed behavior in unit tests (single-module) but not across the full pipeline.
+The matrix was designed as a static artifact generated once. Making models dynamic means the matrix must be dynamic too, but code treats it as immutable input.
 
 **How to avoid:**
-- Use INDEPENDENT `random.Random()` instances for each source of randomness, not the global state. The noise generator gets its own `Random(seed=noise_seed)`, the sampler gets `Random(seed=sample_seed)`, etc.
-- Define a SEED REGISTRY in a config file: `{"noise_seed": 42, "sample_seed": 43, "bootstrap_seed": 44}`. Document why each seed exists.
-- In unit tests, verify that calling the noise generator with the same seed and the same input produces byte-identical output, regardless of what other code runs before it.
-- For NumPy operations in analysis, use `numpy.random.Generator(numpy.random.PCG64(seed))` (the modern API), not `numpy.random.seed()` (deprecated global state).
-- Log the seed values in the SQLite results database alongside every experiment run.
+1. Filter matrix items by configured models before execution -- add `filter_matrix_by_config(items, config)`.
+2. When model list changes, do NOT delete old results. Mark runs with a config version/timestamp.
+3. Add a check at run start: "Matrix contains models X, Y, Z but only A, B are configured. Running A, B only."
+4. Consider generating the matrix at runtime from config rather than as a static file.
 
 **Warning signs:**
-- Rerunning the pilot produces different noisy prompts than the first run
-- Bootstrap confidence intervals differ between runs (analysis randomness is not seeded)
-- Two noise levels produce suspiciously similar mutation patterns (seeds are correlated or identical)
+- "ANTHROPIC_API_KEY not set" when you never configured Anthropic
+- Progress bar shows more items than expected
+- Analysis includes models the user did not configure
 
 **Phase to address:**
-Core infrastructure (noise generator, experiment harness). Must be verified in pilot. The seed registry should be defined before any code is written.
+Phase 5 (Experiment Scope Adaptation) -- but Phase 1 must make model list config-driven so the matrix can consume it.
 
 ---
 
-### Pitfall 9: API Rate Limits and Retry Logic Introduce Systematic Bias
+### Pitfall 9: Module-Level Constants Evaluated at Import Time Ignore Runtime Config
 
 **What goes wrong:**
-When hitting rate limits, naive retry logic introduces delays that change the experimental conditions. If Claude rate-limits at 60 RPM and Gemini at 300 RPM, Claude experiments run 5x slower with longer gaps between calls. If the retry logic backs off exponentially, later prompts in the batch may hit a different model checkpoint if the provider deploys an update mid-experiment. Worse: if retries are not logged, the cost accounting is wrong and some prompts have different latency profiles that contaminate timing analysis.
+Several modules copy config constants at import time into module-level state:
+- `api_client.py` line 36: `_rate_delays = dict(RATE_LIMIT_DELAYS)` -- copies once at import, never updated
+- `setup_wizard.py` lines 27-48: `PROVIDERS` dict built from `MODELS` at import -- never reflects config
+- `pilot.py` line 274: `_VALID_MODELS = set(MODELS)` -- frozen at import time
+
+Even after loading a config with custom models, these module-level values still reflect the hardcoded defaults. Custom models get the 0.5s fallback delay (not their configured value), never appear in PROVIDERS, and fail the _VALID_MODELS check.
 
 **Why it happens:**
-Rate limits are documented but researchers plan for throughput, not for the interaction between rate limits and experimental design. A 20,000-call experiment at 60 RPM takes ~5.5 hours for Claude alone. Over 5+ hours, model updates, server-side changes, and network conditions vary.
+Python evaluates module-level expressions once at first import. This pattern is fine for truly constant values but breaks when constants become config-driven.
 
 **How to avoid:**
-- Implement rate limiting PROACTIVELY, not reactively. Use a token bucket or leaky bucket rate limiter that stays below the API limit rather than hitting the limit and backing off.
-- Log EVERY API call's timestamp, response time, HTTP status, and retry count. Make retry count a column in the SQLite schema.
-- Randomize prompt order within each condition to prevent systematic bias from time-of-day effects.
-- Run both models in INTERLEAVED fashion (not all Claude then all Gemini) to ensure both models experience similar time-of-day conditions.
-- Set a maximum retry count (3) and mark prompts that exhaust retries as "API_FAILURE" not "FAIL." These are missing data, not negative results.
-- Pin model versions via the API (e.g., `claude-sonnet-4-20250514`, not `claude-sonnet-4-latest`) to prevent mid-experiment model updates.
+1. Replace module-level constant copies with functions that read from current config: `def get_rate_delay(model, config) -> float`.
+2. For `_rate_delays` in api_client.py, either accept config as a parameter or add a `reinitialize_delays(config)` function called after config load.
+3. For `PROVIDERS` in setup_wizard.py, build the dict inside `run_setup_wizard()`, not at module level.
+4. Never copy a "constant" that will become dynamic -- use a function call or lazy property instead.
 
 **Warning signs:**
-- Experiment takes much longer than estimated (hitting rate limits constantly)
-- Later conditions in the batch show different accuracy patterns than earlier ones
-- Retry rate exceeds 10% for one provider but not the other
-- Cost is 30%+ over budget (retries are consuming tokens)
+- Custom model always uses 0.5s rate delay regardless of config
+- `propt setup` shows only default models even after config changes
+- Pilot audit flags custom models as unknown
 
 **Phase to address:**
-Experiment harness implementation. Rate limiting and retry logic must be built into the execution layer. Test against the API with a small batch before pilot.
-
----
-
-### Pitfall 10: Prompt Repetition Doubles Input Cost, Not "Zero Cost"
-
-**What goes wrong:**
-The RDD describes prompt repetition as a "zero-cost intervention" based on the Leviathan et al. claim that it "adds no output tokens or meaningful latency." But it DOUBLES input tokens, and input tokens are priced. For Claude Sonnet, input is $3/MTok. Doubling 200-token prompts across 2,000 calls adds ~$1.20 -- small for research, but the paper cannot claim "zero cost" without qualification. More importantly, for the cost-benefit analysis comparing interventions, prompt repetition has a non-zero token cost that must be compared to the Sanitize+Compress cost.
-
-**Why it happens:**
-The Google paper focuses on accuracy improvement and frames "zero cost" as "no external model call." This is true but incomplete for a cost-benefit analysis.
-
-**How to avoid:**
-- Track input token count for the repeated prompt and compute the additional cost.
-- In the paper, distinguish "zero engineering cost" (no optimizer needed) from "zero inference cost" (still doubles input tokens).
-- Include prompt repetition in the same cost-benefit framework as other interventions. Its cost is `2x input tokens` with no pre-processor call. Compare this to Sanitize+Compress, which has a pre-processor call but potentially FEWER total tokens.
-- For the "break-even" analysis: at what prompt length does repetition become more expensive than sanitization?
-
-**Warning signs:**
-- Paper claims "zero cost" and a reviewer points out the doubled input tokens
-- Cost comparison table excludes input token cost for the repetition condition
-
-**Phase to address:**
-Analysis module implementation. Cost accounting must treat all interventions uniformly.
+Phase 1 (Config Schema) -- decide the pattern (function vs. lazy init). Apply it consistently across all affected modules in their respective phases.
 
 ---
 
@@ -258,91 +245,89 @@ Analysis module implementation. Cost accounting must treat all interventions uni
 
 | Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
 |----------|-------------------|----------------|-----------------|
-| Flat JSON results instead of SQLite | Faster to implement | Cannot query across conditions, no ACID, analysis scripts become fragile | Never -- the RDD mandates SQLite for good reason |
-| `print()` instead of `logging` | Quick debugging | Cannot filter log levels, no timestamps, cannot redirect to file for long runs | Never -- 5+ hour experiment runs need structured logging |
-| Global `random.seed()` instead of instance seeds | Fewer lines of code | Non-reproducible when modules interact, impossible to debug seed issues | Never -- use `random.Random(seed)` instances |
-| Hardcoded model version strings | Faster initial development | Model string appears in 10+ places, one missed update invalidates experiment | Only in pilot -- must centralize before full run |
-| Skipping BH correction "for now" | Faster initial analysis | Every p-value in draft tables is wrong, rewriting the paper is expensive | Never -- build it into the analysis pipeline from day one |
+| Keep flat model fields alongside new `models` list | Backward compat with existing configs | Two sources of truth; every feature must update both | During transition only -- set removal date (v3.0), add deprecation warnings |
+| Fall back to $0.00 for unknown pricing | Unblocks custom model usage | Users run expensive experiments with no cost guardrails | Always, but MUST log a visible warning, not just debug-level |
+| Import-time `MODELS` constant derived from defaults | Simple, no loader needed | Custom models only work if config loaded before module imports | Never -- refactor to lazy evaluation from the start |
+| String prefix routing in api_client.py | Avoids schema change | Breaks silently with non-standard model names | Only as fallback behind explicit provider field |
+| Monolithic PRICE_TABLE dict for all pricing | Single lookup point | Cannot handle per-config pricing, stale prices not obvious | Only as fallback behind dynamic pricing |
 
 ## Integration Gotchas
 
 | Integration | Common Mistake | Correct Approach |
 |-------------|----------------|------------------|
-| Anthropic API | Using `claude-sonnet-4-latest` which auto-updates | Pin exact version: `claude-sonnet-4-20250514`. Check version string in first API response. |
-| Anthropic API | Not handling `overloaded_error` (529) status | Implement exponential backoff with jitter. Log as retry, not failure. |
-| Google Gemini API | Assuming `temperature=0` behaves identically to Anthropic | Gemini uses `temperature=0.0` in `generation_config`. Verify parameter name and behavior per SDK version. |
-| Google Gemini API | Not handling safety filter blocks as distinct from failures | Gemini may refuse to process noisy prompts that trigger safety filters. Log as `SAFETY_BLOCK`, not `FAIL`. Exclude from accuracy analysis but report the count. |
-| SQLite | Writing results from multiple threads/processes simultaneously | Use WAL mode (`PRAGMA journal_mode=WAL`) or serialize writes through a single connection. Python `sqlite3` module is not thread-safe by default. |
-| HumanEval sandbox | Running generated code in the same Python process as the grading harness | Use `subprocess` with `timeout`. Never `exec()` in the main process. |
-
-## Performance Traps
-
-| Trap | Symptoms | Prevention | When It Breaks |
-|------|----------|------------|----------------|
-| Sequential API calls with no parallelism | Full experiment takes 20+ hours | Use async HTTP with rate-limited concurrency (e.g., `asyncio.Semaphore(10)`) | At ~2,000 calls per model (pilot is fine sequential; full run is not) |
-| Loading full SQLite DB into pandas for every analysis query | Analysis script takes minutes, OOM on large result sets | Use SQL queries with WHERE clauses, only load needed columns | At ~20,000 rows with full response text (several GB) |
-| Storing full response text in SQLite without compression | Database grows to multiple GB | Store responses in a separate table, compress with zlib if needed, or use TEXT with lazy loading | At ~20,000 responses averaging 500 tokens each |
-| Running all 5 repetitions before checking any results | Discover grading bug after 10,000 calls and $50 spent | Run 1 repetition of all conditions first, verify grading, then run remaining 4 | Immediately -- catch bugs in pilot |
+| python-dotenv loading | Calling `load_dotenv()` in library code or multiple places | Call once in CLI entry point with `override=False` |
+| python-dotenv in tests | `load_dotenv()` runs before test fixtures mock `os.environ` | Use `monkeypatch.setenv()` in tests; ensure `load_dotenv()` is not called during test imports |
+| Provider pricing APIs | Treating them as reliable (always available, stable schema) | Wrap in timeout + try/except, cache results, hardcoded fallback |
+| `.env` file writing | `open(path, 'w')` overwrites entire file, destroying other keys | Use `python-dotenv`'s `set_key()` or read-modify-write to preserve existing keys |
+| Frozen dataclass extension | Adding mutable default (list/dict) as field default | Use `field(default_factory=...)` -- but frozen dataclass + mutable inner values is still a footgun |
+| JSON serialization of tuples | `json.dump(tuple)` produces `[...]` which loads as list | Current code handles this (lines 69-70, 92-93) but new nested types need explicit handling |
 
 ## Security Mistakes
 
 | Mistake | Risk | Prevention |
 |---------|------|------------|
-| API keys in code or git history | Key exposure, unauthorized charges | `.env` file with `.gitignore`, `os.environ.get()` only. Run `git log --all -p -- '*.py' | grep -i 'key'` before any push. |
-| Executing LLM-generated code without sandboxing | Arbitrary code execution, data loss, network exfiltration | Docker/firejail with no-network, memory limits, timeout. Never `exec()` in main process. |
-| Storing raw LLM responses without sanitization in analysis notebooks | Notebook rendering could execute injected HTML/JS in response text | Escape all LLM response text before rendering in notebooks or HTML reports. |
+| Storing API keys in `experiment_config.json` | Config may be committed (it is NOT in `.gitignore` currently) | Keys go ONLY in `.env` or env vars. Add `experiment_config.json` to `.gitignore`. |
+| `.env` file created with default permissions | Other users on shared systems can read keys | `os.chmod(env_path, 0o600)` after creating `.env` |
+| Logging API keys during setup debug output | Key exposure in terminal scrollback or log files | Log only "key is set" / masked display (`sk-...abc`), never the value |
+| Pricing API responses cached with auth tokens | Cached responses may contain account metadata | Extract only pricing fields; never cache full API responses |
+
+## UX Pitfalls
+
+| Pitfall | User Impact | Better Approach |
+|---------|-------------|-----------------|
+| Pricing fetch fails silently, shows $0.00 budget | User thinks experiment is free, gets surprise bill | Explicit warning: "Could not fetch pricing for X. Estimates show $0.00 but actual costs may apply." |
+| Validation rejects entire config on one bad field | User loses all wizard input | Validate incrementally during wizard steps, not just at end. Save valid fields, highlight invalid ones. |
+| No way to test a custom model before experiment | Wrong model ID discovered after 100 API calls | Add `propt test-model <model-id>` that sends a single "Hi" request |
+| `.env` created but user does not know they need to restart shell | Keys saved but not in current session | After writing `.env`, also `os.environ[key] = value` in current process. Tell user: "Key loaded for this session." |
+| Wizard asks for preproc model without explanation | User picks wrong model or skips | Explain: "Pre-processor sanitizes prompts before the target model. Should be cheap/fast (Haiku, Flash, GPT-4o-mini)." |
+| `propt list-models` shows only hardcoded models | User cannot discover available models for their provider | Query provider API for live model list with pricing; fall back to hardcoded list on failure |
 
 ## "Looks Done But Isn't" Checklist
 
-- [ ] **Noise generator:** Often missing protection for format instructions (e.g., "Answer with ####") -- verify noise does not corrupt the answer format directive
-- [ ] **GSM8K grading:** Often missing normalization for number formats (commas, decimals, negative signs, percentages) -- verify against 20+ format variants
-- [ ] **HumanEval grading:** Often missing timeout handling for infinite loops -- verify sandbox kills after 10 seconds and records FAIL
-- [ ] **Cost tracking:** Often missing pre-processor retry costs -- verify total cost includes ALL API calls, not just successful ones
-- [ ] **Stability measurement:** Often missing baseline CR for clean prompts -- verify you report noise-induced CR change RELATIVE to clean baseline
-- [ ] **Bootstrap CIs:** Often missing seed management -- verify rerunning analysis produces identical confidence intervals
-- [ ] **GLMM convergence:** Often missing convergence checks -- verify the model actually converged (check warnings from `statsmodels`)
-- [ ] **Experiment matrix:** Often missing the clean baseline condition -- verify clean prompts x 2 models x 5 reps are in the matrix, not assumed from a separate run
+- [ ] **Config migration:** Old `experiment_config.json` files load correctly with new schema -- test with a config saved by the CURRENT version
+- [ ] **MODELS derivation:** Every file that imports `MODELS` uses config-driven model list -- grep `from src.config import.*MODELS` (currently: compute_derived.py, pilot.py, setup_wizard.py)
+- [ ] **PRICE_TABLE fallback:** `compute_cost()` handles unknown models without crashing -- test with `compute_cost("novel-model", 1000, 500)`
+- [ ] **PREPROC_MODEL_MAP:** Custom target models have preproc mappings -- test `sanitize()` with a custom model pair
+- [ ] **RATE_LIMIT_DELAYS:** Custom models get sensible default delay -- check `api_client._rate_delays` after config load
+- [ ] **Validation softened:** `validate_config()` warns (not errors) for unknown models -- test with custom model name
+- [ ] **api_client routing:** Custom models route to correct provider -- test with model name that has no standard prefix
+- [ ] **Matrix filtering:** Matrix adapts to configured models -- test with 1, 2, and 4 providers
+- [ ] **`.env` loading:** Keys from `.env` available to experiment runs, not just wizard -- test `propt run` after fresh `.env` creation
+- [ ] **`.env` not committed:** `.env` is in `.gitignore` (already true); `experiment_config.json` also in `.gitignore` (verify)
+- [ ] **Module-level copies:** `_rate_delays`, `PROVIDERS`, `_VALID_MODELS` reflect config, not hardcoded defaults
 
 ## Recovery Strategies
 
 | Pitfall | Recovery Cost | Recovery Steps |
 |---------|---------------|----------------|
-| Grading bug discovered after full run | LOW | Regrading from stored responses is cheap if full response text is logged. Rerun `grade_results.py` on existing data. No new API calls needed. |
-| Seed inconsistency discovered mid-experiment | HIGH | Must rerun affected conditions from scratch. If noise was non-deterministic, ALL noisy conditions are suspect. |
-| Missing BH correction in submitted paper | MEDIUM | Recompute all p-values with correction. Some findings may lose significance. Rewrite affected claims. |
-| API model version changed mid-experiment | HIGH | Data from before and after the change cannot be combined. Must rerun the shorter segment with the new version, or discard and rerun entirely. Pin versions to prevent. |
-| Sandbox escape during HumanEval execution | HIGH | Assess damage (file changes, network activity). Rebuild execution environment. Add the escaped code pattern to the pre-execution filter. Rerun affected prompts. |
-| Cost overrun (budget exceeded before full run completes) | MEDIUM | Pause execution. Analyze partial results to determine if sufficient statistical power exists. If not, prioritize conditions by importance and run remaining budget on highest-priority cells. |
+| Corrupt config from partial wizard write | LOW | Delete `experiment_config.json`, re-run `propt setup`. Defaults are safe. |
+| Wrong model ID used for API calls | MEDIUM | Results are in SQLite with model field -- filter/delete bad runs, re-run with correct model. |
+| `.env` overwrites existing keys | LOW | User re-exports correct key or edits `.env` manually. |
+| PRICE_TABLE KeyError mid-experiment | LOW | Fix `compute_cost()`, re-run. Check if cost was stored at insert time -- those rows may need recomputation. |
+| Schema migration breaks load_config | MEDIUM | Backup old config, delete, re-run setup. DB results unaffected (independent schema). |
+| Module-level stale constants | LOW | Add a `reinitialize()` call after config load. No data loss, just wrong behavior until fixed. |
 
 ## Pitfall-to-Phase Mapping
 
 | Pitfall | Prevention Phase | Verification |
 |---------|------------------|--------------|
-| Temperature non-determinism | Experiment harness design | Pilot run shows expected CR variance on clean prompts |
-| GSM8K regex extraction | Grading module implementation | Test suite of 20+ answer format variants all pass |
-| HumanEval sandbox security | Grading module implementation | Adversarial code test suite (loops, forks, I/O) all contained |
-| Multiple comparisons inflation | Analysis module implementation | All reported p-values pass through BH correction in a single call |
-| Noise corrupts semantics | Noise generator implementation | Semantic similarity check on sample of 20% noise prompts |
-| Pre-processor cost accounting | Experiment harness implementation | Cost log includes pre-processor calls, retries, and failures |
-| Data contamination | Benchmark curation / paper writing | Paper includes contamination acknowledgment and delta-focused framing |
-| Seed management | Core infrastructure (first phase) | Rerunning pilot produces byte-identical noisy prompts |
-| API rate limits and bias | Experiment harness implementation | Prompt order is randomized; retry count logged; models interleaved |
-| Prompt repetition cost | Analysis module implementation | Cost comparison table includes input token cost for all interventions |
+| Frozen dataclass schema migration | Phase 1 (Config Schema) | Round-trip test: save old config, load with new code, no data loss |
+| MODELS tuple as allowlist | Phase 1 (Config Schema) | Grep all MODELS imports, verify each uses config-driven source |
+| compute_cost KeyError | Phase 1 + Phase 2 (Pricing) | `compute_cost("unknown-model", 1000, 500)` returns 0.0 with warning |
+| PREPROC_MODEL_MAP crash | Phase 1 + Phase 2 | Custom model pair through full sanitize pipeline without crash |
+| .env file conflicts | Phase 3 (Wizard) | Set key in env, write different key to .env, verify env var wins |
+| Pricing API failures | Phase 2 (Dynamic Pricing) | Mocked timeout/error responses, verify fallback to cached prices |
+| String prefix routing | Phase 1 + Phase 4 (API Client) | Non-standard model name routes correctly via explicit provider field |
+| Fixed experiment matrix | Phase 5 (Scope Adaptation) | 2 configured providers -> matrix has only 2 models |
+| Module-level stale constants | Phase 1 (pattern decision) + each subsequent phase | After config load, verify module-level values reflect config |
 
 ## Sources
 
-- [Pitfalls of Evaluating Language Models with Open Benchmarks (ArXiv 2507.00460)](https://arxiv.org/abs/2507.00460) -- benchmark gaming, data leakage, context truncation
-- [Non-Determinism of "Deterministic" LLM Settings (ArXiv 2408.04667)](https://arxiv.org/html/2408.04667v5) -- temperature=0 non-determinism
-- [GSM8K-Platinum: Revealing Performance Gaps (gradient science)](https://gradientscience.org/gsm8k-platinum/) -- GSM8K label errors and contamination
-- [Investigating Reproducibility Challenges in LLM Bugfixing on HumanEvalFix](https://www.mdpi.com/2674-113X/4/3/17) -- HumanEval reproducibility
-- [Reflections on Reproducibility of Commercial LLM Performance](https://arxiv.org/html/2510.25506v3) -- API version changes, reproducibility
-- [A Statistical Approach to Model Evals (Anthropic)](https://www.anthropic.com/research/statistical-approach-to-model-evals) -- statistical rigor in LLM evaluation
-- [Does Temperature 0 Guarantee Deterministic Outputs?](https://www.vincentschmalbach.com/does-temperature-0-guarantee-deterministic-llm-outputs/) -- floating-point non-determinism
-- [How to Get Consistent LLM Outputs in 2025](https://www.keywordsai.co/blog/llm_consistency_2025) -- practical determinism strategies
-- [OpenAI HumanEval repo security warning](https://github.com/openai/human-eval) -- sandbox execution risks
-- [Simulating Training Data Leakage in Multiple-Choice Benchmarks](https://arxiv.org/html/2505.24263v1) -- 5-14% score inflation from contamination
-- RDD v4.0 (`docs/RDD_Linguistic_Tax_v4.md`) -- project-specific experimental design
+- Direct codebase analysis: `src/config.py`, `src/config_manager.py`, `src/setup_wizard.py`, `src/api_client.py`, `src/pilot.py`, `src/compute_derived.py`, `src/prompt_compressor.py`, `src/execution_summary.py`, `src/run_experiment.py`
+- Context decisions: `.planning/quick/260325-tx5-make-models-fully-configurable-with-dyna/260325-tx5-CONTEXT.md`
+- Existing test patterns: `tests/test_config_manager.py`
+- python-dotenv documentation (load precedence, set_key API)
 
 ---
-*Pitfalls research for: LLM prompt noise/optimization benchmarking research*
-*Researched: 2026-03-19*
+*Pitfalls research for: Configurable models, dynamic pricing, and .env management in Linguistic Tax toolkit*
+*Researched: 2026-03-25*

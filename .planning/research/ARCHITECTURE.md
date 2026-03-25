@@ -1,382 +1,528 @@
-# Architecture Research
+# Architecture Research: Configurable Models and Dynamic Pricing
 
-**Domain:** LLM experiment execution pipeline (noise injection, benchmark evaluation, statistical analysis)
-**Researched:** 2026-03-19
-**Confidence:** HIGH
+**Domain:** Python CLI research toolkit -- extending hardcoded model config to dynamic, user-configurable model selection with live pricing
+**Researched:** 2026-03-25
+**Confidence:** HIGH (based on direct codebase analysis and SDK introspection)
 
-## System Overview
-
-This is a batch-processing research pipeline, not a service. Data flows strictly left-to-right through five stages. Each stage is a standalone module that reads from and writes to a shared SQLite database (or JSON files for inputs). There is no event bus, no API server, no concurrency framework -- just sequential Python scripts coordinated by a thin execution harness.
+## System Overview: Current State
 
 ```
-                        DATA PREPARATION (offline, run once)
- +-----------+     +----------------+     +------------------+
- | Benchmark |---->| Noise          |---->| Experiment       |
- | Prompts   |     | Generator      |     | Matrix Builder   |
- | (JSON)    |     | (Type A + B)   |     | (JSON)           |
- +-----------+     +----------------+     +------------------+
-                                                  |
-                                                  v
-                        INTERVENTION (per-prompt, inline)
-                   +------------------+
-                   | Intervention     |
-                   | Router           |
-                   | - Raw (noop)     |
-                   | - Self-Correct   |
-                   | - Pre-Proc San.  |-----> Cheap LLM (Haiku/Flash)
-                   | - San.+Compress  |-----> Cheap LLM (Haiku/Flash)
-                   | - Repetition     |
-                   +--------+---------+
-                            |
-                            v
-                        EXECUTION (per-prompt x 5 reps x 2 models)
-                   +------------------+
-                   | Execution Engine |
-                   | - API dispatch   |
-                   | - Retry/backoff  |
-                   | - Timing capture |
-                   | - Cost tracking  |
-                   +--------+---------+
-                            |
-                            v
-                        GRADING (per-response)
-                   +------------------+
-                   | Grader           |
-                   | - HumanEval exec |
-                   | - MBPP exec      |
-                   | - GSM8K regex    |
-                   +--------+---------+
-                            |
-                            v
-                   +------------------+
-                   | SQLite           |
-                   | results.db       |
-                   +------------------+
-                            |
-                            v
-                        ANALYSIS (post-hoc, over full dataset)
-              +-------------+-------------+
-              |             |             |
-              v             v             v
-        +-----------+ +-----------+ +-----------+
-        | Derived   | | Stats     | | Figure    |
-        | Metrics   | | Analysis  | | Generator |
-        | (CR, quad)| | (GLMM,CI)| | (plots)   |
-        +-----------+ +-----------+ +-----------+
+                         CLI Layer (cli.py)
+                              |
+            +-----------------+-----------------+
+            |                 |                 |
+    setup_wizard.py    config_commands.py   run/pilot
+            |                 |                 |
+            +--------+--------+        +--------+--------+
+                     |                 |                  |
+              config_manager.py   run_experiment.py   execution_summary.py
+                     |                 |                  |
+              config.py (constants)    |           PRICE_TABLE (hardcoded)
+              - MODELS tuple           |           PREPROC_MODEL_MAP
+              - PRICE_TABLE dict       |           RATE_LIMIT_DELAYS
+              - PREPROC_MODEL_MAP      |
+              - RATE_LIMIT_DELAYS      |
+              - ExperimentConfig       |
+                                       |
+                     +-----------------+--------+
+                     |                          |
+              api_client.py            prompt_compressor.py
+              (prefix-based routing)   (PREPROC_MODEL_MAP lookup)
 ```
 
-### Component Responsibilities
+**Key problem:** Six module-level dicts/tuples in `config.py` are hardcoded. Every consumer imports them at module load time. There is no mechanism to override them from user config.
 
-| Component | Responsibility | Input | Output |
-|-----------|----------------|-------|--------|
-| **Noise Generator** | Inject controlled Type A (character) and Type B (syntactic) noise into clean prompts | Clean prompts JSON, noise config (type, rate, seed) | Noisy prompts with metadata (noise type, rate, mutations applied) |
-| **Experiment Matrix Builder** | Enumerate all (prompt x noise x intervention x model x repetition) combinations | Clean + noisy prompts, intervention list, model list | `experiment_matrix.json` -- flat list of work items |
-| **Intervention Router** | Apply the correct intervention to a prompt before sending to the target model | Single work item from matrix | Processed prompt (possibly via cheap LLM call) |
-| **Execution Engine** | Send prompts to LLM APIs, capture timing/tokens/cost, handle retries | Processed prompt + model config | Raw API response + execution metadata |
-| **Grader** | Determine pass/fail for a single response against ground truth | Raw output + benchmark answer | Boolean pass/fail + grading metadata |
-| **Derived Metrics** | Compute per-condition aggregates: Consistency Rate, quadrant classification, cost rollups | All 5 repetitions for a (prompt, condition) pair | Derived record in SQLite |
-| **Statistical Analysis** | Run GLMM, bootstrap CIs, McNemar's test, Kendall's tau, BH correction | Full results table | Statistical results, p-values, effect sizes |
-| **Figure Generator** | Produce publication-quality plots | Statistical results + raw data | PNG/PDF figures |
+### Component Responsibilities (Current)
 
-## Recommended Project Structure
+| Component | Responsibility | What It Imports from config.py |
+|-----------|----------------|-------------------------------|
+| `config.py` | Hardcoded constants + ExperimentConfig dataclass | N/A (source of truth) |
+| `config_manager.py` | JSON persistence, sparse override merging, validation | `ExperimentConfig`, `PRICE_TABLE` |
+| `setup_wizard.py` | Interactive provider/model/key setup | `MODELS`, `OPENROUTER_BASE_URL`, `PREPROC_MODEL_MAP` |
+| `config_commands.py` | CLI show/set/reset/diff/list-models | `ExperimentConfig`, `PRICE_TABLE` |
+| `api_client.py` | LLM API calls with retry/rate limiting | `OPENROUTER_BASE_URL`, `RATE_LIMIT_DELAYS` |
+| `execution_summary.py` | Cost/runtime estimation, confirmation gate | `PRICE_TABLE`, `PREPROC_MODEL_MAP`, `RATE_LIMIT_DELAYS`, `compute_cost` |
+| `run_experiment.py` | Experiment execution engine | `ExperimentConfig`, `MAX_TOKENS_BY_BENCHMARK`, `PREPROC_MODEL_MAP`, `compute_cost` |
+| `prompt_compressor.py` | Pre-processing interventions | `PREPROC_MODEL_MAP` |
+| `pilot.py` | Pilot validation run | `ExperimentConfig`, `MODELS` |
+| `scripts/generate_matrix.py` | Experiment matrix generation | `INTERVENTIONS`, `MODELS`, `NOISE_TYPES` |
+| `compute_derived.py` | Derived metrics | `INTERVENTIONS`, `MODELS`, `NOISE_TYPES` |
+
+## Recommended Architecture: Target State
+
+### Core Design Decision: ModelConfig Registry
+
+Introduce a `ModelConfig` dataclass and a `ModelRegistry` that replaces all six hardcoded dicts/tuples. The registry is built from config at load time, not at import time.
 
 ```
-src/
-  noise_generator.py        # Type A + Type B noise injection
-  prompt_compressor.py       # Dedup + condensation (used by Sanitize+Compress intervention)
-  prompt_repeater.py         # <QUERY><QUERY> duplication
-  intervention.py            # Router: applies correct intervention given condition
-  api_client.py              # Unified wrapper for Anthropic + Google APIs
-  run_experiment.py          # Execution harness: iterates matrix, calls intervention + API + grader
-  grade_results.py           # HumanEval sandbox + GSM8K regex grading
-  analyze_results.py         # GLMM, bootstrap, McNemar, Kendall
-  compute_derived.py         # CR, quadrant, cost rollups (post-execution)
-  db.py                      # SQLite schema init, insert/query helpers
-  config.py                  # Model versions, API keys from env, cost tables
-  matrix_builder.py          # Generate experiment_matrix.json from prompts + conditions
-
-data/
-  prompts.json               # 200 clean benchmark prompts
-  experiment_matrix.json     # Generated work items (gitignored after generation)
-  real_world_noisy/          # 20 manually curated noisy prompts
-
-results/
-  results.db                 # SQLite (gitignored)
-
-tests/
-  test_noise_generator.py    # Determinism tests (same seed = same output)
-  test_grader.py             # Known-answer grading tests
-  test_intervention.py       # Intervention routing logic
-  test_api_client.py         # Mock API tests
-  test_matrix_builder.py     # Matrix enumeration correctness
-  test_compute_derived.py    # CR / quadrant computation
-
-figures/                     # Generated plots (gitignored)
-docs/
-  RDD_Linguistic_Tax_v4.md   # Authoritative spec
-  research_program.md        # Autonomous execution instructions
+                         CLI Layer (cli.py)
+                              |
+            +-----------------+-----------------+
+            |                 |                 |
+    setup_wizard.py    config_commands.py   run/pilot
+     (free-text entry)  (list-models live)      |
+            |                 |                 |
+            +--------+--------+        +--------+--------+
+                     |                 |                  |
+              config_manager.py   run_experiment.py   execution_summary.py
+                     |                 |                  |
+              config.py                |           model_registry.get_price()
+              - ExperimentConfig       |           model_registry.get_preproc()
+              - ModelConfig dataclass   |           model_registry.get_delay()
+              - ModelRegistry class    |
+              - FALLBACK_* defaults    |
+                     |                 |
+         +----------+----------+      |
+         |                     |      |
+   pricing_client.py    env_manager.py |
+   (per-provider APIs)  (.env I/O)    |
+                                      |
+                     +----------------+--------+
+                     |                         |
+              api_client.py           prompt_compressor.py
+              (registry-based routing) (registry.get_preproc())
 ```
 
-### Structure Rationale
+### New Components
 
-- **Flat `src/` layout:** With 10-12 modules total, packages add friction without benefit. Every module is a single file with a clear name. No `src/generators/`, `src/analysis/` -- that is over-engineering for a research toolkit.
-- **Separate `db.py`:** Centralizes all SQLite DDL, inserts, and query helpers. Every other module imports from `db.py` rather than writing raw SQL. This prevents schema drift.
-- **Separate `intervention.py`:** The intervention router is the most complex branching logic (5 paths, 2 of which involve external API calls). Isolating it from the execution engine keeps both testable.
-- **`config.py` for constants:** Pinned model versions, cost-per-token tables, and environment variable loading live in one place. When model versions change, you update one file.
+#### 1. `ModelConfig` dataclass (in `config.py`)
+
+```python
+@dataclass
+class ModelConfig:
+    """Single model configuration entry."""
+    provider: str           # "anthropic" | "google" | "openai" | "openrouter"
+    model_id: str           # e.g. "claude-sonnet-4-20250514"
+    preproc_model_id: str   # e.g. "claude-haiku-4-5-20250514"
+    input_price_per_1m: float = 0.0
+    output_price_per_1m: float = 0.0
+    preproc_input_price_per_1m: float = 0.0
+    preproc_output_price_per_1m: float = 0.0
+    rate_limit_delay: float = 0.2
+    preproc_rate_limit_delay: float = 0.1
+```
+
+**Rationale:** Bundles all per-model data (pricing, preproc mapping, rate limits) into one object. Eliminates the need for four parallel dicts that must stay in sync.
+
+#### 2. `ModelRegistry` class (in `config.py`)
+
+```python
+class ModelRegistry:
+    """Runtime registry of configured models, built from config."""
+
+    def __init__(self, model_configs: list[ModelConfig]) -> None:
+        self._models: dict[str, ModelConfig] = {mc.model_id: mc for mc in model_configs}
+
+    @classmethod
+    def from_config(cls, config: ExperimentConfig) -> "ModelRegistry":
+        """Build registry from an ExperimentConfig's models list."""
+        ...
+
+    @classmethod
+    def defaults(cls) -> "ModelRegistry":
+        """Build registry with current hardcoded defaults (backward compat)."""
+        ...
+
+    def get_models(self) -> tuple[str, ...]:
+        """Replace MODELS tuple."""
+        ...
+
+    def get_price(self, model_id: str) -> dict[str, float]:
+        """Replace PRICE_TABLE[model] with fallback to $0.00."""
+        ...
+
+    def get_preproc(self, model_id: str) -> str:
+        """Replace PREPROC_MODEL_MAP[model] with KeyError -> ValueError."""
+        ...
+
+    def get_delay(self, model_id: str) -> float:
+        """Replace RATE_LIMIT_DELAYS.get(model, 0.2)."""
+        ...
+
+    def compute_cost(self, model_id: str, input_tokens: int, output_tokens: int) -> float:
+        """Replace standalone compute_cost() with fallback for unknown models."""
+        ...
+```
+
+**Rationale:** Single source of truth for all model-related lookups. Consumers receive a registry instance rather than importing module-level dicts. The `from_config` classmethod bridges the ExperimentConfig -> runtime lookup gap.
+
+#### 3. `src/pricing_client.py` (NEW file)
+
+```python
+"""Per-provider pricing fetcher with offline fallback."""
+
+def fetch_anthropic_pricing() -> dict[str, dict[str, float]]:
+    """Query Anthropic models.list() -- no pricing in API, return empty."""
+    # Anthropic ModelInfo has: id, display_name, max_input_tokens, max_tokens
+    # NO pricing fields. Return model IDs only for validation.
+    ...
+
+def fetch_openai_pricing() -> dict[str, dict[str, float]]:
+    """Query OpenAI models.list() -- no pricing in API, return empty."""
+    # OpenAI Model has: id, created, object, owned_by
+    # NO pricing fields. Return model IDs only for validation.
+    ...
+
+def fetch_google_models() -> list[str]:
+    """Query google.genai.Client().models.list() for model IDs."""
+    # Google models.list() returns model metadata but no pricing.
+    ...
+
+def fetch_openrouter_pricing() -> dict[str, dict[str, float]]:
+    """Query OpenRouter /api/v1/models -- HAS pricing in response."""
+    # OpenRouter is the ONLY provider that returns pricing via API.
+    # JSON response includes `pricing.prompt` and `pricing.completion`
+    # per-token (not per-1M). Multiply by 1_000_000.
+    ...
+
+def fetch_pricing(provider: str, api_key: str) -> dict[str, dict[str, float]]:
+    """Unified entry point. Returns {model_id: {input_per_1m, output_per_1m}}."""
+    ...
+
+def list_provider_models(provider: str, api_key: str) -> list[str]:
+    """List available model IDs from a provider's API."""
+    ...
+```
+
+**Critical finding from SDK introspection:**
+- **Anthropic SDK** (`anthropic==0.86.0`): `client.models.list()` returns `ModelInfo` with `id`, `display_name`, `max_input_tokens`, `max_tokens`, `capabilities`. **No pricing fields.**
+- **OpenAI SDK** (`openai==2.29.0`): `client.models.list()` returns `Model` with `id`, `created`, `object`, `owned_by`. **No pricing fields.**
+- **Google GenAI SDK**: `client.models.list()` returns model metadata. **No pricing fields.**
+- **OpenRouter**: Uses OpenAI SDK with base_url override. The standard SDK `Model` type lacks pricing, but the raw `/api/v1/models` JSON response includes `pricing.prompt` and `pricing.completion`. Must use `httpx`/`requests` or parse raw response.
+
+**Implication:** Live pricing is only available from OpenRouter. For the other three providers, the PRICE_TABLE fallback defaults are the primary pricing source. The `propt list-models` command can show model availability (via API) but pricing must come from hardcoded fallbacks for Anthropic, Google, and OpenAI.
+
+#### 4. `src/env_manager.py` (NEW file)
+
+```python
+"""Manages .env file creation and API key storage."""
+
+from pathlib import Path
+
+def load_dotenv(env_path: Path | None = None) -> None:
+    """Load .env file into os.environ. No-op if file missing."""
+    ...
+
+def set_env_var(key: str, value: str, env_path: Path | None = None) -> None:
+    """Write or update a key=value pair in the .env file."""
+    ...
+
+def get_env_path() -> Path:
+    """Return project root .env path."""
+    ...
+```
+
+**Dependency decision:** Use `python-dotenv` (add to dependencies). It is the standard library for this and avoids reimplementing .env parsing. Current project does NOT have it installed.
+
+**Alternative considered:** Manual file I/O. Rejected because .env files have edge cases (quoting, multiline, comments, export prefixes) that python-dotenv handles correctly.
+
+### Modified Components
+
+#### 5. `ExperimentConfig` (MODIFIED in `config.py`)
+
+Add a `models` field:
+
+```python
+@dataclass(frozen=True)
+class ExperimentConfig:
+    # ... existing fields unchanged for backward compat ...
+    claude_model: str = "claude-sonnet-4-20250514"
+    gemini_model: str = "gemini-1.5-pro"
+    openai_model: str = "gpt-4o-2024-11-20"
+    openrouter_model: str = "openrouter/nvidia/nemotron-3-super-120b-a12b:free"
+    openrouter_preproc_model: str = "openrouter/nvidia/nemotron-3-nano-30b-a3b:free"
+
+    # NEW: structured model configurations (source of truth when present)
+    models: tuple[dict, ...] = ()  # Serialized ModelConfig entries
+```
+
+**Backward compatibility strategy:** When `models` is empty (default), the old flat fields are used to build the registry. When `models` is populated, it is the source of truth and flat fields are ignored. This means existing config files continue to work.
+
+#### 6. `config_manager.py` (MODIFIED)
+
+- **`validate_config()`**: Change model validation from "must be in PRICE_TABLE" (hard error) to "warn if not in fallback defaults" (warning only). This is the single most critical change for supporting free-text model entry.
+- **`load_config()`**: Handle new `models` list field (list of dicts -> tuple of dicts for frozen dataclass).
+- **`save_config()`**: Serialize `models` field properly.
+
+#### 7. `setup_wizard.py` (MODIFIED -- heaviest changes)
+
+- **Provider selection**: Keep pick-one-first flow, then offer "Add another provider?"
+- **Model entry**: Show defaults but accept free-text. Validate by pinging API.
+- **Preproc model**: Explain what it is ("A cheap/fast model used for sanitize/compress pre-processing. It cleans up prompts before sending to the target model.").
+- **API key handling**: If env var not set, prompt for key, write to `.env` via `env_manager.py`.
+- **Budget display**: After model selection, show estimated experiment cost using pricing data.
+- **Build `models` list**: Construct the structured model config entries.
+
+#### 8. `config_commands.py` (MODIFIED)
+
+- **`handle_list_models()`**: Query live provider APIs for available models + pricing. Show both configured models and available-but-not-configured models.
+
+#### 9. `api_client.py` (MODIFIED)
+
+- **`_apply_rate_limit()`**: Use registry instead of `RATE_LIMIT_DELAYS` dict.
+- **`call_model()` routing**: The current prefix-based routing (`model.startswith("claude")`) works for known providers. For unknown models from free-text entry, need a provider field or a smarter routing strategy. **Recommendation:** Add an optional `provider` parameter to `call_model()` OR use the ModelRegistry to look up provider from model_id.
+
+#### 10. `prompt_compressor.py` (MODIFIED)
+
+- **`_get_preproc_model()`**: Use registry instead of `PREPROC_MODEL_MAP` dict. Change error from ValueError to fallback with warning for unknown models.
+
+#### 11. `execution_summary.py` (MODIFIED)
+
+- **`estimate_cost()`**: Use `registry.compute_cost()` instead of `compute_cost()`.
+- **`estimate_runtime()`**: Use `registry.get_delay()` instead of `RATE_LIMIT_DELAYS`.
+
+#### 12. `scripts/generate_matrix.py` (MODIFIED)
+
+- **`generate_matrix()`**: Use `registry.get_models()` instead of `MODELS` tuple. This makes the matrix adapt to configured models.
+
+#### 13. `pilot.py` and `compute_derived.py` (MODIFIED)
+
+- Replace `MODELS` imports with registry-derived model lists.
+
+#### 14. `cli.py` (MODIFIED)
+
+- **`--model` choices**: Remove hardcoded `choices=["claude", "gemini", "gpt", "openrouter", "all"]`. Derive from configured providers or accept any string.
+- Add `.env` loading at startup via `env_manager.load_dotenv()`.
+
+## Data Flow: Config -> Registry -> Consumers
+
+### Setup Flow (New)
+
+```
+User runs `propt setup`
+    |
+    v
+setup_wizard.py: interactive Q&A
+    |
+    +-- Select provider(s)
+    +-- Enter target model (free-text, default shown)
+    +-- Enter preproc model (free-text, default auto-filled)
+    +-- Enter/confirm API key -> env_manager.set_env_var() -> .env file
+    +-- [Optional] pricing_client.fetch_pricing() for cost preview
+    +-- Show estimated experiment cost
+    +-- Offer "Add another provider?"
+    +-- Build models list
+    |
+    v
+config_manager.save_config({...models: [...]...})
+    |
+    v
+experiment_config.json (with models field)
+```
+
+### Runtime Flow (Modified)
+
+```
+Any command (run, pilot, list-models, etc.)
+    |
+    v
+cli.py main():
+    env_manager.load_dotenv()          # NEW: load .env
+    config = config_manager.load_config()
+    registry = ModelRegistry.from_config(config)  # NEW: build registry
+    |
+    v
+Pass `registry` to consumers:
+    - run_experiment.py: registry.compute_cost(), registry.get_preproc()
+    - execution_summary.py: registry.compute_cost(), registry.get_delay()
+    - prompt_compressor.py: registry.get_preproc()
+    - api_client.py: registry.get_delay(), provider lookup
+    - generate_matrix.py: registry.get_models()
+```
+
+### Pricing Flow (New)
+
+```
+propt list-models (or setup wizard)
+    |
+    v
+pricing_client.list_provider_models(provider, api_key)
+    |
+    +-- Anthropic: client.models.list() -> model IDs only
+    +-- OpenAI: client.models.list() -> model IDs only
+    +-- Google: client.models.list() -> model IDs only
+    +-- OpenRouter: httpx.get("/api/v1/models") -> model IDs + pricing
+    |
+    v
+Merge with FALLBACK_PRICE_TABLE for display
+    |
+    v
+For OpenRouter: live pricing overrides fallback
+For others: fallback pricing only (with "fallback" indicator)
+```
 
 ## Architectural Patterns
 
-### Pattern 1: Work Item Queue (Experiment Matrix as Data)
+### Pattern 1: Registry with Fallback Defaults
 
-**What:** The experiment matrix is a JSON file where each entry is a self-contained work item: `{prompt_id, noise_type, noise_rate, intervention, model, repetition}`. The execution engine reads items, processes them one-by-one, and writes results to SQLite. Completed items are tracked in the database, so re-running the script skips already-done work.
+**What:** A runtime-constructed registry that merges user config with hardcoded fallback values. Unknown models get $0.00 pricing with a warning.
 
-**When to use:** Always. This is the core execution pattern.
+**When to use:** When the set of valid values is open-ended (any model string) but you need lookup tables for associated data.
 
-**Trade-offs:** Simple and resumable. Not parallelized (one API call at a time), but rate limits make parallelism counterproductive for 2 APIs with generous but finite rate limits.
+**Trade-offs:**
+- Pro: Supports arbitrary models without code changes
+- Pro: Existing hardcoded values serve as sensible defaults
+- Con: Unknown model pricing is $0.00 which underestimates costs
+- Mitigation: Warning at setup time + budget gate at run time
 
+**Example:**
 ```python
-def run_experiment(matrix_path: str, db_path: str) -> None:
-    """Process all unfinished work items from the experiment matrix."""
-    matrix = load_matrix(matrix_path)
-    completed = get_completed_run_ids(db_path)
+class ModelRegistry:
+    _FALLBACK_PRICE = {"input_per_1m": 0.0, "output_per_1m": 0.0}
 
-    for item in matrix:
-        run_id = make_run_id(item)
-        if run_id in completed:
-            continue
-
-        # 1. Apply intervention
-        processed_prompt, preproc_meta = apply_intervention(
-            item["prompt_text"], item["intervention"], item["noise_type"]
-        )
-
-        # 2. Call target model
-        response, exec_meta = call_model(
-            processed_prompt, item["model"]
-        )
-
-        # 3. Grade
-        passed = grade(response, item["benchmark"], item["expected"])
-
-        # 4. Write to DB
-        insert_result(db_path, run_id, item, response, exec_meta,
-                       preproc_meta, passed)
+    def get_price(self, model_id: str) -> dict[str, float]:
+        if model_id in self._models:
+            mc = self._models[model_id]
+            return {"input_per_1m": mc.input_price_per_1m,
+                    "output_per_1m": mc.output_price_per_1m}
+        logger.warning("No pricing for %s, using $0.00 fallback", model_id)
+        return dict(self._FALLBACK_PRICE)
 ```
 
-### Pattern 2: Two-Phase Execution (Pilot Then Full)
+### Pattern 2: Backward-Compatible Config Evolution
 
-**What:** The execution engine supports a `--pilot` flag that limits to the first 20 prompts. Pilot results are stored in the same database with the same schema -- they are simply a subset. Analysis scripts work on whatever data exists.
+**What:** Add new structured fields alongside existing flat fields. Use new fields when present, fall back to flat fields for old configs.
 
-**When to use:** Always run pilot first. This is enforced by convention, not code.
+**When to use:** When existing config files must continue to work after schema changes.
 
-**Trade-offs:** No code difference between pilot and full run, which keeps things simple. The pilot is not a separate system -- it is the same system with a filter.
+**Trade-offs:**
+- Pro: Zero-disruption upgrade path
+- Pro: Old tests continue to pass without modification
+- Con: Two code paths to maintain during transition
+- Mitigation: Deprecation warnings on flat-field-only configs
 
-### Pattern 3: Grading Strategy Pattern
-
-**What:** Each benchmark type (HumanEval, MBPP, GSM8K) has a different grading function. The grader dispatches based on the `benchmark` field in the work item.
-
-**When to use:** Whenever grading a response.
-
-**Trade-offs:** HumanEval/MBPP grading requires code execution in a sandbox (subprocess with timeout + restricted imports). GSM8K grading is pure regex. These have very different failure modes and security characteristics, so they must be separate implementations behind a common interface.
-
+**Example:**
 ```python
-def grade(response: str, benchmark: str, expected: str) -> bool:
-    """Grade a model response against the expected answer."""
-    if benchmark in ("HumanEval", "MBPP"):
-        return grade_code_execution(response, expected)
-    elif benchmark == "GSM8K":
-        return grade_math_regex(response, expected)
-    else:
-        raise ValueError(f"Unknown benchmark: {benchmark}")
+@classmethod
+def from_config(cls, config: ExperimentConfig) -> "ModelRegistry":
+    if config.models:
+        return cls([ModelConfig(**m) for m in config.models])
+    # Backward compat: build from flat fields
+    return cls._from_flat_fields(config)
 ```
 
-### Pattern 4: Idempotent Derived Metrics
+### Pattern 3: Provider Abstraction for API Discovery
 
-**What:** `compute_derived.py` runs after all 5 repetitions for a condition are complete. It reads the 5 raw results, computes CR (consistency rate), majority vote pass/fail, quadrant classification, and mean latency/cost, then writes a single derived record. It can be re-run without side effects (upserts, not inserts).
+**What:** Each provider has a uniform `list_models()` / `fetch_pricing()` interface, but the implementations differ based on what each API actually exposes.
 
-**When to use:** After execution completes (or after each batch). Can be triggered manually or at the end of `run_experiment.py`.
+**When to use:** When integrating multiple external APIs with different capabilities.
 
-**Trade-offs:** Keeping derived metrics separate from raw results means the raw data is never mutated. Analysis scripts can recompute derived metrics with different definitions without re-running experiments.
-
-## Data Flow
-
-### Primary Pipeline Flow
-
-```
-[Clean Prompts JSON]
-    |
-    v
-[Noise Generator] --> [Noisy Prompts + Metadata]
-    |
-    v
-[Matrix Builder] --> [experiment_matrix.json]
-    |                    (prompt_id, noise_type, noise_rate,
-    |                     intervention, model, repetition)
-    v
-[Execution Engine]
-    |
-    |-- for each work item:
-    |     |
-    |     v
-    |   [Intervention Router]
-    |     |-- Raw: pass through
-    |     |-- Self-Correct: prepend instruction
-    |     |-- Pre-Proc: call cheap LLM --> cleaned prompt
-    |     |-- Pre-Proc+Compress: call cheap LLM --> cleaned+compressed prompt
-    |     |-- Repetition: duplicate prompt text
-    |     |
-    |     v
-    |   [API Client] --> LLM API (Claude or Gemini)
-    |     |
-    |     v
-    |   [Grader] --> pass/fail
-    |     |
-    |     v
-    |   [SQLite INSERT] --> results.db (execution_log table)
-    |
-    v
-[Compute Derived] --> results.db (derived_metrics table)
-    |
-    v
-[Analyze Results] --> statistical outputs (JSON/CSV)
-    |
-    v
-[Figure Generator] --> figures/ (PNG/PDF)
-```
-
-### Database as Integration Point
-
-The SQLite database is the single integration point between pipeline stages. Every stage reads from and writes to the same database. There are no in-memory hand-offs between stages (except within a single work-item processing loop).
-
-**Tables:**
-
-| Table | Written By | Read By |
-|-------|-----------|---------|
-| `execution_log` | Execution Engine | Compute Derived, Analyze Results |
-| `derived_metrics` | Compute Derived | Analyze Results, Figure Generator |
-| `prompts` | Matrix Builder (optional, or just use JSON) | Execution Engine |
-
-### Key Data Flows
-
-1. **Prompt through intervention:** A clean or noisy prompt enters the intervention router. For Pre-Proc interventions, the prompt makes a round-trip to a cheap LLM (Haiku/Flash) before reaching the target model. The intervention router returns both the processed prompt AND metadata about the pre-processing (tokens consumed, latency, cost). This metadata is stored alongside the main execution result.
-
-2. **5-repetition aggregation:** The execution engine processes each work item independently. It does not "know" about the 5-repetition structure -- it just processes items. After all items are done, `compute_derived.py` groups by (prompt_id, condition) and computes aggregates over the 5 repetitions. This separation means the execution engine never needs to hold state across repetitions.
-
-3. **Cost accounting flow:** Each API call (both pre-processor and main model) logs input tokens, output tokens, and dollar cost. The derived metrics compute net token savings (original prompt tokens minus optimized tokens, minus pre-processor overhead). This enables the ROI analysis that is central to the paper.
-
-## Scaling Considerations
-
-This project has a fixed scale: ~20,000 API calls, ~200 prompts, 2 models. There is no user growth curve. The relevant scaling concerns are:
-
-| Concern | Approach |
-|---------|----------|
-| API rate limits | Sequential execution with exponential backoff. No parallelism needed -- rate limits are the bottleneck, not CPU. |
-| SQLite write contention | Not an issue with single-process sequential execution. If ever parallelized, use WAL mode. |
-| Results database size | ~20K rows with text blobs (raw_output, cot_trace). Estimated ~500MB. Well within SQLite's capabilities. |
-| Resumability | Work-item idempotency. Check "does this run_id exist in DB?" before processing. Re-running the script after a crash picks up where it left off. |
-| Cost control | Pilot (20 prompts, ~$15) validates everything before committing to the full ~$300-500 run. |
-
-### First Bottleneck: API Rate Limits
-
-The Anthropic and Google APIs have per-minute token and request limits. With 5 repetitions x 200 prompts x 8 conditions x 2 models = 16,000 calls for Experiment 1 alone, expect multi-hour runtimes. The execution engine must implement exponential backoff with jitter. Log every rate-limit hit so you can estimate total runtime.
-
-### Second Bottleneck: Code Execution Grading
-
-HumanEval/MBPP grading requires executing model-generated code in a sandbox. Each execution needs a timeout (5-10 seconds) and process isolation. With ~10,000 code execution calls, this is ~14-28 hours of grading time if done sequentially at 5s each. Consider: grade inline during execution (so grading is interleaved with API wait times) rather than as a separate post-hoc step.
+**Trade-offs:**
+- Pro: Uniform interface for consumers
+- Con: Some providers return less data (no pricing)
+- Mitigation: Explicit "source" field on pricing data (live vs fallback)
 
 ## Anti-Patterns
 
-### Anti-Pattern 1: Storing Results as Flat JSON Files
+### Anti-Pattern 1: Making All Dicts Dynamic at Import Time
 
-**What people do:** Write each result as a separate JSON file (e.g., `results/humaneval_042_type_a_10pct_raw_rep3.json`), then glob+parse them for analysis.
+**What people do:** Replace `PRICE_TABLE = {...}` with `PRICE_TABLE = load_from_config()` at module level.
 
-**Why it's wrong:** With 20,000 result files, directory listing becomes slow, querying requires loading everything into memory, and there is no atomic write guarantee. Aggregation queries (e.g., "average pass rate for Type A 10% across all prompts") require reading all 20K files.
+**Why it's wrong:** Module-level execution happens at import time, before any config file is loaded or CLI is parsed. Circular imports. Test isolation breaks. Config file must exist for any import to succeed.
 
-**Do this instead:** SQLite with a proper schema. SQL queries handle aggregation, filtering, and joining natively. Single file, ACID writes, no parsing overhead.
+**Do this instead:** Keep static fallback defaults at module level. Build the ModelRegistry at runtime (in CLI entry points) and pass it explicitly to functions that need it.
 
-### Anti-Pattern 2: Coupling Intervention Logic Into the Execution Engine
+### Anti-Pattern 2: Adding Provider-Specific Pricing Scrapers
 
-**What people do:** Put all 5 intervention branches (Raw, Self-Correct, Pre-Proc, etc.) inline in the main execution loop with nested if/elif blocks.
+**What people do:** Scrape pricing pages or maintain a mapping of model names to prices from documentation.
 
-**Why it's wrong:** The execution engine becomes untestable -- you cannot test intervention logic without making real API calls. The 5 intervention paths have different I/O characteristics (some make API calls, some do not), and mixing them into the main loop creates a debugging nightmare.
+**Why it's wrong:** Pricing pages change without notice, scraping is fragile, and hardcoded mappings go stale. Three of the four providers have no pricing API.
 
-**Do this instead:** Separate `intervention.py` module with a single `apply_intervention(prompt, intervention_type, config) -> (processed_prompt, metadata)` function. The execution engine calls this function and does not know or care what happens inside.
+**Do this instead:** Use hardcoded fallback prices that are updated manually when models change. For OpenRouter (which has a pricing API), fetch live data. For others, the FALLBACK_PRICE_TABLE is authoritative.
 
-### Anti-Pattern 3: Computing Derived Metrics Inline During Execution
+### Anti-Pattern 3: Modifying Frozen Dataclass Fields via Object Replacement
 
-**What people do:** Try to compute consistency rate and quadrant classification as each repetition completes, maintaining state across the 5 repetitions in the execution loop.
+**What people do:** Create a new ExperimentConfig with `models` field by replacing the entire object after load.
 
-**Why it's wrong:** The execution engine would need to track which repetitions are complete for each (prompt, condition) pair, adding complex stateful logic to what should be a stateless work-item processor. If execution crashes and resumes, the in-memory state is lost.
+**Why it's wrong:** The `frozen=True` constraint is intentional for reproducibility. Building new instances is fine, but consumers must not mutate config during a run.
 
-**Do this instead:** Compute derived metrics as a separate post-execution step. The execution engine writes raw results; `compute_derived.py` reads all 5 repetitions from the DB and computes aggregates. This is simpler, stateless, and idempotent.
-
-### Anti-Pattern 4: Using print() for Logging
-
-**What people do:** Scatter `print()` calls throughout the codebase for status updates and debugging.
-
-**Why it's wrong:** No log levels, no timestamps, no structured output, cannot redirect to file, cannot control verbosity. For a 20K-call experiment running overnight, you need proper logging with rotation and level filtering.
-
-**Do this instead:** Python `logging` module with a configured handler. `INFO` for progress (every 100 items), `DEBUG` for individual API calls, `WARNING` for retries, `ERROR` for failures.
+**Do this instead:** Build the ModelRegistry once from config, then use the registry. Never modify config after load.
 
 ## Integration Points
 
 ### External Services
 
-| Service | Integration Pattern | Key Concerns |
-|---------|---------------------|--------------|
-| Anthropic API (Claude) | `anthropic` Python SDK, direct `client.messages.create()` | Pin model version string. Capture `usage.input_tokens`, `usage.output_tokens` from response. Implement retry with exponential backoff on 429/529 errors. |
-| Google Gemini API | `google-generativeai` Python SDK, `model.generate_content()` | Pin model version string. Token counting via `model.count_tokens()`. Different error codes than Anthropic -- handle both. |
-| HumanEval Sandbox | `subprocess.run()` with timeout and restricted environment | Use `subprocess.run(timeout=10)`, capture stdout/stderr, match against expected test cases. Never execute model output in the main process. |
+| Service | Integration Pattern | Pricing Available? | Notes |
+|---------|--------------------|--------------------|-------|
+| Anthropic API | `client.models.list()` -> model IDs | NO | Returns `ModelInfo` with id, display_name, max_tokens only |
+| OpenAI API | `client.models.list()` -> model IDs | NO | Returns `Model` with id, created, owned_by only |
+| Google GenAI | `client.models.list()` -> model IDs | NO | Returns model metadata, no pricing |
+| OpenRouter API | `httpx.get("/api/v1/models")` -> IDs + pricing | YES | Raw JSON has `pricing.prompt`, `pricing.completion` per-token |
 
-### Internal Boundaries
+### Internal Boundaries (Changes Required)
 
-| Boundary | Communication | Notes |
-|----------|---------------|-------|
-| Noise Generator <-> Matrix Builder | JSON files on disk | Noise generator writes noisy prompts to JSON. Matrix builder reads them. No runtime dependency. |
-| Intervention Router <-> API Client | Function call (in-process) | Intervention router may call API client for pre-processing (cheap model). Returns processed prompt to execution engine, which calls API client again for main model. Two separate API calls per work item for Pre-Proc interventions. |
-| Execution Engine <-> SQLite | `db.py` module (function calls) | All SQL goes through `db.py`. Execution engine never writes raw SQL. Schema changes happen in one place. |
-| Compute Derived <-> SQLite | `db.py` module (function calls) | Reads `execution_log`, writes `derived_metrics`. Idempotent (UPSERT). |
-| Analysis <-> SQLite | `db.py` module or direct pandas `read_sql()` | Analysis scripts may use pandas for convenience. This is acceptable -- analysis is exploratory, not production. |
+| Boundary | Current Communication | New Communication | Migration Effort |
+|----------|----------------------|-------------------|-----------------|
+| config.py -> all consumers | Module-level dict imports | Registry instance passed at runtime | MEDIUM -- every consumer gains a `registry` parameter |
+| config_manager.py -> config.py | Imports PRICE_TABLE for validation | Imports FALLBACK_PRICE_TABLE for warnings | LOW -- change error to warning |
+| setup_wizard.py -> config.py | Imports MODELS, PREPROC_MODEL_MAP | Uses registry defaults + free-text | MEDIUM -- wizard rewrite |
+| cli.py -> env | os.environ only | env_manager.load_dotenv() at startup | LOW -- one line addition |
+| prompt_compressor.py -> config.py | Direct PREPROC_MODEL_MAP import | Registry.get_preproc() | LOW -- one function change |
 
-## Build Order (Dependencies Between Components)
+## Suggested Build Order
 
-The following build order respects data-flow dependencies. Each stage can be built and tested independently once its upstream dependency exists.
+The dependencies between components dictate this build order:
 
-```
-Phase 1: Foundation (no upstream dependencies)
-  1. config.py          -- constants, env vars, model versions
-  2. db.py              -- schema DDL, insert/query helpers
-  3. noise_generator.py -- Type A + Type B (testable with unit tests, no API needed)
+### Phase 1: Foundation (no existing behavior changes)
 
-Phase 2: Data Preparation (depends on Phase 1)
-  4. prompt_compressor.py  -- needs API client for cheap model calls
-  5. prompt_repeater.py    -- trivial string duplication, no dependencies
-  6. matrix_builder.py     -- reads prompts + noise configs, writes matrix JSON
+1. **Add `python-dotenv` dependency** -- add to pyproject.toml
+2. **Create `src/env_manager.py`** -- .env load/write utilities
+3. **Create `ModelConfig` dataclass** -- in config.py, alongside existing constants
+4. **Create `ModelRegistry` class** -- in config.py, with `defaults()` classmethod that wraps current hardcoded values
+5. **Add `models` field to `ExperimentConfig`** -- default empty tuple, backward compat
 
-Phase 3: Execution Core (depends on Phases 1-2)
-  7. api_client.py      -- unified Anthropic + Google wrapper (needs config.py)
-  8. intervention.py    -- routes to compressor/repeater/API client
-  9. grade_results.py   -- HumanEval sandbox + GSM8K regex (no API dependency)
-  10. run_experiment.py  -- orchestrates intervention + API + grading + DB writes
+**Test gate:** All existing tests pass. Registry.defaults() returns same data as current dicts.
 
-Phase 4: Analysis (depends on Phase 3 producing data)
-  11. compute_derived.py  -- reads execution_log, writes derived_metrics
-  12. analyze_results.py  -- GLMM, bootstrap, McNemar, Kendall
-  13. figure generation   -- publication plots from analysis output
-```
+### Phase 2: Registry Consumers (swap imports to registry)
 
-**Critical path:** `config.py` -> `db.py` -> `api_client.py` -> `intervention.py` -> `run_experiment.py`. Everything else hangs off this spine.
+6. **Update `compute_cost()`** -- make it a registry method AND keep standalone function with deprecation
+7. **Update `prompt_compressor.py`** -- accept registry parameter for preproc lookup
+8. **Update `execution_summary.py`** -- accept registry parameter for pricing/delays
+9. **Update `api_client.py`** -- accept registry parameter for rate limit delays
+10. **Update `run_experiment.py`** -- build registry from config, pass to all consumers
 
-**Parallelizable work:** `noise_generator.py`, `grade_results.py`, and `prompt_repeater.py` have no dependencies on each other and can be built simultaneously. Similarly, all analysis modules (Phase 4) can be built in parallel once the DB schema is defined.
+**Test gate:** All existing tests pass. Behavior identical to before.
+
+### Phase 3: Pricing Client (new capability)
+
+11. **Create `src/pricing_client.py`** -- per-provider model listing and OpenRouter pricing
+12. **Update `config_commands.py` `handle_list_models()`** -- query live APIs + merge with fallbacks
+
+**Test gate:** `propt list-models` shows live model availability.
+
+### Phase 4: Setup Wizard Overhaul (user-facing changes)
+
+13. **Update `config_manager.py` `validate_config()`** -- warn-only for unknown models
+14. **Update `setup_wizard.py`** -- free-text entry, multi-provider, .env writing, budget preview
+15. **Update `cli.py`** -- load .env at startup, dynamic --model choices
+
+**Test gate:** Full wizard flow works with free-text models. .env created.
+
+### Phase 5: Matrix Adaptation (experiment scope)
+
+16. **Update `scripts/generate_matrix.py`** -- use registry.get_models()
+17. **Update `pilot.py`** -- use registry-derived model list
+18. **Update `compute_derived.py`** -- use registry-derived model list
+19. **Update `cli.py --model flag`** -- accept configured provider names dynamically
+
+**Test gate:** Matrix generation adapts to configured models. Pilot runs with subset of providers.
+
+### Phase ordering rationale
+
+- Phases 1-2 are zero-risk: they add new code paths without changing existing behavior
+- Phase 3 is independent of 2 but benefits from having the registry in place
+- Phase 4 depends on 1 (env_manager), 2 (registry), and 3 (pricing for budget preview)
+- Phase 5 depends on 2 (registry) and 4 (wizard populates models config)
 
 ## Sources
 
-- RDD v4.0 (`docs/RDD_Linguistic_Tax_v4.md`) -- authoritative spec for experimental design, schema, and metrics
-- CLAUDE.md -- project conventions and constraints
-- PROJECT.md -- requirements and scope boundaries
-- HumanEval benchmark patterns (OpenAI, standard code execution grading)
-- SQLite documentation (WAL mode, UPSERT semantics)
+- Direct codebase analysis of all files listed in the component table above
+- SDK introspection: `anthropic==0.86.0` ModelInfo fields, `openai==2.29.0` Model fields, `google-genai` Client.models.list() methods
+- Anthropic SDK: `client.models.list()` returns `SyncPage[ModelInfo]` with fields: `id`, `display_name`, `created_at`, `max_input_tokens`, `max_tokens`, `capabilities`, `type` -- confirmed no pricing
+- OpenAI SDK: `client.models.list()` returns `Model` with fields: `id`, `created`, `object`, `owned_by` -- confirmed no pricing
+- OpenRouter REST API documentation (training data): `/api/v1/models` returns `pricing.prompt` and `pricing.completion` per-token -- MEDIUM confidence (not verified live)
+- `python-dotenv` is the standard .env management library for Python projects -- HIGH confidence
 
 ---
-*Architecture research for: LLM experiment execution pipeline (Linguistic Tax)*
-*Researched: 2026-03-19*
+*Architecture research for: Configurable Models and Dynamic Pricing integration with existing Linguistic Tax toolkit*
+*Researched: 2026-03-25*

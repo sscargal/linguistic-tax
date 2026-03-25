@@ -1,0 +1,49 @@
+{
+  "skill_name": "validate-rdd",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "can you check if our code actually matches what the RDD says? i'm about to start running experiments and want to make sure nothing has drifted since we wrote the spec",
+      "expected_output": "A comprehensive compliance report with PASS/FAIL/WARN for each RDD check, covering noise parameters, interventions, model config, experiment design, statistical methods, grading, and logging.",
+      "files": [],
+      "expectations": [
+        "Reads the RDD (docs/RDD_Linguistic_Tax_v4.md)",
+        "Reads relevant source files (config.py, noise_generator.py, etc.)",
+        "Checks noise parameters against RDD Section 5.1",
+        "Checks intervention definitions against RDD Section 6",
+        "Checks model configuration against RDD Section 4.2",
+        "Produces a structured compliance table with PASS/FAIL/WARN statuses",
+        "Explains any deviations found with specific file locations and line numbers"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I just changed some parameters in config.py and want to verify the experiment matrix still aligns with the RDD. specifically check the noise levels, repetition count, and model list",
+      "expected_output": "A focused validation of the specific parameters mentioned, with comparison against RDD values.",
+      "files": [],
+      "expectations": [
+        "Reads config.py for current parameter values",
+        "Reads the RDD for expected values",
+        "Compares noise levels (5%, 10%, 20%) against RDD Section 5.1",
+        "Compares repetition count (5) against RDD Section 4.3",
+        "Compares model list against RDD Section 4.2",
+        "Reports specific deviations if any exist"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "before we submit the paper, do a thorough audit of the statistical analysis code against what the RDD specifies. I want to make sure our GLMM, bootstrap, McNemar's, and Kendall's tau implementations match the spec exactly",
+      "expected_output": "A focused statistical methods validation comparing analyze_results.py and compute_derived.py against RDD Section 7.",
+      "files": [],
+      "expectations": [
+        "Reads analyze_results.py for GLMM implementation details",
+        "Reads analyze_results.py for bootstrap CI parameters (10,000 resamples, 95% CI)",
+        "Reads analyze_results.py for McNemar's test implementation",
+        "Reads analyze_results.py for Kendall's tau implementation",
+        "Reads compute_derived.py for CR and quadrant classification",
+        "Compares each against RDD Section 7 specifications",
+        "Reports compliance status for each statistical method"
+      ]
+    }
+  ]
+}

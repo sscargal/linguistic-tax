@@ -3,8 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 12-03-PLAN.md
-last_updated: "2026-03-25T04:21:15.534Z"
+stopped_at: Completed quick task 260325-sta
+last_updated: "2026-03-25T20:52:43.249Z"
+last_activity: "2026-03-25 - Completed quick task 260325-sgc: Fix uv sync entry points"
 progress:
   total_phases: 15
   completed_phases: 15
@@ -140,6 +141,7 @@ Recent decisions affecting current work:
 - [Phase 15]: Patched src.db.query_runs instead of src.execution_summary.query_runs due to lazy import inside count_completed
 - [Phase 12]: Grouped glossary by Research Concepts and Technical Terms with alphabetical ordering
 - [Phase 12]: Analysis guide organized by statistical method with annotated example output and 6 SQLite queries
+- [Phase quick-260325-sta]: Added torch as direct dep for uv source override on transitive dependency; explicit=true pytorch-cpu index
 
 ### Pending Todos
 
@@ -164,6 +166,7 @@ None yet.
 | 260325-qpc | Create Claude Code CLI skills for Linguistic Tax project | 2026-03-25 | 63cee47 | [260325-qpc-create-claude-code-cli-skills-for-lingui](./quick/260325-qpc-create-claude-code-cli-skills-for-lingui/) |
 | 260325-rvo | Document Claude Code skills in README.md and docs/README.md | 2026-03-25 | b5f5e45 | [260325-rvo-document-new-claude-code-skills-and-upda](./quick/260325-rvo-document-new-claude-code-skills-and-upda/) |
 | 260325-sgc | Fix uv sync: add build-system and tool.uv to pyproject.toml | 2026-03-25 | 5d6da72 | [260325-sgc-fix-uv-sync-add-build-system-and-tool-uv](./quick/260325-sgc-fix-uv-sync-add-build-system-and-tool-uv/) |
+| 260325-sta | CPU-only PyTorch via uv source override, update docs to uv | 2026-03-25 | c5f61e2 | [260325-sta-cpu-only-torch-remove-cuda-deps-switch-p](./quick/260325-sta-cpu-only-torch-remove-cuda-deps-switch-p/) |
 
 ### Blockers/Concerns
 
@@ -173,7 +176,7 @@ None yet.
 
 ## Session Continuity
 
-Last activity: 2026-03-25 - Completed quick task 260325-sgc: Fix uv sync entry points
-Last session: 2026-03-25T20:32:44Z
-Stopped at: Completed quick task 260325-sgc
+Last activity: 2026-03-25 - Completed quick task 260325-sta: CPU-only PyTorch via uv source override
+Last session: 2026-03-25T20:52:39.606Z
+Stopped at: Completed quick task 260325-sta
 Resume file: None

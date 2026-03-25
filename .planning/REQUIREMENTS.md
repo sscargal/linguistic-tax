@@ -108,12 +108,12 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **GATE-BUDGET**: --budget flag exits non-zero if estimated cost exceeds threshold, checked before --yes auto-accept
 - [x] **GATE-PLAN**: Save pre-execution summary to results/execution_plan.json with timestamp, item counts, cost projection, models, filters
 - [x] **GATE-RESUME**: Show completed vs remaining counts when resuming a partial run, with adjusted cost for remaining items only
-- [ ] **GATE-CLI-RUN**: `propt run` subcommand with --model, --limit, --retry-failed, --db, --yes, --budget, --dry-run, --intervention flags
-- [ ] **GATE-CLI-PILOT**: `propt pilot` subcommand with --yes, --budget, --dry-run, --db flags wrapping pilot.py
-- [ ] **GATE-DRYRUN**: --dry-run shows summary only and exits without executing (replaces old _show_dry_run)
-- [ ] **GATE-PROGRESS**: tqdm progress bar during execution showing completion %, items done/total, ETA, cost-so-far
-- [ ] **GATE-WIRE**: Confirmation gate integrated into both run_experiment.py run_engine() and pilot.py run_pilot()
-- [ ] **GATE-TQDM**: tqdm added to pyproject.toml dependencies
+- [x] **GATE-CLI-RUN**: `propt run` subcommand with --model, --limit, --retry-failed, --db, --yes, --budget, --dry-run, --intervention flags
+- [x] **GATE-CLI-PILOT**: `propt pilot` subcommand with --yes, --budget, --dry-run, --db flags wrapping pilot.py
+- [x] **GATE-DRYRUN**: --dry-run shows summary only and exits without executing (replaces old _show_dry_run)
+- [x] **GATE-PROGRESS**: tqdm progress bar during execution showing completion %, items done/total, ETA, cost-so-far
+- [x] **GATE-WIRE**: Confirmation gate integrated into both run_experiment.py run_engine() and pilot.py run_pilot()
+- [x] **GATE-TQDM**: tqdm added to pyproject.toml dependencies
 - [ ] **GATE-TEST**: Unit tests for cost estimation, runtime estimation, summary formatting, confirmation gate, execution plan saving, and CLI subcommand registration
 
 ## v2 Requirements

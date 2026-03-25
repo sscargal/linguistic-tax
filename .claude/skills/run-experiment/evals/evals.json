@@ -1,0 +1,43 @@
+{
+  "skill_name": "run-experiment",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "ok the pilot looks good, i want to run the full experiment now but i'm nervous about cost. can you show me what it'll cost and then start with the cheapest model first?",
+      "expected_output": "Shows dry-run cost estimate, suggests starting with free OpenRouter model, provides execution commands in recommended order.",
+      "files": [],
+      "expectations": [
+        "Suggests a dry-run first (propt run --dry-run)",
+        "Recommends starting with cheapest/free model",
+        "Shows the recommended execution order (free → cheap → expensive)",
+        "Provides the specific CLI commands with --model flags",
+        "Mentions budget-gating option (--budget flag)"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "the experiment got interrupted overnight - i think my laptop went to sleep. how do I pick up where it left off?",
+      "expected_output": "Explains resumability, suggests re-running the same command which auto-skips completed runs.",
+      "files": [],
+      "expectations": [
+        "Explains that the engine is resumable by design",
+        "Says to just re-run the same propt run command",
+        "Explains that completed run IDs are skipped automatically",
+        "Suggests checking progress first with /check-results or sqlite3 query",
+        "Does NOT suggest any destructive action (no re-running completed items)"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "i want to run just the prompt_repetition intervention across all models to see if the google technique actually works before running everything else",
+      "expected_output": "Shows the targeted command for running a single intervention.",
+      "files": [],
+      "expectations": [
+        "Provides the correct filtered command: propt run --intervention prompt_repetition",
+        "Suggests doing a dry-run first for that specific filter",
+        "Explains what prompt repetition does (duplicate input per Leviathan et al.)",
+        "Suggests comparing results against raw baseline after completion"
+      ]
+    }
+  ]
+}

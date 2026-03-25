@@ -4,6 +4,11 @@
 
 This roadmap delivers a complete research pipeline for measuring how prompt noise degrades LLM accuracy and whether automated optimization recovers it. The work flows from foundational infrastructure (data, noise, config) through high-risk grading modules, then intervention/execution machinery, a pilot validation gate, statistical analysis, and finally publication figures. Every phase produces independently verifiable output. The full 20,000-call experiment run is explicitly out of scope for GSD -- the toolkit must be complete and pilot-validated.
 
+## Milestones
+
+- v1.0 MVP - Phases 1-15 (shipped 2026-03-25)
+- v2.0 Configurable Models and Dynamic Pricing - Phases 16-19 (in progress)
+
 ## Phases
 
 **Phase Numbering:**
@@ -12,220 +17,92 @@ This roadmap delivers a complete research pipeline for measuring how prompt nois
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation and Data Infrastructure** - Config, SQLite schema, noise generators, benchmark prompts, and experiment matrix
-- [ ] **Phase 2: Grading Pipeline** - Sandboxed code execution grader and regex math grader with result storage
-- [ ] **Phase 3: Interventions and Execution Engine** - All 5 intervention strategies plus the orchestrating execution engine with full API instrumentation
-- [ ] **Phase 4: Pilot Validation** - 20-prompt end-to-end pilot run with grading spot-check and cost projection
-- [ ] **Phase 5: Statistical Analysis and Derived Metrics** - GLMM, bootstrap CIs, McNemar's, Kendall's tau, BH correction, CR, quadrants, cost rollups
-- [ ] **Phase 6: Publication Figures** - Accuracy curves, quadrant plots, cost heatmaps, rank-order visualizations
+<details>
+<summary>v1.0 MVP (Phases 1-15) - SHIPPED 2026-03-25</summary>
+
+- [x] **Phase 1: Foundation and Data Infrastructure** - Config, SQLite schema, noise generators, benchmark prompts, and experiment matrix
+- [x] **Phase 2: Grading Pipeline** - Sandboxed code execution grader and regex math grader with result storage
+- [x] **Phase 3: Interventions and Execution Engine** - All 5 intervention strategies plus the orchestrating execution engine with full API instrumentation
+- [x] **Phase 4: Pilot Validation** - 20-prompt end-to-end pilot run with grading spot-check and cost projection
+- [x] **Phase 5: Statistical Analysis and Derived Metrics** - GLMM, bootstrap CIs, McNemar's, Kendall's tau, BH correction, CR, quadrants, cost rollups
+- [x] **Phase 6: Publication Figures** - Accuracy curves, quadrant plots, cost heatmaps, rank-order visualizations
+- [x] **Phase 7: OpenAI Integration** - GPT-4o as fully integrated third target model
+- [x] **Phase 8: Test Coverage** - 80%+ line coverage with integration tests and QA script
+- [x] **Phase 9: OpenRouter Support** - 4th provider gateway with free Nemotron models
+- [x] **Phase 10: Prompt Format Research** - Literature survey and testable hypotheses for prompt formats
+- [x] **Phase 11: Micro-Formatting Experiments** - Atomic experiment specs for micro-formatting effects
+- [x] **Phase 12: Documentation** - Comprehensive docs for new users
+- [x] **Phase 13: Setup Wizard** - Guided Q&A configuration flow
+- [x] **Phase 14: CLI Config Subcommands** - View, modify, validate config via CLI
+- [x] **Phase 15: Pre-Execution Gate** - Cost/runtime summary with confirmation before execution
+
+</details>
+
+### v2.0 Configurable Models and Dynamic Pricing
+
+**Milestone Goal:** Make models fully configurable at setup time with live pricing, flexible wizard flow, .env API key management, and adaptive experiment scope -- so the toolkit works with any model, not just the four hardcoded ones.
+
+- [ ] **Phase 16: Config Schema and Defensive Fallbacks** - ModelConfig/ModelRegistry abstractions, backward-compatible migration, defensive compute_cost, env_manager
+- [ ] **Phase 17: Registry Consumers** - Swap all hardcoded MODELS/PRICE_TABLE/RATE_LIMIT_DELAYS imports to registry lookups across consumer modules
+- [ ] **Phase 18: Pricing Client and Model Discovery** - Live model listing from provider APIs, OpenRouter live pricing, enhanced propt list-models
+- [ ] **Phase 19: Setup Wizard Overhaul** - Free-text model entry, multi-provider loop, .env creation, budget preview, model validation ping
 
 ## Phase Details
 
-### Phase 1: Foundation and Data Infrastructure
-**Goal**: Researcher has a complete, deterministic data foundation -- noise generators produce reproducible output, 200 benchmark prompts are curated, the experiment matrix is materialized, and all results can be stored in SQLite
-**Depends on**: Nothing (first phase)
-**Requirements**: DATA-01, DATA-02, DATA-03, DATA-04, NOISE-01, NOISE-02, NOISE-03, NOISE-04
+### Phase 16: Config Schema and Defensive Fallbacks
+**Goal**: Researcher has a config-driven model registry that replaces hardcoded constants -- custom models load without crashes, old configs migrate transparently, and .env files manage API keys
+**Depends on**: Phase 15 (v1.0 complete)
+**Requirements**: CFG-01, CFG-02, CFG-03, CFG-04, CFG-05, PRC-01, PRC-03
 **Success Criteria** (what must be TRUE):
-  1. Running the noise generator twice with the same seed produces byte-identical output for both Type A and Type B noise
-  2. 200 clean benchmark prompts exist in prompts.json with correct canonical answers for HumanEval, MBPP, and GSM8K
-  3. The experiment matrix JSON enumerates every prompt x noise x intervention combination as a self-contained work item
-  4. SQLite database can be created with the RDD schema and accepts insert/query of experimental result rows
-  5. Configuration module exposes pinned model versions, API settings, and a seed registry that prevents global random state
-**Plans**: 3 plans
+  1. Researcher can add a custom model ID to the config's models list and load it without any validation error or crash
+  2. A config file saved by v1.0 (flat claude_model/gemini_model fields, no models list) loads correctly and auto-migrates to the new format
+  3. Running compute_cost() with an unknown model ID returns $0.00 and logs a warning instead of crashing with KeyError
+  4. PRICE_TABLE, PREPROC_MODEL_MAP, and RATE_LIMIT_DELAYS are built from the loaded config at runtime, not from hardcoded module-level constants
+  5. python-dotenv is installed and env_manager module can load/write .env files
+**Plans**: TBD
 
-Plans:
-- [ ] 01-01-PLAN.md -- Config module with pinned settings and seed registry, SQLite database with full RDD schema
-- [ ] 01-02-PLAN.md -- Noise generators: Type A character-level with keyword protection, Type B ESL syntactic, CLI interface
-- [ ] 01-03-PLAN.md -- Benchmark prompt curation (200 prompts from HumanEval/MBPP/GSM8K) and experiment matrix generation
-
-### Phase 2: Grading Pipeline
-**Goal**: Researcher can automatically grade any LLM output -- HumanEval/MBPP code is executed in a secure sandbox with pass/fail, GSM8K answers are extracted and compared via regex, and all grades are recorded in SQLite
-**Depends on**: Phase 1 (needs SQLite schema for GRAD-03, benchmark prompts for test data)
-**Requirements**: GRAD-01, GRAD-02, GRAD-03
+### Phase 17: Registry Consumers
+**Goal**: Every module that previously imported hardcoded MODELS, PRICE_TABLE, PREPROC_MODEL_MAP, or RATE_LIMIT_DELAYS now reads from the ModelRegistry -- custom models flow through the entire pipeline without hitting allowlist rejections
+**Depends on**: Phase 16
+**Requirements**: EXP-01, EXP-02, EXP-03, EXP-04
 **Success Criteria** (what must be TRUE):
-  1. HumanEval/MBPP code outputs are executed in a subprocess sandbox with timeout and resource limits -- infinite loops and fork bombs do not hang or crash the host
-  2. GSM8K grading correctly extracts and compares numerical answers across format variants (prose, LaTeX, units, comma-separated)
-  3. Every grading result (pass/fail) is written to the SQLite results database with the corresponding run ID
-**Plans**: 1 plan
+  1. Experiment matrix generation produces work items only for models present in the loaded config, not a hardcoded tuple
+  2. Running `propt run --model <custom-model>` with a configured custom model does not raise "unknown model" errors
+  3. Pilot run with a subset of providers (e.g., only Anthropic and OpenRouter) completes without errors about missing providers
+  4. Derived metrics computation (compute_derived.py) processes results for exactly the configured models, no more and no less
+**Plans**: TBD
 
-Plans:
-- [ ] 02-01-PLAN.md -- Subprocess sandbox code grader (HumanEval/MBPP), regex math grader (GSM8K), CLI with batch mode, grading_details DB table
-
-### Phase 3: Interventions and Execution Engine
-**Goal**: Researcher can execute any experiment matrix work item end-to-end -- the intervention router dispatches to the correct strategy, the API client calls Claude or Gemini with full instrumentation, and the engine manages resumability and rate limiting
-**Depends on**: Phase 1 (config, matrix, noise, DB), Phase 2 (grading)
-**Requirements**: INTV-01, INTV-02, INTV-03, INTV-04, INTV-05, EXEC-01, EXEC-02, EXEC-03, EXEC-04, EXEC-05
+### Phase 18: Pricing Client and Model Discovery
+**Goal**: Researcher can query live model availability and pricing from provider APIs -- propt list-models shows real model IDs, context windows, and pricing where available, with graceful fallback when APIs are unreachable
+**Depends on**: Phase 16
+**Requirements**: DSC-01, DSC-02, PRC-02
 **Success Criteria** (what must be TRUE):
-  1. The intervention router correctly dispatches to all 5 strategies: Raw, Self-Correct, Pre-Proc Sanitize, Pre-Proc Sanitize+Compress, and Prompt Repetition
-  2. API calls to both Claude Sonnet and Gemini 1.5 Pro succeed at temperature=0.0 and log TTFT, TTLT, token counts, cost, and timestamp for every call
-  3. Each condition is executed 5 times (repetitions) and all repetition results are stored
-  4. Stopping and restarting the engine skips already-completed work items without data loss or duplication
-  5. Rate limiting prevents API throttling errors during sustained execution
-**Plans**: 3 plans
+  1. Running `propt list-models` queries each configured provider's API and displays available model IDs
+  2. Model listing output includes context window size and pricing columns (with pricing populated for OpenRouter, marked as "fallback" for other providers)
+  3. When a provider API is unreachable (timeout or error), list-models falls back gracefully with a warning instead of crashing
+**Plans**: TBD
 
-Plans:
-- [ ] 03-01-PLAN.md -- Intervention pure functions (repeater, compressor/sanitizer), config extensions (price table, max_tokens, preproc models)
-- [ ] 03-02-PLAN.md -- Unified API client with streaming TTFT/TTLT, rate limiting, retry logic, pyproject.toml fix
-- [ ] 03-03-PLAN.md -- Intervention router, execution engine with resumability and inline grading, CLI
-
-### Phase 4: Pilot Validation
-**Goal**: Researcher has validated the entire pipeline end-to-end on 20 prompts, confirmed grading accuracy, and produced a reliable cost projection for the full experiment run
-**Depends on**: Phase 3 (complete execution pipeline)
-**Requirements**: PILOT-01, PILOT-02, PILOT-03
+### Phase 19: Setup Wizard Overhaul
+**Goal**: Researcher can configure any combination of models and providers through the setup wizard -- free-text model entry with defaults, multi-provider flow, .env key management, model validation, and budget preview before committing
+**Depends on**: Phase 16, Phase 17, Phase 18
+**Requirements**: WIZ-01, WIZ-02, WIZ-03, WIZ-04, WIZ-05, WIZ-06, DSC-03
 **Success Criteria** (what must be TRUE):
-  1. Pilot run completes for 20 prompts across all noise conditions and intervention types with results in SQLite
-  2. Manual spot-check of at least 10% of pilot grading results confirms grading accuracy (no systematic errors)
-  3. Cost projection for the full experiment run is computed from pilot data and falls within budget constraints
-**Plans**: 2 plans
-
-Plans:
-- [ ] 04-01-PLAN.md -- Core pilot module: compress_only fix, stratified prompt selection, pilot execution entry point, data completeness audit, noise sanity check
-- [ ] 04-02-PLAN.md -- Pilot analysis: grading spot-check, cost projection with bootstrap CIs, BERTScore fidelity, latency profiling, verdict report, CLI
-
-### Phase 5: Statistical Analysis and Derived Metrics
-**Goal**: Researcher can compute all statistical analyses and derived metrics defined in the RDD from experimental results in SQLite
-**Depends on**: Phase 4 (validated pilot data to develop against; modules work on any results data)
-**Requirements**: STAT-01, STAT-02, STAT-03, STAT-04, STAT-05, DERV-01, DERV-02, DERV-03
-**Success Criteria** (what must be TRUE):
-  1. GLMM fits on binary pass/fail data with prompt-level random effects and produces coefficient estimates with p-values
-  2. Bootstrap confidence intervals are computed for all reported accuracy and stability metrics
-  3. McNemar's test identifies prompt-level fragility and recoverability with BH-corrected p-values across all comparisons
-  4. Consistency Rate (CR) is computed from pairwise agreement across 5 repetitions, and each prompt-condition is classified into a stability-correctness quadrant
-  5. Cost rollups show net ROI for each intervention (token savings minus pre-processor overhead)
-**Plans**: 3 plans
-
-Plans:
-- [ ] 05-01-PLAN.md -- Derived metrics: CR computation, quadrant classification, cost rollups, quadrant migration matrices, CLI
-- [ ] 05-02-PLAN.md -- Statistical analysis: GLMM with fallback, bootstrap CIs, McNemar's fragility, Kendall's tau, BH correction, sensitivity analysis, effect size summary, CLI with subcommands
-- [ ] 05-03-PLAN.md -- Gap closure: CR bootstrap CIs from derived_metrics, STAT-05 requirement wording fix
-
-### Phase 6: Publication Figures
-**Goal**: Researcher has publication-quality figures for all key results, ready for the ArXiv paper
-**Depends on**: Phase 5 (analysis results to visualize)
-**Requirements**: FIG-01, FIG-02, FIG-03, FIG-04
-**Success Criteria** (what must be TRUE):
-  1. Accuracy degradation curves show noise level on x-axis vs. accuracy on y-axis, faceted by model and intervention type
-  2. Stability-correctness quadrant plots display each prompt-condition as a point in the 4-quadrant space (Robust/Confidently-Wrong/Lucky/Broken)
-  3. Cost-benefit heatmaps show net token savings by condition with clear color scale
-  4. All figures are saved as publication-quality vector graphics (PDF or SVG) in the figures/ directory
-**Plans**: 1 plan
-
-Plans:
-- [ ] 06-01-PLAN.md -- All 4 figure types (accuracy curves, quadrant plots, cost heatmaps, Kendall tau bars) with shared style config, save helper, and argparse CLI (TDD)
+  1. Wizard explains the distinction between target models and pre-processor models before asking the researcher to choose
+  2. Researcher can configure 1 to 4 providers in a single wizard session, entering a custom model ID as free text for each
+  3. When the researcher provides API keys during setup, a .env file is created (or updated) with correct file permissions and the keys are available immediately without restarting
+  4. Wizard validates each selected model by making a small API call and reports success or failure before completing setup
+  5. Wizard displays estimated experiment cost based on selected models before the researcher confirms the configuration
+**Plans**: TBD
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
+Phases execute in numeric order: 16 -> 17 -> 18 -> 19
+(Phases 17 and 18 can execute in parallel after 16 completes; Phase 19 depends on all three)
 
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 1. Foundation and Data Infrastructure | 0/3 | Planning complete | - |
-| 2. Grading Pipeline | 0/1 | Planning complete | - |
-| 3. Interventions and Execution Engine | 0/3 | Planning complete | - |
-| 4. Pilot Validation | 0/2 | Planning complete | - |
-| 5. Statistical Analysis and Derived Metrics | 2/3 | Gap closure planned | - |
-| 6. Publication Figures | 0/1 | Planning complete | - |
-
-### Phase 7: Add OpenAI to the supported model provider
-
-**Goal:** GPT-4o is a fully integrated third target model in the experiment pipeline -- API client streams with TTFT/TTLT tracking, config has all pricing/routing entries, pilot and figures handle 3 models, and the full test suite passes
-**Requirements**: OAPI-01, OAPI-02, OAPI-03, OAPI-04, OAPI-05, OAPI-06
-**Depends on:** Phase 6
-**Plans:** 2/2 plans complete
-
-Plans:
-- [ ] 07-01-PLAN.md -- Core OpenAI integration: config entries, _call_openai with streaming, call_model routing, retry/rate-limit, pyproject.toml, .env.example, comprehensive tests
-- [ ] 07-02-PLAN.md -- Downstream updates: pilot _VALID_MODELS from config, figure layout scaling for 3 models, full suite verification
-
-### Phase 8: Write unit tests
-
-**Goal:** Expand test coverage to 80%+ line coverage across all modules, fill gaps in the two lowest-coverage modules (analyze_results at 62%, compute_derived at 64%), add integration tests for multi-module flows, shared mock factories in conftest, and create a comprehensive QA bash script (scripts/qa_script.sh) for pre-release validation
-**Requirements**: TEST-01, TEST-02, TEST-03, TEST-04, TEST-05, TEST-06
-**Depends on:** Phase 7
-**Plans:** 3 plans
-
-Plans:
-- [ ] 08-01-PLAN.md -- Conftest mock factories, pyproject.toml updates (pytest-cov, slow marker), coverage gap tests for analyze_results, compute_derived, noise_generator, generate_figures
-- [ ] 08-02-PLAN.md -- Integration tests (noise->grading, derived metrics, config->DB pipelines) and final coverage verification
-- [ ] 08-03-PLAN.md -- QA bash script (scripts/qa_script.sh) with 6 sections, --live/--section/--log flags, summary table with VERDICT
-
-### Phase 9: Add OpenRouter support with free model defaults (Nemotron)
-
-**Goal:** OpenRouter is a fully integrated 4th provider gateway with free Nemotron models -- _call_openrouter streams via OpenAI SDK reuse with TTFT/TTLT, config has all pricing/routing entries at $0, call_model routes openrouter/ prefix, comprehensive unit and integration tests pass, and QA script validates all entries
-**Requirements**: OR-01, OR-02, OR-03, OR-04, OR-05, OR-06, OR-07, OR-08, OR-09
-**Depends on:** Phase 8
-**Plans:** 2/2 plans complete
-
-Plans:
-- [ ] 09-01-PLAN.md -- Core OpenRouter integration: config entries (MODELS, PRICE_TABLE, PREPROC_MODEL_MAP, RATE_LIMIT_DELAYS, ExperimentConfig), _call_openrouter with OpenAI SDK reuse, call_model routing, .env.example
-- [ ] 09-02-PLAN.md -- Unit tests (TestCallOpenRouter, TestOpenRouterConfig, routing, key validation), integration lifecycle test, QA script OpenRouter checks
-
-### Phase 10: Research optimal prompt input formats for whitepaper
-
-**Goal:** Researcher has a comprehensive research document surveying how prompt input formats affect LLM reasoning accuracy and token efficiency, with 6 testable hypotheses ranked by feasibility, detailed experiment designs for the top 3, and integration notes showing how promising formats map to future intervention types in the existing experiment framework
-**Requirements**: FMT-RES-01, FMT-RES-02, FMT-RES-03, FMT-RES-04, FMT-RES-05
-**Depends on:** Phase 9
-**Plans:** 2/2 plans complete
-
-Plans:
-- [ ] 10-01-PLAN.md -- Literature survey across 6 format categories (TOON, XML, bullet/outline, punctuation, hybrid/novel, verbose NL baseline) with format taxonomy comparison table
-- [ ] 10-02-PLAN.md -- 6 testable hypotheses with full specifications, experiment designs for top 3, integration notes for experiment framework, finalized executive summary
-
-### Phase 11: Brainstorm micro-formatting test questions for experiment suite
-
-**Goal:** Researcher has a complete suite of atomic, self-contained experiment specifications for micro-formatting effects on LLM reasoning -- all 6 Phase 10 hypotheses decomposed into independently executable test questions, new micro-formatting ideas brainstormed across 4 categories (whitespace/layout, code-specific formatting, instruction phrasing, structural markers) with top ideas fully specified, and a tiered execution plan prioritizing experiments by cost and scientific value
-**Requirements**: MFMT-01, MFMT-02, MFMT-03, MFMT-04, MFMT-05
-**Depends on:** Phase 10
-**Plans:** 3/3 plans complete
-
-Plans:
-- [ ] 11-01-PLAN.md -- Token efficiency and structural markup experiment specs: TOON (H-FMT-01), bullet/outline (H-FMT-03), XML (H-FMT-02) atomic questions
-- [ ] 11-02-PLAN.md -- Punctuation and format-noise interaction experiment specs: punctuation removal (H-FMT-04), question marks (H-FMT-06), format x noise (H-FMT-05) atomic questions
-- [ ] 11-03-PLAN.md -- Novel brainstormed hypotheses across 4 categories and README index with tiered execution plan
-
-### Phase 12: Comprehensive documentation and README for new users
-
-**Goal:** Someone with zero context can understand, install, configure, and use this research toolkit using only the documentation -- comprehensive README.md with research context, CLI reference, and glossary; getting-started guide with runnable walkthroughs; architecture doc with Mermaid diagrams; analysis interpretation guide with SQLite queries; contributing guide with extension patterns; and docs/README.md index
-**Requirements**: DOC-01, DOC-02, DOC-03, DOC-04, DOC-05, DOC-06
-**Depends on:** Phase 11
-**Plans:** 3/3 plans complete
-
-Plans:
-- [ ] 12-01-PLAN.md -- Root README.md: research context, quick-start, CLI reference, sample output, experiment design, glossary
-- [ ] 12-02-PLAN.md -- docs/architecture.md (module reference + 4 Mermaid diagrams) and docs/getting-started.md (3 walkthroughs + sequence diagram)
-- [ ] 12-03-PLAN.md -- docs/analysis-guide.md (statistical interpretation + SQLite queries), docs/contributing.md (dev setup + extension guides), docs/README.md (index)
-
-### Phase 13: Guided setup wizard for project configuration
-
-**Goal:** New users can run `python src/cli.py setup` to configure the toolkit through a guided Q&A flow -- select model provider and models, validate API keys, check environment prerequisites, and generate experiment_config.json with all configurable properties and sensible defaults. Manual config editing remains fully supported. CLI entry point with extensible subcommand architecture is established for Phase 14.
-**Requirements**: SETUP-01, SETUP-02, SETUP-03, SETUP-04, SETUP-05, SETUP-06, SETUP-07
-**Depends on:** Phase 12
-**Plans:** 2/2 plans complete
-
-Plans:
-- [ ] 13-01-PLAN.md -- Config manager module: JSON config file I/O, sparse override merge with ExperimentConfig, validation rules
-- [ ] 13-02-PLAN.md -- CLI entry point with argparse subparsers, interactive setup wizard, environment checks, API key validation, config-missing guard
-
-### Phase 14: CLI config subcommands for viewing and modifying settings
-
-**Goal:** Researchers can use `propt` CLI subcommands (show-config, set-config, reset-config, validate, diff, list-models) to view, modify, validate, and diff experiment configuration without manual JSON editing. The `propt` command is registered as a pyproject.toml console_scripts entry point with shell tab completion for property names.
-**Requirements**: CFG-SHOW, CFG-SET, CFG-RESET, CFG-VALIDATE, CFG-DIFF, CFG-MODELS, CFG-ENTRY, CFG-COMPLETE
-**Depends on:** Phase 13
-**Plans:** 2/2 plans complete
-
-Plans:
-- [ ] 14-01-PLAN.md -- Config subcommand handlers (show-config, set-config, reset-config, validate, diff, list-models), CLI registration, propt entry point, argcomplete
-- [ ] 14-02-PLAN.md -- Comprehensive tests for all config subcommand handlers and updated CLI registration
-
-### Phase 15: Pre-execution experiment summary and confirmation gate
-
-**Goal:** Before executing experiments, display a comprehensive pre-execution summary (cost projection, experiment count, estimated runtime, models, noise conditions, interventions) with a confirmation gate. Researcher can accept/reject/modify filters before execution proceeds. Includes --yes flag for scripted runs, --budget threshold for cost gates, `propt run` and `propt pilot` CLI subcommands, tqdm progress bar during execution, and execution plan saving to JSON.
-**Requirements**: GATE-COST, GATE-RUNTIME, GATE-SUMMARY, GATE-CONFIRM, GATE-BUDGET, GATE-PLAN, GATE-RESUME, GATE-CLI-RUN, GATE-CLI-PILOT, GATE-DRYRUN, GATE-PROGRESS, GATE-WIRE, GATE-TQDM, GATE-TEST
-**Depends on:** Phase 14
-**Plans:** 3/3 plans complete
-
-Plans:
-- [ ] 15-01-PLAN.md -- Core execution_summary module: cost estimation, runtime estimation, summary formatting, confirmation gate, execution plan saving
-- [ ] 15-02-PLAN.md -- CLI integration: propt run/pilot subcommands, confirmation gate wiring into run_experiment.py and pilot.py, tqdm progress bar, pyproject.toml
-- [ ] 15-03-PLAN.md -- Tests for execution_summary module and CLI run/pilot subcommand registration
+| Phase | Milestone | Plans Complete | Status | Completed |
+|-------|-----------|----------------|--------|-----------|
+| 16. Config Schema and Defensive Fallbacks | v2.0 | 0/TBD | Not started | - |
+| 17. Registry Consumers | v2.0 | 0/TBD | Not started | - |
+| 18. Pricing Client and Model Discovery | v2.0 | 0/TBD | Not started | - |
+| 19. Setup Wizard Overhaul | v2.0 | 0/TBD | Not started | - |

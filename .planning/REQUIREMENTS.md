@@ -63,33 +63,33 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CFG-01 | — | Pending |
-| CFG-02 | — | Pending |
-| CFG-03 | — | Pending |
-| CFG-04 | — | Pending |
-| CFG-05 | — | Pending |
-| DSC-01 | — | Pending |
-| DSC-02 | — | Pending |
-| DSC-03 | — | Pending |
-| WIZ-01 | — | Pending |
-| WIZ-02 | — | Pending |
-| WIZ-03 | — | Pending |
-| WIZ-04 | — | Pending |
-| WIZ-05 | — | Pending |
-| WIZ-06 | — | Pending |
-| PRC-01 | — | Pending |
-| PRC-02 | — | Pending |
-| PRC-03 | — | Pending |
-| EXP-01 | — | Pending |
-| EXP-02 | — | Pending |
-| EXP-03 | — | Pending |
-| EXP-04 | — | Pending |
+| CFG-01 | Phase 16 | Pending |
+| CFG-02 | Phase 16 | Pending |
+| CFG-03 | Phase 16 | Pending |
+| CFG-04 | Phase 16 | Pending |
+| CFG-05 | Phase 16 | Pending |
+| DSC-01 | Phase 18 | Pending |
+| DSC-02 | Phase 18 | Pending |
+| DSC-03 | Phase 19 | Pending |
+| WIZ-01 | Phase 19 | Pending |
+| WIZ-02 | Phase 19 | Pending |
+| WIZ-03 | Phase 19 | Pending |
+| WIZ-04 | Phase 19 | Pending |
+| WIZ-05 | Phase 19 | Pending |
+| WIZ-06 | Phase 19 | Pending |
+| PRC-01 | Phase 16 | Pending |
+| PRC-02 | Phase 18 | Pending |
+| PRC-03 | Phase 16 | Pending |
+| EXP-01 | Phase 17 | Pending |
+| EXP-02 | Phase 17 | Pending |
+| EXP-03 | Phase 17 | Pending |
+| EXP-04 | Phase 17 | Pending |
 
 **Coverage:**
-- v2.0 requirements: 18 total
-- Mapped to phases: 0
-- Unmapped: 18 (pending roadmap creation)
+- v2.0 requirements: 21 total
+- Mapped to phases: 21
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-25*
-*Last updated: 2026-03-25 after initial definition*
+*Last updated: 2026-03-25 after roadmap creation*

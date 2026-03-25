@@ -13,7 +13,7 @@ This guide walks you from a fresh clone to viewing your first experimental resul
 ## Installation
 
 ```bash
-git clone https://github.com/<user>/linguistic-tax.git
+git clone https://github.com/sscargal/linguistic-tax.git
 cd linguistic-tax
 uv sync
 ```

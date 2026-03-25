@@ -100,7 +100,7 @@ Update three documentation files to replace pip/venv workflow with uv.
 
 1. Quick Start section (lines ~13-21): Replace the venv+pip commands with:
 ```bash
-git clone https://github.com/<user>/linguistic-tax.git
+git clone https://github.com/sscargal/linguistic-tax.git
 cd linguistic-tax
 uv sync
 export ANTHROPIC_API_KEY="sk-ant-..."   # At least one provider required
@@ -111,7 +111,7 @@ uv run propt pilot --dry-run
 2. Installation > Setup section (lines ~33-42): Replace venv+pip commands with:
 ```bash
 # Clone and install
-git clone https://github.com/<user>/linguistic-tax.git
+git clone https://github.com/sscargal/linguistic-tax.git
 cd linguistic-tax
 uv sync
 ```
@@ -135,7 +135,7 @@ Remove the Windows activate comment. Update the "Import errors after install" tr
 **docs/contributing.md** -- Development Setup section (lines ~7-13):
 Replace:
 ```bash
-git clone https://github.com/<user>/linguistic-tax.git
+git clone https://github.com/sscargal/linguistic-tax.git
 cd linguistic-tax
 python -m venv .venv && source .venv/bin/activate
 pip install -e .
@@ -143,7 +143,7 @@ pytest tests/ -x -q    # Quick smoke test
 ```
 With:
 ```bash
-git clone https://github.com/<user>/linguistic-tax.git
+git clone https://github.com/sscargal/linguistic-tax.git
 cd linguistic-tax
 uv sync
 uv run pytest tests/ -x -q    # Quick smoke test

@@ -11,7 +11,7 @@ The toolkit implements a full factorial experiment across 4 model providers, 8 n
 ## Quick Start
 
 ```bash
-git clone https://github.com/<user>/linguistic-tax.git
+git clone https://github.com/sscargal/linguistic-tax.git
 cd linguistic-tax
 uv sync
 export ANTHROPIC_API_KEY="sk-ant-..."   # At least one provider required
@@ -31,7 +31,7 @@ uv run propt pilot --dry-run
 
 ```bash
 # Clone and install
-git clone https://github.com/<user>/linguistic-tax.git
+git clone https://github.com/sscargal/linguistic-tax.git
 cd linguistic-tax
 uv sync
 ```

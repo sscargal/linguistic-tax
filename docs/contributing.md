@@ -5,7 +5,7 @@ How to set up the development environment, run tests, and extend the toolkit wit
 ## Development Setup
 
 ```bash
-git clone https://github.com/<user>/linguistic-tax.git
+git clone https://github.com/sscargal/linguistic-tax.git
 cd linguistic-tax
 uv sync
 uv run pytest tests/ -x -q    # Quick smoke test

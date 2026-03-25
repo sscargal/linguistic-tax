@@ -90,14 +90,14 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### CLI Config Subcommands
 
-- [ ] **CFG-SHOW**: show-config subcommand displaying all properties in terminal table with Value/Default columns, `*` modified indicator, `--json`/`--changed`/`--verbose` flags, and single-property query mode
-- [ ] **CFG-SET**: set-config subcommand accepting multiple key-value pairs with auto type coercion from ExperimentConfig defaults, immediate validation, sparse config file auto-creation, and change summary output
-- [ ] **CFG-RESET**: reset-config subcommand removing overrides from sparse config file, with `--all` flag to reset entire config to defaults
-- [ ] **CFG-VALIDATE**: validate subcommand running validate_config on current effective config with exit code 0/non-zero
-- [ ] **CFG-DIFF**: diff subcommand showing only properties that differ from defaults in a diff-like format
-- [ ] **CFG-MODELS**: list-models subcommand printing all valid model strings from PRICE_TABLE with pricing info
-- [ ] **CFG-ENTRY**: Register `propt` as pyproject.toml console_scripts entry point (`propt = "src.cli:main"`)
-- [ ] **CFG-COMPLETE**: Shell tab completion for property names in set-config/show-config/reset-config via argcomplete
+- [x] **CFG-SHOW**: show-config subcommand displaying all properties in terminal table with Value/Default columns, `*` modified indicator, `--json`/`--changed`/`--verbose` flags, and single-property query mode
+- [x] **CFG-SET**: set-config subcommand accepting multiple key-value pairs with auto type coercion from ExperimentConfig defaults, immediate validation, sparse config file auto-creation, and change summary output
+- [x] **CFG-RESET**: reset-config subcommand removing overrides from sparse config file, with `--all` flag to reset entire config to defaults
+- [x] **CFG-VALIDATE**: validate subcommand running validate_config on current effective config with exit code 0/non-zero
+- [x] **CFG-DIFF**: diff subcommand showing only properties that differ from defaults in a diff-like format
+- [x] **CFG-MODELS**: list-models subcommand printing all valid model strings from PRICE_TABLE with pricing info
+- [x] **CFG-ENTRY**: Register `propt` as pyproject.toml console_scripts entry point (`propt = "src.cli:main"`)
+- [x] **CFG-COMPLETE**: Shell tab completion for property names in set-config/show-config/reset-config via argcomplete
 
 ## v2 Requirements
 

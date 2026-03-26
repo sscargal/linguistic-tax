@@ -19,7 +19,8 @@ from typing import Any
 import pandas as pd
 from tabulate import tabulate
 
-from src.config import INTERVENTIONS, MODELS, NOISE_TYPES
+from src.config import INTERVENTIONS, NOISE_TYPES
+from src.model_registry import registry
 
 logger = logging.getLogger(__name__)
 
@@ -479,7 +480,7 @@ def main() -> None:
     noisy_types = ["type_a_5pct", "type_a_10pct", "type_a_20pct"]
     migrations: list[dict[str, Any]] = []
 
-    for model in MODELS:
+    for model in registry.target_models():
         for noise_type in noisy_types:
             from_cond = build_condition_string("clean", "raw")
             to_cond = build_condition_string(noise_type, "raw")

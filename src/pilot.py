@@ -19,7 +19,8 @@ from typing import Any
 import numpy as np
 from scipy.stats import bootstrap as scipy_bootstrap
 
-from src.config import ExperimentConfig, MODELS, derive_seed
+from src.config import ExperimentConfig, derive_seed
+from src.model_registry import registry
 from src.config_manager import find_config_path, CONFIG_FILENAME
 from src.db import query_runs
 from src.execution_summary import (
@@ -271,7 +272,7 @@ _REQUIRED_FIELDS = [
     "pass_fail", "ttft_ms", "ttlt_ms", "total_cost_usd", "model", "timestamp",
 ]
 
-_VALID_MODELS = set(MODELS)
+_VALID_MODELS = set(registry.target_models())
 
 
 def audit_data_completeness(

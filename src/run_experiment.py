@@ -21,10 +21,9 @@ from src.config_manager import find_config_path, CONFIG_FILENAME
 from src.config import (
     ExperimentConfig,
     MAX_TOKENS_BY_BENCHMARK,
-    PREPROC_MODEL_MAP,
-    compute_cost,
     derive_seed,
 )
+from src.model_registry import registry
 from src.db import init_database, insert_run, query_runs, save_grade_result
 from src.execution_summary import (
     estimate_cost,
@@ -283,12 +282,12 @@ def _process_item(
         )
 
         # Compute costs
-        main_input_cost = compute_cost(item["model"], response.input_tokens, 0)
-        main_output_cost = compute_cost(item["model"], 0, response.output_tokens)
+        main_input_cost = registry.compute_cost(item["model"], response.input_tokens, 0)
+        main_output_cost = registry.compute_cost(item["model"], 0, response.output_tokens)
 
         preproc_cost = 0.0
         if "preproc_model" in preproc_meta:
-            preproc_cost = compute_cost(
+            preproc_cost = registry.compute_cost(
                 preproc_meta["preproc_model"],
                 preproc_meta.get("preproc_input_tokens", 0),
                 preproc_meta.get("preproc_output_tokens", 0),
@@ -402,9 +401,24 @@ def run_engine(args: argparse.Namespace, config: ExperimentConfig | None = None)
     with open(config.matrix_path) as f:
         matrix = json.load(f)
 
-    # Filter by model
+    # Validate and filter by model
     if args.model != "all":
-        matrix = [item for item in matrix if item["model"].startswith(args.model)]
+        target_ids = set(registry.target_models())
+        if args.model in target_ids:
+            # Exact model_id match
+            matrix = [item for item in matrix if item["model"] == args.model]
+        else:
+            # Treat as provider prefix
+            matrix = [
+                item for item in matrix
+                if item["model"].startswith(args.model)
+            ]
+            if not matrix:
+                available = ", ".join(sorted(target_ids))
+                raise SystemExit(
+                    f"Unknown model or prefix '{args.model}'. "
+                    f"Available models: {available}"
+                )
 
     # Get completed run_ids for resumability
     completed_runs = {r["run_id"] for r in query_runs(conn, status="completed")}
@@ -549,9 +563,9 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--model",
-        choices=["claude", "gemini", "all"],
+        type=str,
         default="all",
-        help="Filter to specific model provider (default: all)",
+        help="Model ID, provider prefix (e.g. claude, gemini), or 'all' (default: all)",
     )
     parser.add_argument(
         "--limit",

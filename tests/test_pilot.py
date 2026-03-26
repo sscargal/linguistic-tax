@@ -726,6 +726,6 @@ class TestValidModels:
         assert "gemini-1.5-pro" in _VALID_MODELS
 
     def test_valid_models_matches_config(self) -> None:
-        from src.config import MODELS
+        from src.model_registry import registry
         from src.pilot import _VALID_MODELS
-        assert _VALID_MODELS == set(MODELS)
+        assert _VALID_MODELS == set(registry.target_models())

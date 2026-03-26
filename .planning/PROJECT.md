@@ -42,6 +42,7 @@ Produce rigorous, reproducible experimental data showing how prompt noise degrad
 - Experiment scope adapts to configured models
 
 ### Recently Validated
+- ✓ All documentation updated for v2.0 — README.md, CLAUDE.md, getting-started, architecture, contributing, analysis guide updated with ModelRegistry, .env keys, 21 modules, zero stale v1.0 refs — Phase 21
 - ✓ Skills and agents updated for v2.0 — all 7 SKILL.md files updated with model_registry/config_manager/env_manager references, evals regenerated, triggers re-optimized, zero stale refs — Phase 20
 - ✓ Setup wizard overhaul — multi-provider selection, free-text model entry with live browser, .env key management, validation pings, budget preview — Phase 19
 - ✓ Pricing client and model discovery — live model listing from 4 provider APIs, OpenRouter live pricing, enhanced propt list-models with context windows and --json flag — Phase 18
@@ -99,4 +100,4 @@ Produce rigorous, reproducible experimental data showing how prompt noise degrad
 | 5 repetitions per condition | Balance statistical power with API cost | — Pending |
 
 ---
-*Last updated: 2026-03-26 after Phase 18 complete — Pricing Client and Model Discovery*
+*Last updated: 2026-03-26 after Phase 21 complete — Update All Documentation*

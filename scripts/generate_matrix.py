@@ -14,7 +14,8 @@ import sys
 # Allow imports from src/
 sys.path.insert(0, str(pathlib.Path(__file__).parent.parent / "src"))
 
-from config import INTERVENTIONS, MODELS, NOISE_TYPES, ExperimentConfig
+from config import INTERVENTIONS, NOISE_TYPES, ExperimentConfig
+from model_registry import registry
 
 logging.basicConfig(
     level=logging.INFO,
@@ -41,6 +42,7 @@ def extract_noise_level(noise_type: str) -> str | None:
 def generate_matrix(
     prompts_path: str,
     config: ExperimentConfig | None = None,
+    models: list[str] | None = None,
 ) -> list[dict]:
     """Generate the full experiment matrix as a list of work items.
 
@@ -53,6 +55,7 @@ def generate_matrix(
     Args:
         prompts_path: Path to the curated prompts JSON file.
         config: Experiment configuration. Defaults to ExperimentConfig().
+        models: List of model IDs to include. Defaults to registry.target_models().
 
     Returns:
         List of work item dictionaries, each with prompt_id, noise_type,
@@ -60,6 +63,8 @@ def generate_matrix(
     """
     if config is None:
         config = ExperimentConfig()
+    if models is None:
+        models = registry.target_models()
 
     # Load prompts to get prompt_ids
     with open(prompts_path, encoding="utf-8") as f:
@@ -74,7 +79,7 @@ def generate_matrix(
     for prompt_id in prompt_ids:
         for noise_type in NOISE_TYPES:
             for intervention in INTERVENTIONS:
-                for model in MODELS:
+                for model in models:
                     for rep in range(1, config.repetitions + 1):
                         matrix.append(
                             {
@@ -95,7 +100,7 @@ def generate_matrix(
     # Experiment 2: Compression study
     # 200 prompts x 1 noise (clean) x 1 intervention (compress_only) x 2 models x 5 reps = 2,000
     for prompt_id in prompt_ids:
-        for model in MODELS:
+        for model in models:
             for rep in range(1, config.repetitions + 1):
                 matrix.append(
                     {
@@ -134,12 +139,19 @@ def main() -> None:
         default="data/experiment_matrix.json",
         help="Output path for experiment matrix (default: data/experiment_matrix.json)",
     )
+    parser.add_argument(
+        "--models",
+        type=str,
+        default=None,
+        help="Comma-separated model IDs (default: all configured target models)",
+    )
     args = parser.parse_args()
 
     output_path = pathlib.Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    matrix = generate_matrix(prompts_path=args.prompts)
+    models = args.models.split(",") if args.models else None
+    matrix = generate_matrix(prompts_path=args.prompts, models=models)
 
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(matrix, f, indent=2, ensure_ascii=False)

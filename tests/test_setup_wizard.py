@@ -34,13 +34,14 @@ def test_providers_entries_have_required_keys():
 
 
 def test_providers_models_are_from_config():
-    """All models in PROVIDERS come from config.MODELS."""
+    """All models in PROVIDERS come from registry target models."""
     from src.setup_wizard import PROVIDERS
-    from src.config import MODELS
+    from src.model_registry import registry
 
+    target_models = set(registry.target_models())
     for key, entry in PROVIDERS.items():
         for model in entry["models"]:
-            assert model in MODELS, f"{model} in {key} not found in MODELS"
+            assert model in target_models, f"{model} in {key} not found in registry"
 
 
 # ---------------------------------------------------------------------------
@@ -233,15 +234,16 @@ def test_wizard_interactive_flow_creates_config(tmp_path):
 
 
 def test_wizard_auto_fills_preproc_model():
-    """wizard auto-fills preproc model from PREPROC_MODEL_MAP when user selects target model."""
+    """wizard auto-fills preproc model from registry when user selects target model."""
     from src.setup_wizard import PROVIDERS
-    from src.config import PREPROC_MODEL_MAP
+    from src.model_registry import registry
 
     # Verify that models in PROVIDERS map to preproc models
     for provider_key, provider in PROVIDERS.items():
         for model in provider["models"]:
-            if model in PREPROC_MODEL_MAP:
-                assert PREPROC_MODEL_MAP[model] is not None
+            preproc = registry.get_preproc(model)
+            if preproc is not None:
+                assert preproc != ""
 
 
 def test_wizard_ctrl_c_cancels_cleanly(capsys):

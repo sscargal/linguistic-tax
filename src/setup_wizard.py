@@ -15,7 +15,8 @@ import anthropic
 import openai
 from google import genai
 
-from src.config import MODELS, OPENROUTER_BASE_URL, PREPROC_MODEL_MAP
+from src.config import OPENROUTER_BASE_URL
+from src.model_registry import registry
 from src.config_manager import get_full_config_dict, save_config, validate_config
 
 logger = logging.getLogger(__name__)
@@ -24,28 +25,34 @@ logger = logging.getLogger(__name__)
 # Provider registry
 # ---------------------------------------------------------------------------
 
-PROVIDERS: dict[str, dict[str, Any]] = {
-    "anthropic": {
-        "name": "Anthropic (Claude)",
-        "models": [m for m in MODELS if m.startswith("claude")],
-        "env_var": "ANTHROPIC_API_KEY",
-    },
-    "google": {
-        "name": "Google (Gemini)",
-        "models": [m for m in MODELS if m.startswith("gemini")],
-        "env_var": "GOOGLE_API_KEY",
-    },
-    "openai": {
-        "name": "OpenAI (GPT)",
-        "models": [m for m in MODELS if m.startswith("gpt")],
-        "env_var": "OPENAI_API_KEY",
-    },
-    "openrouter": {
-        "name": "OpenRouter (free models)",
-        "models": [m for m in MODELS if m.startswith("openrouter/")],
-        "env_var": "OPENROUTER_API_KEY",
-    },
-}
+def _build_providers() -> dict[str, dict[str, Any]]:
+    """Build provider registry from model registry target models."""
+    _models = registry.target_models()
+    return {
+        "anthropic": {
+            "name": "Anthropic (Claude)",
+            "models": [m for m in _models if m.startswith("claude")],
+            "env_var": "ANTHROPIC_API_KEY",
+        },
+        "google": {
+            "name": "Google (Gemini)",
+            "models": [m for m in _models if m.startswith("gemini")],
+            "env_var": "GOOGLE_API_KEY",
+        },
+        "openai": {
+            "name": "OpenAI (GPT)",
+            "models": [m for m in _models if m.startswith("gpt")],
+            "env_var": "OPENAI_API_KEY",
+        },
+        "openrouter": {
+            "name": "OpenRouter (free models)",
+            "models": [m for m in _models if m.startswith("openrouter/")],
+            "env_var": "OPENROUTER_API_KEY",
+        },
+    }
+
+
+PROVIDERS: dict[str, dict[str, Any]] = _build_providers()
 
 # ---------------------------------------------------------------------------
 # Required packages for environment check
@@ -240,7 +247,7 @@ def run_setup_wizard(
                 print(f"Invalid choice, defaulting to {target_model}")
 
         # Step 4: Preproc model
-        preproc_model = PREPROC_MODEL_MAP.get(target_model, "")
+        preproc_model = registry.get_preproc(target_model) or ""
         if preproc_model:
             print(f"\nPre-processor model (auto-filled): {preproc_model}")
             preproc_choice = input_fn("Press Enter to accept or type model name: ")

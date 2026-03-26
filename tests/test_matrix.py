@@ -6,7 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from src.config import INTERVENTIONS, MODELS, NOISE_TYPES
+from src.config import INTERVENTIONS, NOISE_TYPES
+from src.model_registry import registry
 
 MATRIX_PATH = Path(__file__).parent.parent / "data" / "experiment_matrix.json"
 
@@ -117,8 +118,8 @@ def test_valid_interventions(matrix: list[dict]) -> None:
 
 
 def test_valid_models(matrix: list[dict]) -> None:
-    """Test that all model values are from MODELS."""
-    valid = set(MODELS)
+    """Test that all model values are from registry target models."""
+    valid = set(registry.target_models())
     for item in matrix:
         assert item["model"] in valid, f"Invalid model: {item['model']}"
 

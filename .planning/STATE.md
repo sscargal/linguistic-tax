@@ -126,11 +126,12 @@ Recent decisions affecting current work:
 |---|-------------|------|--------|-----------|
 | 260325-w6g | Support Ctrl-C in the wizard and scripts | 2026-03-25 | d7e40b4 | [260325-w6g-support-ctrl-c-in-the-wizard-and-scripts](./quick/260325-w6g-support-ctrl-c-in-the-wizard-and-scripts/) |
 | 260326-n2y | Git status triage — commit untracked files | 2026-03-26 | 8b08e67 | [260326-n2y-run-git-status-and-decide-what-needs-to-](./quick/260326-n2y-run-git-status-and-decide-what-needs-to-/) |
-| 260326-vzd | Fix slicer references and QA script failures | 2026-03-26 | pending | [260326-vzd-fix-slicer-references-and-qa-script-fail](./quick/260326-vzd-fix-slicer-references-and-qa-script-fail/) |
+| 260326-vzd | Fix slicer references and QA script failures | 2026-03-26 | 1dcef07 | [260326-vzd-fix-slicer-references-and-qa-script-fail](./quick/260326-vzd-fix-slicer-references-and-qa-script-fail/) |
+| 260326-w5r | Fix pytest warnings | 2026-03-26 | b37191b | [260326-w5r-fix-pytest-failures](./quick/260326-w5r-fix-pytest-failures/) |
 
 ## Session Continuity
 
-Last activity: 2026-03-26 - Completed quick task 260326-vzd: Fix slicer references and QA script failures
+Last activity: 2026-03-26 - Completed quick task 260326-w5r: Fix pytest warnings
 Last session: 2026-03-26T20:47:04.547Z
 Stopped at: Completed 22-03-PLAN.md
 Resume file: None

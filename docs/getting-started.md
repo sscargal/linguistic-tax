@@ -4,7 +4,7 @@ This guide walks you from a fresh clone to viewing your first experimental resul
 
 ## Prerequisites
 
-- **Python >= 3.11** -- check with `python --version`
+- **Python >= 3.12** -- check with `python --version`
 - **[uv](https://docs.astral.sh/uv/)** -- install with `curl -LsSf https://astral.sh/uv/install.sh | sh`
 - **At least one API key** for a supported provider (see [Configuration](#configuration))
 - **~500 MB disk space** for dependencies
@@ -28,25 +28,9 @@ You should see all 9 subcommands listed: `setup`, `show-config`, `set-config`, `
 
 ## Configuration
 
-### Set Environment Variables
-
-Export at least one API key for the provider you plan to use:
-
-```bash
-export ANTHROPIC_API_KEY="sk-ant-..."     # For Claude models
-export GOOGLE_API_KEY="AIza..."           # For Gemini models
-export OPENAI_API_KEY="sk-..."            # For GPT-4o models
-export OPENROUTER_API_KEY="sk-or-..."     # For OpenRouter models (free Nemotron)
-```
-
-| Provider | Env Variable | Models | Cost |
-|----------|-------------|--------|------|
-| Anthropic | `ANTHROPIC_API_KEY` | claude-sonnet-4-20250514 | $3.00/$15.00 per 1M tokens |
-| Google | `GOOGLE_API_KEY` | gemini-1.5-pro | $1.25/$5.00 per 1M tokens |
-| OpenAI | `OPENAI_API_KEY` | gpt-4o-2024-11-20 | $2.50/$10.00 per 1M tokens |
-| OpenRouter | `OPENROUTER_API_KEY` | nvidia/nemotron-3-super-120b-a12b:free | Free |
-
 ### Run the Setup Wizard
+
+The recommended way to configure the toolkit is with the interactive setup wizard:
 
 ```bash
 propt setup
@@ -55,13 +39,16 @@ propt setup
 The wizard walks through:
 
 1. **Environment check** -- verifies Python version and required packages
-2. **Provider selection** -- choose from Anthropic, Google, OpenAI, or OpenRouter
-3. **Target model** -- auto-fills the default model for your provider
-4. **Pre-processor model** -- auto-filled based on target model (e.g., Haiku for Claude, Flash for Gemini)
-5. **API key validation** -- optional test call to verify your key works
-6. **File paths** -- prompts, experiment matrix, and results database locations
+2. **Existing config detection** -- if a config exists, offers to add a provider, reconfigure, or start fresh
+3. **Provider selection** -- multi-select from Anthropic, Google, OpenAI, and OpenRouter (comma-separated, e.g., `1,3`)
+4. **API key collection** -- for each provider, enter or confirm your API key (stored in `.env` at project root)
+5. **Model roles explanation** -- describes target models (the LLMs being tested) vs. pre-processor models (cheap, fast models that clean prompts)
+6. **Model selection** -- for each provider, enter a target model ID (free text with default shown) and a pre-processor model (auto-assigned from registry, overridable). Type `list` to browse available models live from the provider API.
+7. **Validation pings** -- the wizard pings each selected target model with a minimal API call to verify access
+8. **Budget preview** -- displays estimated experiment cost for both pilot (20 prompts) and full (200 prompts) runs based on selected models' pricing
+9. **Confirmation** -- review the configuration summary table and save
 
-This creates `experiment_config.json` in your project root with only your overrides from the defaults.
+This creates `experiment_config.json` in your project root with your model selections and overrides.
 
 For CI or non-interactive environments:
 
@@ -69,13 +56,50 @@ For CI or non-interactive environments:
 propt setup --non-interactive
 ```
 
-### Manual Configuration
+### API Keys
 
-Set individual properties without the wizard:
+`propt setup` creates and manages a `.env` file at the project root automatically. You can also manage keys manually using either method:
+
+**Option 1 -- `.env` file (recommended, created by `propt setup`):**
+
+```
+# .env (project root)
+ANTHROPIC_API_KEY=sk-ant-...
+GOOGLE_API_KEY=AI...
+OPENAI_API_KEY=sk-...
+OPENROUTER_API_KEY=sk-or-...
+```
+
+**Option 2 -- Shell export:**
 
 ```bash
-propt set-config claude_model claude-sonnet-4-20250514
+export ANTHROPIC_API_KEY="sk-ant-..."
+export GOOGLE_API_KEY="AIza..."
+export OPENAI_API_KEY="sk-..."
+export OPENROUTER_API_KEY="sk-or-..."
+```
+
+The `.env` file is loaded automatically at startup and does not override existing environment variables. Keys written by the wizard have chmod 600 (owner-only access).
+
+**Default models (configurable via `propt setup`):**
+
+| Provider | Env Variable | Default Target Model | Default Preproc Model | Cost |
+|----------|-------------|----------------------|----------------------|------|
+| Anthropic | `ANTHROPIC_API_KEY` | claude-sonnet-4-20250514 | claude-haiku-4-5-20250514 | $3.00/$15.00 per 1M tokens |
+| Google | `GOOGLE_API_KEY` | gemini-1.5-pro | gemini-2.0-flash | $1.25/$5.00 per 1M tokens |
+| OpenAI | `OPENAI_API_KEY` | gpt-4o-2024-11-20 | gpt-4o-mini-2024-07-18 | $2.50/$10.00 per 1M tokens |
+| OpenRouter | `OPENROUTER_API_KEY` | openrouter/nvidia/nemotron-3-super-120b-a12b:free | openrouter/nvidia/nemotron-3-nano-30b-a3b:free | Free |
+
+All model names and pricing come from the `ModelRegistry` (loaded from `data/default_models.json`). Use `propt list-models` to see all available models with live pricing.
+
+### Manual Configuration
+
+Set individual experiment properties without the wizard:
+
+```bash
+propt set-config temperature 0.0
 propt set-config results_db_path results/my_results.db
+propt set-config repetitions 3
 ```
 
 Validate your configuration:
@@ -83,6 +107,8 @@ Validate your configuration:
 ```bash
 propt validate
 ```
+
+For model configuration, use `propt setup` -- the `models` field in the config is a structured list managed by the wizard.
 
 ## Full Experiment Run Flow
 
@@ -151,6 +177,15 @@ prompt_repetition               320
 raw                             320
 self_correct                    320
 
+Noise Conditions:
+Noise Type    Items
+----------  -------
+clean           400
+type_a_05       400
+type_a_10       400
+type_a_20       400
+type_b          400
+
 Cost:
   Target model cost:    $1.74
   Pre-processor cost:   $0.04
@@ -159,6 +194,8 @@ Cost:
 Runtime:
   Estimated runtime: 8m 0s
 ```
+
+The exact models and costs shown depend on your configuration. If you configured fewer providers, fewer model rows will appear.
 
 ### Step 2: Run the pilot
 
@@ -299,7 +336,7 @@ propt show-config --changed
 Show a single property:
 
 ```bash
-propt show-config claude_model
+propt show-config temperature
 ```
 
 Output as JSON:
@@ -329,22 +366,24 @@ propt reset-config --all
 Reset a single property:
 
 ```bash
-propt reset-config claude_model
+propt reset-config temperature
 ```
 
 ## Troubleshooting
 
 **"No config found"** -- Run `propt setup` to create your configuration file before running experiments.
 
-**API key errors** -- Verify your environment variables are exported in the current shell session:
+**API key errors** -- Verify your environment variables are set. Check the `.env` file at the project root, or verify shell exports:
 
 ```bash
 echo $ANTHROPIC_API_KEY   # Should not be empty
 ```
 
+The wizard validates keys during setup. Re-run `propt setup` to update keys.
+
 **Rate limiting** -- The toolkit has built-in retry logic with exponential backoff (1s, 4s, 16s). If rate limiting persists, reduce the number of items with `--limit` or use a different provider.
 
-**Python version errors** -- This toolkit requires Python >= 3.11 for match/case syntax and modern type hints. Check with `python --version`.
+**Python version errors** -- This toolkit requires Python >= 3.12 for modern type hints. Check with `python --version`.
 
 **Import errors after install** -- Run `uv sync` to ensure all dependencies are installed. uv manages its own virtual environment automatically.
 

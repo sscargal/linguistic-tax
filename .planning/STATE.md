@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Configurable Models and Dynamic Pricing
 status: unknown
-stopped_at: Completed 17-02-PLAN.md
-last_updated: "2026-03-26T00:45:59.834Z"
+stopped_at: Completed 17-03-PLAN.md
+last_updated: "2026-03-26T00:51:03.467Z"
 last_activity: 2026-03-26
 progress:
   total_phases: 7
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 6
-  completed_plans: 5
+  completed_plans: 6
 ---
 
 # Project State
@@ -24,8 +24,8 @@ See: .planning/PROJECT.md (updated 2026-03-26)
 
 ## Current Position
 
-Phase: 17 (registry-consumers) — EXECUTING
-Plan: 3 of 3
+Phase: 17 (registry-consumers) — COMPLETE
+Plan: 3 of 3 (all complete)
 
 ## Performance Metrics
 
@@ -52,6 +52,7 @@ Plan: 3 of 3
 | Phase 16 P03 | 6min | 2 tasks | 8 files |
 | Phase 17 P01 | 4min | 2 tasks | 7 files |
 | Phase 17-02 P02 | 4min | 2 tasks | 8 files |
+| Phase 17-03 P03 | 3min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -69,6 +70,7 @@ Recent decisions affecting current work:
 - [Phase 16]: Added registry-backed backward-compat shims for MODELS/PRICE_TABLE/etc. to bridge Phase 16-17 transition
 - [Phase 17]: Unknown preproc models warn and return model-itself as fallback instead of raising ValueError
 - [Phase 17-02]: setup_wizard PROVIDERS built via _build_providers() function for registry evaluation
+- [Phase 17-03]: All backward-compat shims removed from config.py; model_registry is sole source of truth for model data
 
 ### Pending Todos
 
@@ -97,6 +99,6 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last activity: 2026-03-26
-Last session: 2026-03-26T00:45:59.832Z
-Stopped at: Completed 17-02-PLAN.md
+Last session: 2026-03-26T00:51:03.464Z
+Stopped at: Completed 17-03-PLAN.md
 Resume file: None

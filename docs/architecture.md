@@ -26,13 +26,15 @@ flowchart LR
     G --> H[(SQLite DB)]
 ```
 
+> **Note:** The 4 providers shown above are the defaults shipped with `data/default_models.json`. Providers are configurable -- add or remove models via `propt setup` or by editing `data/default_models.json`.
+
 Prompts are loaded from `data/prompts.json` (200 clean benchmarks from HumanEval, MBPP, and GSM8K). The noise generator applies Type A character-level mutations or Type B ESL syntactic patterns. The intervention router selects one of five strategies. The API client sends the processed prompt to the target model, measures TTFT and TTLT, and streams the response. The grader evaluates correctness (code execution sandbox for HumanEval/MBPP, regex number extraction for GSM8K) and writes everything to SQLite.
 
 ## Data Flow
 
 ```mermaid
 flowchart TD
-    A[prompts.json + experiment_matrix.json] --> B[run_experiment.py]
+    A[prompts.json + experiment_matrix.json + default_models.json] --> B[run_experiment.py]
     B --> C[(results.db)]
     C --> D[analyze_results.py]
     C --> E[compute_derived.py]
@@ -42,7 +44,7 @@ flowchart TD
     G --> H[figures/]
 ```
 
-The experiment matrix (`data/experiment_matrix.json`) defines the full factorial design: 200 prompts x 8 noise types x 5 interventions x 4 models x 5 repetitions. `run_experiment.py` processes each work item and writes results to `results/results.db`. Post-experiment, `compute_derived.py` calculates per-prompt Consistency Rate, quadrant classification, and cost rollups. `analyze_results.py` runs GLMM, bootstrap CIs, McNemar's test, and Kendall's tau. Finally, `generate_figures.py` produces publication-quality PDF and PNG figures.
+The experiment matrix (`data/experiment_matrix.json`) defines the full factorial design: 200 prompts x 8 noise types x 5 interventions x 4 models x 5 repetitions. Model configurations are loaded from `data/default_models.json` into the `ModelRegistry`, which provides pricing, preprocessor mappings, and rate limit delays to all consumers. `run_experiment.py` processes each work item and writes results to `results/results.db`. Post-experiment, `compute_derived.py` calculates per-prompt Consistency Rate, quadrant classification, and cost rollups. `analyze_results.py` runs GLMM, bootstrap CIs, McNemar's test, and Kendall's tau. Finally, `generate_figures.py` produces publication-quality PDF and PNG figures.
 
 ## CLI Command Map
 
@@ -60,6 +62,8 @@ flowchart TD
 
     SETUP --> SW[setup_wizard.py]
     SW --> CM[config_manager.py]
+    SW --> MR[model_registry.py]
+    SW --> EM[env_manager.py]
     CM --> CFG[experiment_config.json]
 
     SHOWCONFIG --> CC[config_commands.py]
@@ -69,6 +73,7 @@ flowchart TD
     DIFF --> CC
     LISTMODELS --> CC
     CC --> CM
+    CC --> MD[model_discovery.py]
 
     RUN --> ES[execution_summary.py]
     ES --> RE[run_experiment.py]
@@ -119,7 +124,7 @@ sequenceDiagram
     Engine->>DB: save_grade_result(details)
 ```
 
-Rate limiting uses per-model delays from `RATE_LIMIT_DELAYS` with adaptive backoff: on 429 errors, the delay doubles and the request retries up to 3 times with exponential backoff (1s, 4s, 16s).
+Rate limiting uses per-model delays from `ModelRegistry` (loaded from `data/default_models.json`) with adaptive backoff: on 429 errors, the delay doubles and the request retries up to 3 times with exponential backoff (1s, 4s, 16s).
 
 ## Module Reference
 
@@ -127,9 +132,17 @@ Rate limiting uses per-model delays from `RATE_LIMIT_DELAYS` with adaptive backo
 
 | Module | Purpose | Key Functions/Classes |
 |--------|---------|----------------------|
-| `config.py` | Pinned models, experiment parameters, pricing | `ExperimentConfig` (frozen dataclass), `derive_seed()`, `compute_cost()`, `NOISE_TYPES`, `INTERVENTIONS`, `MODELS`, `PRICE_TABLE`, `PREPROC_MODEL_MAP` |
+| `config.py` | Experiment parameters and noise/intervention constants | `ExperimentConfig`, `derive_seed()`, `NOISE_TYPES`, `INTERVENTIONS`, `MAX_TOKENS_BY_BENCHMARK` |
+| `model_registry.py` | Config-driven model registry: pricing, preproc mappings, rate limits | `ModelConfig` (dataclass), `ModelRegistry`, `registry` (module-level singleton) |
 | `config_manager.py` | Config file I/O and validation | `find_config_path()`, `load_config()`, `save_config()`, `validate_config()`, `get_full_config_dict()` |
 | `config_commands.py` | CLI config subcommand handlers | `handle_show_config()`, `handle_set_config()`, `handle_reset_config()`, `handle_validate()`, `handle_diff()`, `handle_list_models()` |
+
+### Environment and Discovery Layer
+
+| Module | Purpose | Key Functions/Classes |
+|--------|---------|----------------------|
+| `env_manager.py` | .env file loading, writing, and API key management | `load_env()`, `write_env()`, `check_keys()`, `PROVIDER_KEY_MAP` |
+| `model_discovery.py` | Live model queries from provider APIs (Anthropic, Google, OpenAI, OpenRouter) | `discover_all_models()`, `DiscoveredModel` (dataclass), `DiscoveryResult` (dataclass) |
 
 ### Data Layer
 
@@ -179,6 +192,15 @@ Rate limiting uses per-model delays from `RATE_LIMIT_DELAYS` with adaptive backo
 |--------|---------|----------------------|
 | `cli.py` | CLI entry point with 9 subcommands | `build_cli()`, `main()`, `handle_run()`, `handle_pilot()` |
 | `setup_wizard.py` | Interactive setup wizard | `run_setup_wizard()`, `check_environment()`, `validate_api_key()` |
+
+## ModelRegistry Configuration Flow
+
+Model configuration follows a layered loading pattern:
+
+1. **Default models** (`data/default_models.json`) define the curated set of 4 target models and 4 preprocessor models with pricing, preproc mappings, and rate limit delays.
+2. **ModelRegistry** (`src/model_registry.py`) loads defaults at import time into a module-level `registry` singleton. All consumers import `registry` directly.
+3. **User configuration** (`experiment_config.json`) can override the model list via the `models` field. When loaded by `config_manager`, the registry is reloaded with user-specified models via `registry.reload()`.
+4. **Consumers** (`api_client`, `execution_summary`, `run_experiment`, `compute_derived`, etc.) call `registry.get_price()`, `registry.get_delay()`, `registry.get_preproc()`, and `registry.compute_cost()` instead of accessing hardcoded constants.
 
 ## Database Schema
 
@@ -245,23 +267,24 @@ Diagnostic metadata from the grading pipeline. One row per graded run.
 
 ## Configuration System
 
-All experiment parameters are defined in a frozen `ExperimentConfig` dataclass in `config.py`:
+All experiment parameters are defined in an `ExperimentConfig` dataclass in `config.py`:
 
 ```python
-@dataclass(frozen=True)
+@dataclass
 class ExperimentConfig:
-    claude_model: str = "claude-sonnet-4-20250514"
-    gemini_model: str = "gemini-1.5-pro"
-    openai_model: str = "gpt-4o-2024-11-20"
-    openrouter_model: str = "openrouter/nvidia/nemotron-3-super-120b-a12b:free"
+    models: list[dict] | None = None
+    config_version: int = 2
     base_seed: int = 42
     type_a_rates: tuple[float, ...] = (0.05, 0.10, 0.20)
+    type_a_weights: tuple[float, ...] = (0.40, 0.25, 0.20, 0.15)
     repetitions: int = 5
     temperature: float = 0.0
     prompts_path: str = "data/prompts.json"
     matrix_path: str = "data/experiment_matrix.json"
     results_db_path: str = "results/results.db"
 ```
+
+The `models` field accepts a list of model configuration dicts (matching the `data/default_models.json` schema). When `None`, the `ModelRegistry` uses defaults from `data/default_models.json`.
 
 ### Sparse Override Pattern
 
@@ -275,13 +298,27 @@ The config file (`experiment_config.json`) stores only properties that differ fr
 
 `config_manager.validate_config()` checks:
 
-- Model identifiers exist in `PRICE_TABLE`
+- Model identifiers exist in `ModelRegistry` (via `registry.get_price()`)
 - `type_a_rates` values are in [0, 1]
 - `repetitions` >= 1
 - `temperature` >= 0
 - File paths exist on disk (for `prompts_path` and `matrix_path`)
 
 Run `propt validate` to check the current configuration.
+
+## Design Decisions
+
+### Registry pattern for model configuration
+
+`ModelRegistry` with `data/default_models.json` replaces the hardcoded `MODELS`, `PRICE_TABLE`, `PREPROC_MODEL_MAP`, and `RATE_LIMIT_DELAYS` constants that were previously in `config.py`. The registry is loaded at import time as a module-level singleton and can be reloaded when user configuration is applied. This allows adding or changing models without code changes -- users edit `data/default_models.json` or use the `propt setup` wizard for runtime configuration.
+
+### .env file management
+
+`env_manager.py` integrates `python-dotenv` for API key storage. The setup wizard creates and updates `.env` files automatically with `chmod 600` permissions. This follows standard practice for secret management: keys stay out of config files and version control, and the wizard can validate keys on the spot.
+
+### Live model discovery
+
+`model_discovery.py` queries provider APIs (Anthropic, Google, OpenAI, OpenRouter) in parallel to discover available models with context windows and pricing. Users see actual available models when running `propt list-models`, which reduces configuration errors compared to manually looking up model identifiers.
 
 ## Cross-References
 

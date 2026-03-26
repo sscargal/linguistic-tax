@@ -86,6 +86,8 @@ INTERVENTIONS: tuple[str, ...] = (
     "emphasis_instruction_caps",
     "emphasis_instruction_bold",
     "emphasis_lowercase_initial",
+    "emphasis_mixed",
+    "emphasis_aggressive_caps",
 )
 
 MAX_TOKENS_BY_BENCHMARK: dict[str, int] = {

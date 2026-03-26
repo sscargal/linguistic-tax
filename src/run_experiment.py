@@ -121,7 +121,7 @@ def apply_intervention(
             return sanitize_and_compress(prompt_text, model, call_fn)
         case "compress_only":
             return sanitize_and_compress(prompt_text, model, call_fn)
-        case "emphasis_bold" | "emphasis_caps" | "emphasis_quotes":
+        case "emphasis_bold" | "emphasis_caps" | "emphasis_quotes" | "emphasis_mixed" | "emphasis_aggressive_caps":
             converted = load_emphasis_variant(
                 prompt_id=prompt_id,
                 intervention=intervention,

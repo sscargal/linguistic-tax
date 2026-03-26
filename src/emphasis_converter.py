@@ -260,6 +260,94 @@ def apply_instruction_caps(text: str) -> str:
     return _apply_to_text_only(text, transform)
 
 
+def apply_mixed_emphasis(text: str) -> str:
+    """Bold on negation words, CAPS on other instruction verbs.
+
+    Negation words ("do not", "don't") get **bold**, while other
+    instruction verbs ("should", "must", "will", "shall", "need to",
+    "have to", "return") get ALL CAPS.
+
+    Args:
+        text: The input prompt text.
+
+    Returns:
+        Text with mixed emphasis applied.
+    """
+    _negation_phrases = ["do not", "don't"]
+    _negation_re = re.compile(
+        r"\b(" + "|".join(re.escape(p) for p in _negation_phrases) + r")\b",
+        re.IGNORECASE,
+    )
+
+    def transform(segment: str) -> str:
+        # First: bold negations
+        result = _negation_re.sub(lambda m: f"**{m.group(0)}**", segment)
+        # Then: caps on non-negation instruction words
+        result = _INSTRUCTION_RE.sub(lambda m: m.group(0).upper(), result)
+        result = _RETURN_PATTERN.sub(lambda m: m.group(0).upper(), result)
+        return result
+
+    return _apply_to_text_only(text, transform)
+
+
+# Extended instruction word set for aggressive caps (broader scope)
+_AGGRESSIVE_WORDS = [
+    "should",
+    "must",
+    "will",
+    "shall",
+    "need to",
+    "have to",
+    "do not",
+    "don't",
+    "can",
+    "cannot",
+    "may",
+    "might",
+    "ought",
+    "require",
+    "ensure",
+    "verify",
+    "check",
+    "validate",
+    "handle",
+    "implement",
+    "compute",
+    "calculate",
+    "determine",
+    "note",
+    "assume",
+    "consider",
+    "ignore",
+]
+
+_AGGRESSIVE_RE = re.compile(
+    r"\b(" + "|".join(re.escape(w) for w in sorted(_AGGRESSIVE_WORDS, key=len, reverse=True)) + r")\b",
+    re.IGNORECASE,
+)
+
+
+def apply_aggressive_caps(text: str) -> str:
+    """ALL instruction words in CAPS (broader scope than instruction_caps).
+
+    Targets a wider set of instructional vocabulary: modal verbs, imperative
+    verbs, and common programming task verbs. Uses the same code-block
+    protection as other emphasis functions.
+
+    Args:
+        text: The input prompt text.
+
+    Returns:
+        Text with all instruction words in ALL CAPS.
+    """
+    def transform(segment: str) -> str:
+        result = _AGGRESSIVE_RE.sub(lambda m: m.group(0).upper(), segment)
+        result = _RETURN_PATTERN.sub(lambda m: m.group(0).upper(), result)
+        return result
+
+    return _apply_to_text_only(text, transform)
+
+
 def apply_instruction_bold(text: str) -> str:
     """Wrap instruction verbs in **bold** markdown emphasis.
 

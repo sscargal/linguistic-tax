@@ -106,8 +106,8 @@ class TestConstants:
         assert set(NOISE_TYPES) == expected
 
     def test_interventions_count(self):
-        """INTERVENTIONS has exactly 11 entries (5 original + 6 emphasis)."""
-        assert len(INTERVENTIONS) == 11
+        """INTERVENTIONS has exactly 13 entries (5 original + 8 emphasis)."""
+        assert len(INTERVENTIONS) == 13
 
     def test_interventions_contents(self):
         """INTERVENTIONS contains all expected intervention types."""
@@ -117,6 +117,7 @@ class TestConstants:
             "emphasis_bold", "emphasis_caps", "emphasis_quotes",
             "emphasis_instruction_caps", "emphasis_instruction_bold",
             "emphasis_lowercase_initial",
+            "emphasis_mixed", "emphasis_aggressive_caps",
         }
         assert set(INTERVENTIONS) == expected
 

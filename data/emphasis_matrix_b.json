@@ -1,0 +1,5002 @@
+[
+  {
+    "prompt_id": "HumanEval/97",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/97",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/97",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/97",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/97",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/97",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/97",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/97",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/97",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/97",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/97",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/97",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/97",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/97",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/97",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/97",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/97",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/97",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/97",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/97",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/97",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/97",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/97",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/97",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/97",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/84",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/84",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/84",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/84",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/84",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/84",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/84",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/84",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/84",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/84",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/84",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/84",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/84",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/84",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/84",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/84",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/84",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/84",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/84",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/84",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/84",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/84",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/84",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/84",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/84",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/149",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/149",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/149",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/149",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/149",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/149",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/149",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/149",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/149",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/149",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/149",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/149",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/149",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/149",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/149",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/149",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/149",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/149",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/149",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/149",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/149",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/149",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/149",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/149",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/149",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/153",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/153",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/153",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/153",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/153",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/153",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/153",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/153",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/153",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/153",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/153",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/153",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/153",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/153",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/153",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/153",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/153",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/153",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/153",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/153",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/153",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/153",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/153",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/153",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/153",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/68",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/68",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/68",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/68",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/68",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/68",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/68",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/68",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/68",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/68",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/68",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/68",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/68",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/68",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/68",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/68",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/68",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/68",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/68",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/68",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/68",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/68",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/68",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/68",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/68",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/79",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/79",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/79",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/79",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/79",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/79",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/79",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/79",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/79",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/79",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/79",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/79",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/79",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/79",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/79",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/79",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/79",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/79",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/79",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/79",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/79",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/79",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/79",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/79",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/79",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/148",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/148",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/148",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/148",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/148",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/148",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/148",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/148",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/148",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/148",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/148",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/148",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/148",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/148",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/148",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/148",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/148",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/148",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/148",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/148",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/148",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/148",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/148",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/148",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/148",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/113",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/113",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/113",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/113",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/113",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/113",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/113",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/113",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/113",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/113",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/113",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/113",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/113",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/113",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/113",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/113",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/113",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/113",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/113",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/113",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/113",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/113",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/113",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/113",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/113",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/119",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/119",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/119",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/119",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/119",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/119",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/119",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/119",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/119",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/119",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/119",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/119",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/119",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/119",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/119",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/119",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/119",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/119",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/119",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/119",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/119",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/119",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/119",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/119",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/119",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/12",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/12",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/12",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/12",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/12",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/12",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/12",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/12",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/12",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/12",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/12",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/12",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/12",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/12",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/12",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/12",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/12",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/12",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/12",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/12",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/12",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/12",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/12",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/12",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/12",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/139",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/139",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/139",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/139",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/139",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/139",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/139",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/139",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/139",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/139",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/139",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/139",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/139",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/139",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/139",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/139",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/139",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/139",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/139",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/139",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/139",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/139",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/139",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/139",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/139",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/143",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/143",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/143",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/143",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/143",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/143",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/143",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/143",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/143",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/143",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/143",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/143",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/143",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/143",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/143",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/143",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/143",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/143",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/143",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/143",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/143",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/143",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/143",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/143",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/143",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/8",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/8",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/8",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/8",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/8",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/8",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/8",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/8",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/8",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/8",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/8",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/8",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/8",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/8",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/8",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/8",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/8",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/8",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/8",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/8",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/8",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/8",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/8",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/8",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/8",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/111",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/111",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/111",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/111",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/111",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/111",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/111",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/111",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/111",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/111",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/111",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/111",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/111",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/111",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/111",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/111",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/111",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/111",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/111",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/111",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/111",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/111",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/111",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/111",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/111",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/129",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/129",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/129",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/129",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/129",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/129",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/129",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/129",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/129",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/129",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/129",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/129",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/129",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/129",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/129",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/129",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/129",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/129",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/129",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/129",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/129",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/129",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/129",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/129",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/129",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/135",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/135",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/135",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/135",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/135",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/135",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/135",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/135",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/135",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/135",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/135",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/135",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/135",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/135",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/135",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/135",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/135",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/135",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/135",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/135",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/135",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/135",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/135",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/135",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/135",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/151",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/151",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/151",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/151",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/151",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/151",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/151",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/151",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/151",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/151",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/151",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/151",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/151",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/151",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/151",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/151",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/151",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/151",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/151",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/151",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/151",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/151",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/151",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/151",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/151",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/161",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/161",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/161",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/161",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/161",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/161",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/161",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/161",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/161",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/161",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/161",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/161",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/161",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/161",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/161",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/161",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/161",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/161",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/161",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/161",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/161",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/161",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/161",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/161",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/161",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/71",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/71",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/71",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/71",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/71",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/71",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/71",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/71",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/71",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/71",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/71",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/71",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/71",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/71",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/71",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/71",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/71",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/71",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/71",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/71",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/71",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/71",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/71",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/71",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/71",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/1",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/1",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/1",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/1",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/1",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "raw",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/1",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/1",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/1",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/1",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/1",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/1",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/1",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/1",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/1",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/1",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_instruction_bold",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/1",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/1",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/1",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/1",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/1",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_mixed",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/1",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 1,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/1",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 2,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/1",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 3,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/1",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 4,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  },
+  {
+    "prompt_id": "HumanEval/1",
+    "noise_type": "clean",
+    "noise_level": null,
+    "intervention": "emphasis_aggressive_caps",
+    "model": "nvidia/nemotron-3-super-120b-a12b:free",
+    "repetition_num": 5,
+    "status": "pending",
+    "experiment": "emphasis_cluster_b"
+  }
+]

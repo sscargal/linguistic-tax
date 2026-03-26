@@ -15,6 +15,7 @@ from typing import Any
 from tabulate import tabulate
 
 from src.config import ExperimentConfig
+from src.model_discovery import DiscoveredModel, discover_all_models, _get_fallback_models
 from src.model_registry import registry
 from src.config_manager import (
     find_config_path,
@@ -316,24 +317,99 @@ def handle_diff(args: Any) -> None:
         print(tabulate(rows, headers=["Property", "Default", "Current"], tablefmt="simple"))
 
 
-def handle_list_models(args: Any) -> None:
-    """List all available models with pricing information.
-
-    Displays a table of models from PRICE_TABLE with input/output costs.
+def _format_price(input_per_1m: float | None, output_per_1m: float | None) -> str:
+    """Format pricing for display.
 
     Args:
-        args: Parsed argparse namespace (no specific attributes needed).
-    """
-    rows = []
-    for model_id in sorted(registry._models):
-        inp, out = registry.get_price(model_id)
-        if inp == 0 and out == 0:
-            cost_str = "free"
-        else:
-            cost_str = f"${inp:.2f} / ${out:.2f}"
-        rows.append([model_id, cost_str])
+        input_per_1m: Input cost per 1M tokens, or None if unknown.
+        output_per_1m: Output cost per 1M tokens, or None if unknown.
 
-    print(tabulate(rows, headers=["Model", "Input / Output (per 1M tokens)"], tablefmt="simple"))
+    Returns:
+        Formatted price string: "$X.XX / $Y.YY", "free", or "--".
+    """
+    if input_per_1m is None and output_per_1m is None:
+        return "--"
+    inp = input_per_1m if input_per_1m is not None else 0.0
+    out = output_per_1m if output_per_1m is not None else 0.0
+    if inp == 0.0 and out == 0.0:
+        return "free"
+    return f"${inp:.2f} / ${out:.2f}"
+
+
+def _format_context_window(ctx: int | None) -> str:
+    """Format context window size for display.
+
+    Args:
+        ctx: Context window token count, or None if unknown.
+
+    Returns:
+        Comma-separated integer string or "--" for None.
+    """
+    if ctx is None:
+        return "--"
+    return f"{ctx:,}"
+
+
+def handle_list_models(args: Any) -> None:
+    """List all available models with live provider discovery and pricing.
+
+    Queries all configured providers for available models, groups output
+    by provider, and marks configured models. Falls back to registry data
+    when provider queries fail.
+
+    Args:
+        args: Parsed argparse namespace with optional json flag.
+    """
+    result = discover_all_models(timeout=5.0)
+    configured_ids = set(registry._models.keys())
+    provider_order = ["anthropic", "google", "openai", "openrouter"]
+
+    all_provider_data: dict[str, list[tuple[DiscoveredModel, str]]] = {}
+
+    for provider in provider_order:
+        if provider in result.errors:
+            print(f"Warning: {result.errors[provider]}")
+            fallback_models = _get_fallback_models(provider)
+            if fallback_models:
+                all_provider_data[provider] = [
+                    (m, "fallback") for m in fallback_models
+                ]
+        elif provider in result.models:
+            all_provider_data[provider] = [
+                (m, "configured" if m.model_id in configured_ids else "available")
+                for m in result.models[provider]
+            ]
+
+    if getattr(args, "json", False):
+        output_dict: dict[str, list[dict[str, Any]]] = {}
+        for provider, model_entries in all_provider_data.items():
+            output_dict[provider] = [
+                {
+                    "model_id": m.model_id,
+                    "context_window": m.context_window,
+                    "input_price_per_1m": m.input_price_per_1m,
+                    "output_price_per_1m": m.output_price_per_1m,
+                    "status": status,
+                }
+                for m, status in model_entries
+            ]
+        print(json.dumps(output_dict, indent=2))
+    else:
+        for provider, model_entries in all_provider_data.items():
+            rows = []
+            for m, status in model_entries:
+                rows.append([
+                    m.model_id,
+                    _format_context_window(m.context_window),
+                    _format_price(m.input_price_per_1m, m.output_price_per_1m),
+                    status,
+                ])
+            print(f"\n{provider.upper()}")
+            print(tabulate(
+                rows,
+                headers=["Model ID", "Context Window", "Pricing (per 1M tokens)", "Status"],
+                tablefmt="simple",
+            ))
 
 
 def property_name_completer(prefix: str, parsed_args: Any, **kwargs: Any) -> list[str]:

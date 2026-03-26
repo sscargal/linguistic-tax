@@ -143,6 +143,10 @@ def build_cli() -> argparse.ArgumentParser:
     models_parser = subparsers.add_parser(
         "list-models", help="List available models with pricing"
     )
+    models_parser.add_argument(
+        "--json", action="store_true", default=False,
+        help="Output as JSON for programmatic use"
+    )
     models_parser.set_defaults(func=handle_list_models)
 
     # --- run ---

@@ -14,7 +14,7 @@ import logging
 from collections.abc import Callable
 from typing import Any
 
-from src.config import PREPROC_MODEL_MAP
+from src.model_registry import registry
 
 logger = logging.getLogger(__name__)
 
@@ -59,23 +59,26 @@ def build_self_correct_prompt(text: str) -> str:
 
 
 def _get_preproc_model(main_model: str) -> str:
-    """Look up the cheap pre-processor model for a given main model.
+    """Return the preprocessor model ID for a given target model.
+
+    If no preprocessor mapping exists, logs a warning and returns
+    the model itself as a fallback (self-preprocessing).
 
     Args:
         main_model: The main model identifier (e.g., "claude-sonnet-4-20250514").
 
     Returns:
-        The corresponding cheap pre-processor model identifier.
-
-    Raises:
-        ValueError: If main_model is not found in PREPROC_MODEL_MAP.
+        The corresponding cheap pre-processor model identifier, or
+        main_model itself if no mapping exists.
     """
-    if main_model not in PREPROC_MODEL_MAP:
-        raise ValueError(
-            f"No pre-processor model mapping for: {main_model}. "
-            f"Known models: {list(PREPROC_MODEL_MAP.keys())}"
+    preproc = registry.get_preproc(main_model)
+    if preproc is None:
+        logger.warning(
+            "No pre-processor mapping for '%s'; using model itself as fallback",
+            main_model,
         )
-    return PREPROC_MODEL_MAP[main_model]
+        return main_model
+    return preproc
 
 
 def sanitize(

@@ -15,7 +15,8 @@ from google import genai
 from google.genai import errors as genai_errors
 from google.genai import types
 
-from src.config import OPENROUTER_BASE_URL, RATE_LIMIT_DELAYS
+from src.config import OPENROUTER_BASE_URL
+from src.model_registry import registry
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +34,9 @@ class APIResponse:
 
 
 # Mutable state for adaptive rate limiting
-_rate_delays: dict[str, float] = dict(RATE_LIMIT_DELAYS)
+_rate_delays: dict[str, float] = {
+    m: registry.get_delay(m) for m in registry._models
+}
 
 
 def _validate_api_keys(model: str) -> None:

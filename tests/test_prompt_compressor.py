@@ -118,9 +118,10 @@ class TestGetPreprocModel:
     def test_gemini_maps_to_flash(self) -> None:
         assert _get_preproc_model("gemini-1.5-pro") == "gemini-2.0-flash"
 
-    def test_unknown_model_raises_value_error(self) -> None:
-        with pytest.raises(ValueError, match="No pre-processor model mapping"):
-            _get_preproc_model("unknown-model-123")
+    def test_unknown_model_falls_back_to_self(self) -> None:
+        """Unknown model returns itself as fallback instead of raising."""
+        result = _get_preproc_model("unknown-model-123")
+        assert result == "unknown-model-123"
 
 
 # ---------------------------------------------------------------------------

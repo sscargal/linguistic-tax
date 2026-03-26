@@ -80,7 +80,7 @@ After generating, review each figure for:
 
 1. **Readability**: Can you read all axis labels and legends at the expected print size?
 2. **Color**: Does the colorblind palette distinguish all lines/points?
-3. **Completeness**: Are all models and conditions represented?
+3. **Completeness**: Are all configured models and conditions represented? (Model count varies based on registry configuration)
 4. **Formatting**: Do PDF versions have editable text (not rasterized)?
 5. **Data accuracy**: Do the plotted values match the analysis output?
 
@@ -103,4 +103,5 @@ If the default figures need adjustment, the source is `src/generate_figures.py`.
 
 - Experiment runs must be completed in `results/results.db`
 - For best results, run `python -m src.compute_derived` first (needed for quadrant and cost figures)
+- Model set is determined by the configuration — figures automatically adapt to however many models are in the results
 - Python packages: matplotlib, seaborn, pandas, numpy

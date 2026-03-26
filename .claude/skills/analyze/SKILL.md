@@ -16,6 +16,8 @@ Stage 1: Derived metrics    →  Stage 2: Statistical tests  →  Stage 3: Inter
 (compute_derived.py)           (analyze_results.py)            (map to H1-H5)
 ```
 
+Note: The analysis pipeline processes results for all models configured in the model registry. The number and identity of models is determined at setup time via `propt setup`, not hardcoded.
+
 ## Stage 1: Compute derived metrics
 
 This must run first — it populates the `derived_metrics` table needed by Stage 2.
@@ -134,3 +136,4 @@ When the user asks what the data shows, present:
 - All p-values are BH-corrected for multiple comparisons
 - Bootstrap uses 10,000 iterations with seed=42 for reproducibility
 - Effect sizes (odds ratios with CIs) are always reported alongside p-values
+- Results include data for all configured models — the analysis automatically handles variable model counts

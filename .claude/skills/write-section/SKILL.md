@@ -70,7 +70,7 @@ Every claim must cite a specific number with confidence interval. Example:
 
 **Introduction**: Frame around the Two-Headed Problem diagram from the RDD. Introduce the 5 hypotheses as research questions. End with contributions list.
 
-**Methodology**: Must be reproducible. Include algorithm pseudocode for noise injection. Reference the exact model versions and seeds.
+**Methodology**: Must be reproducible. Include algorithm pseudocode for noise injection. Reference the exact model versions (from model registry configuration) and seeds. Note that models are configurable — the methodology should describe this as a feature of the toolkit.
 
 **Results**: Organize by Finding 1-7. Each finding gets: claim, evidence (table/figure), statistical test result, interpretation. Use the hypothesis scorecard.
 
@@ -101,3 +101,4 @@ Write LaTeX to `paper/` directory:
 - Every quantitative claim needs a source (analysis output, figure reference, or table)
 - The paper targets cs.CL (Computation and Language) and cs.AI (Artificial Intelligence) categories
 - Target length is ~17 pages including references
+- The toolkit supports configurable models — methodology and setup sections should reflect this. Model versions come from model_registry, not hardcoded constants.

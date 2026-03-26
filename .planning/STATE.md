@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Configurable Models and Dynamic Pricing
 status: unknown
-stopped_at: Phase 22 context gathered
-last_updated: "2026-03-26T20:10:27.856Z"
+stopped_at: Completed 22-01-PLAN.md
+last_updated: "2026-03-26T20:36:42.719Z"
 last_activity: 2026-03-26
 progress:
   total_phases: 7
   completed_phases: 6
-  total_plans: 16
-  completed_plans: 16
+  total_plans: 19
+  completed_plans: 17
 ---
 
 # Project State
@@ -24,8 +24,8 @@ See: .planning/PROJECT.md (updated 2026-03-26)
 
 ## Current Position
 
-Phase: 22 (experiment-all-caps-and-emphasis-formatting-effects-on-llm-attention) — Ready to plan
-Plan: Not started
+Phase: 22 (experiment-all-caps-and-emphasis-formatting-effects-on-llm-attention) — EXECUTING
+Plan: 2 of 3
 
 ## Performance Metrics
 
@@ -63,6 +63,7 @@ Plan: Not started
 | Phase 21 P01 | 3min | 2 tasks | 2 files |
 | Phase 21 P03 | 5min | 2 tasks | 2 files |
 | Phase 21 P04 | 3min | 2 tasks | 1 files |
+| Phase 22 P01 | 3min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -91,6 +92,8 @@ Recent decisions affecting current work:
 - [Phase 21]: ExperimentConfig field names for set-config examples (base_seed, repetitions, temperature) based on config_commands.py source
 - [Phase 21]: Environment and Discovery Layer in architecture module reference (separate from Configuration Layer)
 - [Phase 21]: Architecture.md Design Decisions historical references to old constants are legitimate, not stale
+- [Phase 22]: Sentinel replacement strategy for key-term matching prevents double-replacement
+- [Phase 22]: prompt_id param added to apply_intervention with backward-compatible default
 
 ### Pending Todos
 
@@ -122,6 +125,6 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last activity: 2026-03-26
-Last session: 2026-03-26T20:10:27.854Z
-Stopped at: Phase 22 context gathered
-Resume file: .planning/phases/22-experiment-all-caps-and-emphasis-formatting-effects-on-llm-attention/22-CONTEXT.md
+Last session: 2026-03-26T20:36:42.717Z
+Stopped at: Completed 22-01-PLAN.md
+Resume file: None

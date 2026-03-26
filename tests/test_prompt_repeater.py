@@ -174,8 +174,8 @@ class TestComputeCost:
         result = compute_cost("gemini-2.0-flash", 1000, 1000)
         assert abs(result - 0.0005) < 1e-10
 
-    def test_unknown_model_raises(self) -> None:
+    def test_unknown_model_returns_zero(self) -> None:
         from src.config import compute_cost
 
-        with pytest.raises(KeyError):
-            compute_cost("unknown-model", 100, 100)
+        result = compute_cost("unknown-model", 100, 100)
+        assert result == 0.0

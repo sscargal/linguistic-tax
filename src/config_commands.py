@@ -26,11 +26,8 @@ from src.config_manager import (
 logger = logging.getLogger(__name__)
 
 FIELD_DESCRIPTIONS: dict[str, str] = {
-    "claude_model": "Anthropic Claude model for target experiments",
-    "gemini_model": "Google Gemini model for target experiments",
-    "openai_model": "OpenAI GPT model for target experiments",
-    "openrouter_model": "OpenRouter model for target experiments",
-    "openrouter_preproc_model": "OpenRouter model for pre-processing",
+    "models": "List of model configurations (None = use defaults)",
+    "config_version": "Configuration format version",
     "base_seed": "Base random seed for reproducibility",
     "type_a_rates": "Character-level noise error rates",
     "type_a_weights": "Character mutation type weights (swap, delete, insert, substitute)",

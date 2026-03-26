@@ -54,7 +54,7 @@ class TestShowConfig:
     """Tests for handle_show_config."""
 
     def test_show_config_table_all_properties(self, tmp_path, monkeypatch, capsys):
-        """show-config with no flags prints table containing all 13 field names."""
+        """show-config with no flags prints table containing all field names."""
         monkeypatch.chdir(tmp_path)
         handle_show_config(make_args())
         output = capsys.readouterr().out
@@ -70,12 +70,12 @@ class TestShowConfig:
         assert "*temperature" in output
 
     def test_show_config_json_output(self, tmp_path, monkeypatch, capsys):
-        """--json flag produces valid JSON with all 13 keys."""
+        """--json flag produces valid JSON with all ExperimentConfig keys."""
         monkeypatch.chdir(tmp_path)
         handle_show_config(make_args(json=True))
         output = capsys.readouterr().out
         data = json.loads(output)
-        assert len(data) == 13
+        assert len(data) == len(dc_fields(ExperimentConfig))
         for f in dc_fields(ExperimentConfig):
             assert f.name in data
 
@@ -182,10 +182,10 @@ class TestSetConfig:
         assert raw["repetitions"] == 3
 
     def test_set_config_validates_before_save(self, tmp_path, monkeypatch):
-        """Invalid model name exits 1 without writing."""
+        """Invalid value exits 1 without writing."""
         monkeypatch.chdir(tmp_path)
         with pytest.raises(SystemExit) as exc_info:
-            handle_set_config(make_args(pairs=["claude_model", "invalid-model"]))
+            handle_set_config(make_args(pairs=["repetitions", "-1"]))
         assert exc_info.value.code == 1
         assert not (tmp_path / CONFIG_FILENAME).exists()
 
@@ -284,10 +284,10 @@ class TestValidate:
         assert "valid" in output.lower()
 
     def test_validate_invalid(self, tmp_path, monkeypatch):
-        """validate exits 1 with invalid model name."""
+        """validate exits 1 with invalid repetitions value."""
         monkeypatch.chdir(tmp_path)
         (tmp_path / CONFIG_FILENAME).write_text(
-            json.dumps({"claude_model": "invalid"})
+            json.dumps({"repetitions": -1})
         )
         with pytest.raises(SystemExit) as exc_info:
             handle_validate(make_args())
@@ -383,7 +383,7 @@ class TestHelpers:
         assert _format_value("hello") == "hello"
 
     def test_field_descriptions_has_all_fields(self):
-        """FIELD_DESCRIPTIONS has entries for all 13 ExperimentConfig fields."""
+        """FIELD_DESCRIPTIONS has entries for all ExperimentConfig fields."""
         for f in dc_fields(ExperimentConfig):
             assert f.name in FIELD_DESCRIPTIONS, f"Missing description for {f.name}"
-        assert len(FIELD_DESCRIPTIONS) == 13
+        assert len(FIELD_DESCRIPTIONS) == len(dc_fields(ExperimentConfig))

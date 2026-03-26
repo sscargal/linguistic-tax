@@ -260,7 +260,7 @@ class TestConfigToDatabasePipeline:
             "noise_type": "type_a_10pct",
             "noise_level": "10",
             "intervention": "raw",
-            "model": config.claude_model,
+            "model": "claude-sonnet-4-20250514",
             "repetition": 1,
             "status": "completed",
             "pass_fail": 1,

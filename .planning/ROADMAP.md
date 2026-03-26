@@ -123,14 +123,14 @@ Phases execute in numeric order: 16 -> 17 -> 18 -> 19
 | 16. Config Schema and Defensive Fallbacks | 3/3 | Complete    | 2026-03-26 | - |
 | 17. Registry Consumers | 3/3 | Complete    | 2026-03-26 | - |
 | 18. Pricing Client and Model Discovery | 2/2 | Complete    | 2026-03-26 | - |
-| 19. Setup Wizard Overhaul | v2.0 | 0/2 | Not started | - |
+| 19. Setup Wizard Overhaul | 1/2 | In Progress|  | - |
 
 ### Phase 20: Update skills and agents in .claude using the skill-creator skill and re-run all optimizations and evaluations
 
 **Goal:** [To be planned]
 **Requirements**: TBD
 **Depends on:** Phase 19
-**Plans:** 2/2 plans complete
+**Plans:** 1/2 plans executed
 
 Plans:
 - [ ] TBD (run /gsd:plan-phase 20 to break down)

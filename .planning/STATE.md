@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Configurable Models and Dynamic Pricing
 status: unknown
-stopped_at: Phase 19 context gathered
-last_updated: "2026-03-26T03:03:38.517Z"
+stopped_at: Completed 19-01-PLAN.md
+last_updated: "2026-03-26T03:27:16.354Z"
 last_activity: 2026-03-26
 progress:
   total_phases: 7
   completed_phases: 3
-  total_plans: 8
-  completed_plans: 8
+  total_plans: 10
+  completed_plans: 9
 ---
 
 # Project State
@@ -20,11 +20,11 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-26)
 
 **Core value:** Produce rigorous, reproducible experimental data showing how prompt noise degrades LLM accuracy and whether automated prompt optimization recovers it
-**Current focus:** Phase 18 — pricing-client-and-model-discovery
+**Current focus:** Phase 19 — setup-wizard-overhaul
 
 ## Current Position
 
-Phase: 18 (pricing-client-and-model-discovery) — EXECUTING
+Phase: 19 (setup-wizard-overhaul) — EXECUTING
 Plan: 2 of 2
 
 ## Performance Metrics
@@ -55,6 +55,7 @@ Plan: 2 of 2
 | Phase 17-03 P03 | 3min | 2 tasks | 4 files |
 | Phase 18 P01 | 4min | 1 tasks | 2 files |
 | Phase 18 P02 | 3min | 1 tasks | 3 files |
+| Phase 19 P01 | 2min | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -75,6 +76,7 @@ Recent decisions affecting current work:
 - [Phase 17-03]: All backward-compat shims removed from config.py; model_registry is sole source of truth for model data
 - [Phase 18]: Used as_completed(timeout=) for outer timeout enforcement in parallel provider queries
 - [Phase 18]: Provider display order hardcoded as anthropic/google/openai/openrouter for consistent CLI output
+- [Phase 19]: All 16 wizard functions in single module; budget preview via synthetic experiment items
 
 ### Pending Todos
 
@@ -104,6 +106,6 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last activity: 2026-03-26
-Last session: 2026-03-26T03:03:38.509Z
-Stopped at: Phase 19 context gathered
-Resume file: .planning/phases/19-setup-wizard-overhaul/19-CONTEXT.md
+Last session: 2026-03-26T03:27:16.351Z
+Stopped at: Completed 19-01-PLAN.md
+Resume file: None

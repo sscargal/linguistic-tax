@@ -19,16 +19,16 @@ Requirements for configurable models and dynamic pricing. Each maps to roadmap p
 
 - [x] **DSC-01**: `propt list-models` queries live models from each configured provider's API
 - [x] **DSC-02**: `propt list-models` displays model ID, context window, and pricing (where available from provider)
-- [ ] **DSC-03**: User can enter any model ID as free text during setup (not limited to a hardcoded list)
+- [x] **DSC-03**: User can enter any model ID as free text during setup (not limited to a hardcoded list)
 
 ### Setup Wizard
 
-- [ ] **WIZ-01**: Setup wizard explains what "target model" and "pre-processor model" mean in the experiment context
-- [ ] **WIZ-02**: User can configure 1-4 providers in a single setup session (multi-provider loop)
-- [ ] **WIZ-03**: User can enter custom model IDs via free text with sensible defaults shown
-- [ ] **WIZ-04**: Wizard creates/updates `.env` file when user provides API keys
-- [ ] **WIZ-05**: Wizard shows estimated experiment cost based on selected models' pricing before completing setup
-- [ ] **WIZ-06**: Wizard validates each selected model by pinging the provider API with a tiny request
+- [x] **WIZ-01**: Setup wizard explains what "target model" and "pre-processor model" mean in the experiment context
+- [x] **WIZ-02**: User can configure 1-4 providers in a single setup session (multi-provider loop)
+- [x] **WIZ-03**: User can enter custom model IDs via free text with sensible defaults shown
+- [x] **WIZ-04**: Wizard creates/updates `.env` file when user provides API keys
+- [x] **WIZ-05**: Wizard shows estimated experiment cost based on selected models' pricing before completing setup
+- [x] **WIZ-06**: Wizard validates each selected model by pinging the provider API with a tiny request
 
 ### Pricing
 
@@ -70,13 +70,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CFG-05 | Phase 16 | Complete |
 | DSC-01 | Phase 18 | Complete |
 | DSC-02 | Phase 18 | Complete |
-| DSC-03 | Phase 19 | Pending |
-| WIZ-01 | Phase 19 | Pending |
-| WIZ-02 | Phase 19 | Pending |
-| WIZ-03 | Phase 19 | Pending |
-| WIZ-04 | Phase 19 | Pending |
-| WIZ-05 | Phase 19 | Pending |
-| WIZ-06 | Phase 19 | Pending |
+| DSC-03 | Phase 19 | Complete |
+| WIZ-01 | Phase 19 | Complete |
+| WIZ-02 | Phase 19 | Complete |
+| WIZ-03 | Phase 19 | Complete |
+| WIZ-04 | Phase 19 | Complete |
+| WIZ-05 | Phase 19 | Complete |
+| WIZ-06 | Phase 19 | Complete |
 | PRC-01 | Phase 16 | Complete |
 | PRC-02 | Phase 18 | Complete |
 | PRC-03 | Phase 16 | Complete |

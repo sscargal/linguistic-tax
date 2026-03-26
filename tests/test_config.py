@@ -1,31 +1,32 @@
 """Tests for the configuration module."""
 
-import dataclasses
-
 import pytest
 
 from src.config import (
-    ExperimentConfig, derive_seed, NOISE_TYPES, INTERVENTIONS, MODELS,
-    PRICE_TABLE, PREPROC_MODEL_MAP, RATE_LIMIT_DELAYS, OPENROUTER_BASE_URL,
-    compute_cost,
+    ExperimentConfig, derive_seed, NOISE_TYPES, INTERVENTIONS, OPENROUTER_BASE_URL,
 )
 
 
 class TestExperimentConfig:
-    """Tests for ExperimentConfig frozen dataclass."""
+    """Tests for ExperimentConfig dataclass (mutable, with models list)."""
 
-    def test_config_is_frozen(self, sample_config):
-        """ExperimentConfig is frozen -- assigning attribute raises FrozenInstanceError."""
-        with pytest.raises(dataclasses.FrozenInstanceError):
-            sample_config.base_seed = 99
+    def test_config_is_mutable(self, sample_config):
+        """ExperimentConfig is mutable -- assigning attribute succeeds."""
+        sample_config.base_seed = 99
+        assert sample_config.base_seed == 99
 
-    def test_claude_model_pinned(self, sample_config):
-        """Claude model version is pinned."""
-        assert sample_config.claude_model == "claude-sonnet-4-20250514"
+    def test_models_field_defaults_to_none(self):
+        """models field defaults to None (use defaults from registry)."""
+        assert ExperimentConfig().models is None
 
-    def test_gemini_model_pinned(self, sample_config):
-        """Gemini model version is pinned."""
-        assert sample_config.gemini_model == "gemini-1.5-pro"
+    def test_config_version_defaults_to_2(self):
+        """config_version defaults to 2."""
+        assert ExperimentConfig().config_version == 2
+
+    def test_models_field_accepts_list(self):
+        """models field accepts a list of model dicts."""
+        config = ExperimentConfig(models=[{"model_id": "test"}])
+        assert config.models == [{"model_id": "test"}]
 
     def test_base_seed(self, sample_config):
         """Base seed is 42."""
@@ -58,18 +59,6 @@ class TestExperimentConfig:
     def test_results_db_path(self, sample_config):
         """Results DB path is results/results.db."""
         assert sample_config.results_db_path == "results/results.db"
-
-    def test_openai_model_pinned(self, sample_config):
-        """OpenAI model version is pinned."""
-        assert sample_config.openai_model == "gpt-4o-2024-11-20"
-
-    def test_openrouter_model_pinned(self, sample_config):
-        """OpenRouter target model version is pinned."""
-        assert sample_config.openrouter_model == "openrouter/nvidia/nemotron-3-super-120b-a12b:free"
-
-    def test_openrouter_preproc_model_pinned(self, sample_config):
-        """OpenRouter preproc model version is pinned."""
-        assert sample_config.openrouter_preproc_model == "openrouter/nvidia/nemotron-3-nano-30b-a3b:free"
 
 
 class TestDeriveSeed:
@@ -128,30 +117,6 @@ class TestConstants:
         }
         assert set(INTERVENTIONS) == expected
 
-    def test_models_count(self):
-        """MODELS has exactly 4 entries (3 direct + 1 OpenRouter)."""
-        assert len(MODELS) == 4
-
-    def test_models_contents(self):
-        """MODELS contains the pinned model versions."""
-        assert "claude-sonnet-4-20250514" in MODELS
-        assert "gemini-1.5-pro" in MODELS
-        assert "gpt-4o-2024-11-20" in MODELS
-
-    def test_price_table_openai(self):
-        """PRICE_TABLE contains GPT-4o and GPT-4o-mini pricing entries."""
-        assert PRICE_TABLE["gpt-4o-2024-11-20"] == {"input_per_1m": 2.50, "output_per_1m": 10.00}
-        assert PRICE_TABLE["gpt-4o-mini-2024-07-18"] == {"input_per_1m": 0.15, "output_per_1m": 0.60}
-
-    def test_preproc_map_openai(self):
-        """PREPROC_MODEL_MAP maps GPT-4o to GPT-4o-mini."""
-        assert PREPROC_MODEL_MAP["gpt-4o-2024-11-20"] == "gpt-4o-mini-2024-07-18"
-
-    def test_rate_limit_delays_openai(self):
-        """RATE_LIMIT_DELAYS contains entries for GPT-4o and GPT-4o-mini."""
-        assert RATE_LIMIT_DELAYS["gpt-4o-2024-11-20"] == 0.2
-        assert RATE_LIMIT_DELAYS["gpt-4o-mini-2024-07-18"] == 0.1
-
 
 class TestOpenRouterConfig:
     """Tests for OpenRouter-specific configuration entries."""
@@ -159,42 +124,3 @@ class TestOpenRouterConfig:
     def test_openrouter_base_url_default(self):
         """OPENROUTER_BASE_URL defaults to OpenRouter API endpoint."""
         assert OPENROUTER_BASE_URL == "https://openrouter.ai/api/v1"
-
-    def test_openrouter_model_in_models(self):
-        """OpenRouter target model is in the MODELS tuple."""
-        assert "openrouter/nvidia/nemotron-3-super-120b-a12b:free" in MODELS
-
-    def test_openrouter_target_in_price_table(self):
-        """OpenRouter target model has zero-cost pricing."""
-        entry = PRICE_TABLE["openrouter/nvidia/nemotron-3-super-120b-a12b:free"]
-        assert entry["input_per_1m"] == 0.0
-        assert entry["output_per_1m"] == 0.0
-
-    def test_openrouter_preproc_in_price_table(self):
-        """OpenRouter preproc model has zero-cost pricing."""
-        entry = PRICE_TABLE["openrouter/nvidia/nemotron-3-nano-30b-a3b:free"]
-        assert entry["input_per_1m"] == 0.0
-        assert entry["output_per_1m"] == 0.0
-
-    def test_openrouter_preproc_map(self):
-        """PREPROC_MODEL_MAP maps OpenRouter target to preproc model."""
-        assert PREPROC_MODEL_MAP["openrouter/nvidia/nemotron-3-super-120b-a12b:free"] == \
-            "openrouter/nvidia/nemotron-3-nano-30b-a3b:free"
-
-    def test_openrouter_rate_limit_target(self):
-        """RATE_LIMIT_DELAYS has OpenRouter target model at 0.5s."""
-        assert RATE_LIMIT_DELAYS["openrouter/nvidia/nemotron-3-super-120b-a12b:free"] == 0.5
-
-    def test_openrouter_rate_limit_preproc(self):
-        """RATE_LIMIT_DELAYS has OpenRouter preproc model at 0.5s."""
-        assert RATE_LIMIT_DELAYS["openrouter/nvidia/nemotron-3-nano-30b-a3b:free"] == 0.5
-
-    def test_compute_cost_zero_for_free_model(self):
-        """compute_cost returns exactly 0.0 for free OpenRouter target model."""
-        cost = compute_cost("openrouter/nvidia/nemotron-3-super-120b-a12b:free", 10000, 5000)
-        assert cost == 0.0
-
-    def test_compute_cost_zero_for_free_preproc(self):
-        """compute_cost returns exactly 0.0 for free OpenRouter preproc model."""
-        cost = compute_cost("openrouter/nvidia/nemotron-3-nano-30b-a3b:free", 10000, 5000)
-        assert cost == 0.0

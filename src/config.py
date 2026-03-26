@@ -1,7 +1,8 @@
 """Configuration module for the Linguistic Tax research toolkit.
 
-Provides pinned model versions, experiment parameters, noise settings,
-file paths, and deterministic seed derivation for reproducible experiments.
+Provides experiment parameters, noise settings, file paths, and deterministic
+seed derivation for reproducible experiments. Model pricing, preproc mappings,
+and rate limit delays are now in src/model_registry.py.
 """
 
 import hashlib
@@ -16,33 +17,22 @@ OPENROUTER_BASE_URL: str = os.environ.get(
 )
 
 
-@dataclass(frozen=True)
+@dataclass
 class ExperimentConfig:
-    """Immutable experiment configuration with all pinned values.
+    """Experiment configuration with config-driven model list.
 
     All experimental parameters are defined here as defaults.
-    The frozen constraint ensures no accidental mutation during runs.
+    Models are configured via the ``models`` list (populated from config JSON)
+    or left as None to use defaults from data/default_models.json.
     """
 
-    # Model versions (pinned)
-    claude_model: str = "claude-sonnet-4-20250514"
-    gemini_model: str = "gemini-1.5-pro"
-    openai_model: str = "gpt-4o-2024-11-20"
-    openrouter_model: str = "openrouter/nvidia/nemotron-3-super-120b-a12b:free"
-    openrouter_preproc_model: str = "openrouter/nvidia/nemotron-3-nano-30b-a3b:free"
-
-    # Seeds
+    models: list[dict] | None = None
+    config_version: int = 2
     base_seed: int = 42
-
-    # Noise parameters
     type_a_rates: tuple[float, ...] = (0.05, 0.10, 0.20)
     type_a_weights: tuple[float, ...] = (0.40, 0.25, 0.20, 0.15)
-
-    # Experiment parameters
     repetitions: int = 5
     temperature: float = 0.0
-
-    # Paths
     prompts_path: str = "data/prompts.json"
     matrix_path: str = "data/experiment_matrix.json"
     results_db_path: str = "results/results.db"
@@ -91,69 +81,153 @@ INTERVENTIONS: tuple[str, ...] = (
     "prompt_repetition",
 )
 
-MODELS: tuple[str, ...] = (
-    "claude-sonnet-4-20250514",
-    "gemini-1.5-pro",
-    "gpt-4o-2024-11-20",
-    "openrouter/nvidia/nemotron-3-super-120b-a12b:free",
-)
-
-# ---------------------------------------------------------------------------
-# Pricing, token limits, and pre-processor configuration
-# ---------------------------------------------------------------------------
-
-PRICE_TABLE: dict[str, dict[str, float]] = {
-    "claude-sonnet-4-20250514": {"input_per_1m": 3.00, "output_per_1m": 15.00},
-    "claude-haiku-4-5-20250514": {"input_per_1m": 1.00, "output_per_1m": 5.00},
-    "gemini-1.5-pro": {"input_per_1m": 1.25, "output_per_1m": 5.00},
-    "gemini-2.0-flash": {"input_per_1m": 0.10, "output_per_1m": 0.40},
-    "gpt-4o-2024-11-20": {"input_per_1m": 2.50, "output_per_1m": 10.00},
-    "gpt-4o-mini-2024-07-18": {"input_per_1m": 0.15, "output_per_1m": 0.60},
-    "openrouter/nvidia/nemotron-3-super-120b-a12b:free": {"input_per_1m": 0.0, "output_per_1m": 0.0},
-    "openrouter/nvidia/nemotron-3-nano-30b-a3b:free": {"input_per_1m": 0.0, "output_per_1m": 0.0},
-}
-
 MAX_TOKENS_BY_BENCHMARK: dict[str, int] = {
     "humaneval": 2048,
     "mbpp": 2048,
     "gsm8k": 1024,
 }
 
-PREPROC_MODEL_MAP: dict[str, str] = {
-    "claude-sonnet-4-20250514": "claude-haiku-4-5-20250514",
-    "gemini-1.5-pro": "gemini-2.0-flash",
-    "gpt-4o-2024-11-20": "gpt-4o-mini-2024-07-18",
-    "openrouter/nvidia/nemotron-3-super-120b-a12b:free": "openrouter/nvidia/nemotron-3-nano-30b-a3b:free",
-}
 
-RATE_LIMIT_DELAYS: dict[str, float] = {
-    "claude-sonnet-4-20250514": 0.2,
-    "claude-haiku-4-5-20250514": 0.1,
-    "gemini-1.5-pro": 0.1,
-    "gemini-2.0-flash": 0.05,
-    "gpt-4o-2024-11-20": 0.2,
-    "gpt-4o-mini-2024-07-18": 0.1,
-    "openrouter/nvidia/nemotron-3-super-120b-a12b:free": 0.5,
-    "openrouter/nvidia/nemotron-3-nano-30b-a3b:free": 0.5,
-}
+# ---------------------------------------------------------------------------
+# Backward-compatibility aliases (delegate to ModelRegistry)
+#
+# These provide the same names that consumer modules currently import.
+# Phase 17 will update consumers to use the registry directly, after which
+# these aliases will be removed.
+# ---------------------------------------------------------------------------
+
+def _lazy_registry():
+    """Import registry on first use to avoid circular imports."""
+    from src.model_registry import registry
+    return registry
+
+
+class _RegistryBackedDict(dict):
+    """A dict-like shim that rebuilds itself from the live registry on each access."""
+
+    def __init__(self, builder):
+        self._builder = builder
+        super().__init__(builder())
+
+    def _refresh(self):
+        super().clear()
+        super().update(self._builder())
+
+    def __getitem__(self, key):
+        self._refresh()
+        return super().__getitem__(key)
+
+    def __contains__(self, key):
+        self._refresh()
+        return super().__contains__(key)
+
+    def __iter__(self):
+        self._refresh()
+        return super().__iter__()
+
+    def keys(self):
+        self._refresh()
+        return super().keys()
+
+    def values(self):
+        self._refresh()
+        return super().values()
+
+    def items(self):
+        self._refresh()
+        return super().items()
+
+    def __len__(self):
+        self._refresh()
+        return super().__len__()
+
+    def __repr__(self):
+        self._refresh()
+        return super().__repr__()
+
+    def get(self, key, default=None):
+        self._refresh()
+        return super().get(key, default)
+
+
+def _build_models_tuple():
+    r = _lazy_registry()
+    return tuple(r.target_models())
+
+
+def _build_price_table():
+    r = _lazy_registry()
+    result = {}
+    for mid, mc in r._models.items():
+        inp = mc.input_price_per_1m if mc.input_price_per_1m is not None else 0.0
+        out = mc.output_price_per_1m if mc.output_price_per_1m is not None else 0.0
+        result[mid] = {"input_per_1m": inp, "output_per_1m": out}
+    return result
+
+
+def _build_preproc_map():
+    r = _lazy_registry()
+    result = {}
+    for mid, mc in r._models.items():
+        if mc.preproc_model_id is not None:
+            result[mid] = mc.preproc_model_id
+    return result
+
+
+def _build_rate_limit_delays():
+    r = _lazy_registry()
+    result = {}
+    for mid, mc in r._models.items():
+        result[mid] = mc.rate_limit_delay if mc.rate_limit_delay is not None else 0.5
+    return result
+
+
+class _LazyModels:
+    """Lazy tuple-like that rebuilds from registry on access."""
+
+    def __contains__(self, item):
+        return item in _build_models_tuple()
+
+    def __iter__(self):
+        return iter(_build_models_tuple())
+
+    def __len__(self):
+        return len(_build_models_tuple())
+
+    def __repr__(self):
+        return repr(_build_models_tuple())
+
+    def __str__(self):
+        return str(_build_models_tuple())
+
+    def __eq__(self, other):
+        return _build_models_tuple() == other
+
+    def __getitem__(self, index):
+        return _build_models_tuple()[index]
+
+
+MODELS = _LazyModels()
+
+PRICE_TABLE = _RegistryBackedDict(_build_price_table)
+
+PREPROC_MODEL_MAP = _RegistryBackedDict(_build_preproc_map)
+
+RATE_LIMIT_DELAYS = _RegistryBackedDict(_build_rate_limit_delays)
 
 
 def compute_cost(model: str, input_tokens: int, output_tokens: int) -> float:
-    """Compute USD cost from token counts and price table.
+    """Compute USD cost from token counts via the ModelRegistry.
+
+    Backward-compatibility wrapper. Phase 17 will migrate callers to
+    registry.compute_cost() directly.
 
     Args:
-        model: Model identifier (must be a key in PRICE_TABLE).
+        model: Model identifier.
         input_tokens: Number of input tokens consumed.
         output_tokens: Number of output tokens generated.
 
     Returns:
         Total cost in USD.
-
-    Raises:
-        KeyError: If model is not found in PRICE_TABLE.
     """
-    prices = PRICE_TABLE[model]
-    return (
-        input_tokens * prices["input_per_1m"] / 1_000_000
-        + output_tokens * prices["output_per_1m"] / 1_000_000
-    )
+    return _lazy_registry().compute_cost(model, input_tokens, output_tokens)

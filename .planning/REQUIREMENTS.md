@@ -18,7 +18,7 @@ Requirements for configurable models and dynamic pricing. Each maps to roadmap p
 ### Model Discovery
 
 - [x] **DSC-01**: `propt list-models` queries live models from each configured provider's API
-- [ ] **DSC-02**: `propt list-models` displays model ID, context window, and pricing (where available from provider)
+- [x] **DSC-02**: `propt list-models` displays model ID, context window, and pricing (where available from provider)
 - [ ] **DSC-03**: User can enter any model ID as free text during setup (not limited to a hardcoded list)
 
 ### Setup Wizard
@@ -69,7 +69,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CFG-04 | Phase 16 | Complete |
 | CFG-05 | Phase 16 | Complete |
 | DSC-01 | Phase 18 | Complete |
-| DSC-02 | Phase 18 | Pending |
+| DSC-02 | Phase 18 | Complete |
 | DSC-03 | Phase 19 | Pending |
 | WIZ-01 | Phase 19 | Pending |
 | WIZ-02 | Phase 19 | Pending |

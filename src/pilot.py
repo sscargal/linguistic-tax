@@ -1175,16 +1175,17 @@ def _check_config_exists() -> None:
     if find_config_path() is None:
         logger.error(
             "No config found. Run `python src/cli.py setup` to configure "
-            "the slicer before running experiments."
+            "the experiment toolkit before running experiments."
         )
         sys.exit(1)
 
 
 def main() -> None:
     """Entry point for the pilot validation CLI."""
-    _check_config_exists()
     parser = _build_parser()
     args = parser.parse_args()
+
+    _check_config_exists()
     result = run_pilot(
         budget=args.budget,
         db_path=args.db,

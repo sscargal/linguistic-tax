@@ -77,7 +77,7 @@ def build_cli() -> argparse.ArgumentParser:
     # --- setup (existing) ---
     setup_parser = subparsers.add_parser(
         "setup",
-        help="Run the guided setup wizard to configure the slicer",
+        help="Run the guided setup wizard to configure the experiment toolkit",
     )
     setup_parser.add_argument(
         "--non-interactive",

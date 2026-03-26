@@ -42,6 +42,7 @@ Produce rigorous, reproducible experimental data showing how prompt noise degrad
 - Experiment scope adapts to configured models
 
 ### Recently Validated
+- ✓ Emphasis experiment infrastructure — 8 conversion functions (bold/CAPS/quotes/instruction/sentence-initial), 1,100-item experiment matrix across 3 clusters, docstring-aware code-block protection — Phase 22
 - ✓ All documentation updated for v2.0 — README.md, CLAUDE.md, getting-started, architecture, contributing, analysis guide updated with ModelRegistry, .env keys, 21 modules, zero stale v1.0 refs — Phase 21
 - ✓ Skills and agents updated for v2.0 — all 7 SKILL.md files updated with model_registry/config_manager/env_manager references, evals regenerated, triggers re-optimized, zero stale refs — Phase 20
 - ✓ Setup wizard overhaul — multi-provider selection, free-text model entry with live browser, .env key management, validation pings, budget preview — Phase 19
@@ -100,4 +101,4 @@ Produce rigorous, reproducible experimental data showing how prompt noise degrad
 | 5 repetitions per condition | Balance statistical power with API cost | — Pending |
 
 ---
-*Last updated: 2026-03-26 after Phase 21 complete — Update All Documentation*
+*Last updated: 2026-03-26 after Phase 22 complete — Emphasis Formatting Experiments*

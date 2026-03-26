@@ -1,6 +1,6 @@
 ---
 name: run-experiment
-description: Execute the full experiment matrix or targeted subsets for the Linguistic Tax research project. Use this skill whenever the user wants to run experiments, execute the full matrix, run a specific model or intervention, resume interrupted runs, retry failed runs, or check execution cost before running. Also trigger when the user says "run experiments", "start the full run", "run claude only", "retry failed", "resume experiments", "how much will this cost", or "execute the matrix".
+description: Execute the full experiment matrix or targeted subsets for the Linguistic Tax research project. Use this skill whenever the user wants to run experiments, execute the full matrix, run a specific model or intervention, resume interrupted runs, retry failed runs, check execution cost before running, or run with configured models. Also trigger when the user says "run experiments", "start the full run", "run claude only", "retry failed", "resume experiments", "how much will this cost", "execute the matrix", "registry-backed execution", or "run configured models".
 ---
 
 # Run Experiment

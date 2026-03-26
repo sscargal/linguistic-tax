@@ -9,8 +9,8 @@
       "expectations": [
         "Queries results.db (or reports it doesn't exist)",
         "Shows a status breakdown table (completed, pending, failed counts)",
-        "Shows per-model completion counts",
-        "Shows total cost spent in USD",
+        "Shows per-model completion counts for all configured models",
+        "Shows total cost spent in USD using model_registry pricing data",
         "Calculates and shows completion percentage",
         "Estimates remaining cost if experiment is partially complete"
       ]
@@ -39,6 +39,19 @@
         "Checks for duplicate run IDs",
         "Gives a clear recommendation about whether to proceed",
         "Suggests next steps based on findings"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "show me the cost breakdown by model. i want to know which models are costing the most and how that compares to the registry pricing",
+      "expected_output": "Cost breakdown per model with comparison to registry pricing data.",
+      "files": [],
+      "expectations": [
+        "Queries results.db for actual cost per model",
+        "Compares actual costs against model_registry.get_price() estimates",
+        "Shows cost-per-call averages by model",
+        "Flags any models where actual cost differs significantly from registry pricing",
+        "Mentions propt list-models for viewing registered model costs"
       ]
     }
   ]

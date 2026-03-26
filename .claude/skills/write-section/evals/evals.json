@@ -12,8 +12,9 @@
         "Produces valid LaTeX with proper packages and formatting",
         "Covers all 4 methodology components: noise injection, compression, interventions, experiment design",
         "Includes algorithm pseudocode or description for noise injection",
-        "References the exact model versions and reproducibility details",
-        "Uses proper citation format for referenced papers"
+        "References the exact model versions from the configurable model registry",
+        "Uses proper citation format for referenced papers",
+        "Describes model configuration as dynamic (via propt setup) not hardcoded"
       ]
     },
     {
@@ -22,7 +23,7 @@
       "expected_output": "A concise LaTeX abstract following the problem-method-finding-implication structure.",
       "files": [],
       "expectations": [
-        "Follows problem → method → finding → implication structure",
+        "Follows problem -> method -> finding -> implication structure",
         "Mentions the linguistic tax concept",
         "Describes the experimental scope (prompts, models, conditions)",
         "Highlights the combined sanitize+compress finding",
@@ -41,7 +42,8 @@
         "Each finding has: claim, evidence (table/figure), statistical test, interpretation",
         "References figures with \\ref{} commands",
         "Includes confidence intervals with quantitative claims",
-        "References the hypothesis scorecard (H1-H5)"
+        "References the hypothesis scorecard (H1-H5)",
+        "Describes model results using configured model names from the registry"
       ]
     }
   ]

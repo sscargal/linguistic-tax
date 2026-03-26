@@ -12,7 +12,8 @@
         "Interprets results against the 5 hypotheses (H1-H5)",
         "Presents a hypothesis scorecard with support status",
         "Reports key metrics (R, RR, TR values)",
-        "Notes any surprising findings"
+        "Notes any surprising findings",
+        "Handles results for all configured models from the registry"
       ]
     },
     {
@@ -40,6 +41,19 @@
         "Reports tau values per noise level",
         "Identifies whether the tax is uniform or targeted",
         "If targeted, suggests which prompt characteristics are vulnerable"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "how do the results compare across the different models we configured? are some models more resilient to noise than others?",
+      "expected_output": "Cross-model comparison of noise resilience using configured models from the registry.",
+      "files": [],
+      "expectations": [
+        "Compares results across all models from model_registry.target_models()",
+        "Shows per-model accuracy degradation rates",
+        "Identifies most and least noise-resilient models",
+        "Notes any model-specific patterns in intervention effectiveness",
+        "Acknowledges that the model set is configurable via propt setup"
       ]
     }
   ]

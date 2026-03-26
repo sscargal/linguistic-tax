@@ -34,9 +34,22 @@
       "files": [],
       "expectations": [
         "Identifies the issue: config file not initialized",
-        "Suggests running propt setup to create the config",
-        "Mentions checking API keys are set as environment variables",
+        "Suggests running propt setup to create the config via config_manager",
+        "Mentions checking API keys are set as environment variables via env_manager.check_keys()",
         "Suggests re-running the pilot after setup completes"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "can i run the pilot with just the providers i have configured? i only set up anthropic and google so far",
+      "expected_output": "Explains how the pilot uses configured providers from the registry.",
+      "files": [],
+      "expectations": [
+        "Explains the pilot runs against all models configured via propt setup",
+        "Mentions model_registry.target_models() determines which models are included",
+        "Suggests propt list-models to verify which providers are configured",
+        "Notes that env_manager.check_keys() validates only configured provider keys",
+        "Explains the pilot will adjust scope to configured models only"
       ]
     }
   ]

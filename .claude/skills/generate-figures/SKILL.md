@@ -1,6 +1,6 @@
 ---
 name: generate-figures
-description: Generate publication-quality figures for the Linguistic Tax ArXiv paper. Use this skill whenever the user wants to create plots, generate figures, make charts for the paper, visualize results, create accuracy curves, quadrant plots, cost heatmaps, or rank stability charts. Also trigger when the user says "make the figures", "generate plots", "create the paper figures", "visualize the results", "accuracy curve", "quadrant scatter", or "cost heatmap".
+description: Generate publication-quality figures for the Linguistic Tax ArXiv paper. Use this skill whenever the user wants to create plots, generate figures, make charts for the paper, visualize results, create accuracy curves, quadrant plots, cost heatmaps, rank stability charts, or visualize dynamic model results. Also trigger when the user says "make the figures", "generate plots", "create the paper figures", "visualize the results", "accuracy curve", "quadrant scatter", "cost heatmap", or "visualize configured models".
 ---
 
 # Generate Figures

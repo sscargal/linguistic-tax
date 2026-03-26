@@ -1,6 +1,6 @@
 ---
 name: check-results
-description: Inspect experiment progress, data quality, and cost tracking for the Linguistic Tax research project. Use this skill whenever the user asks about experiment status, how many runs are complete, what the cost is so far, whether there are gaps in the matrix, database health, or anything related to the state of results.db. Also trigger when the user says things like "how's the experiment going", "what's left to run", "check progress", "show me the results so far", or "how much have we spent".
+description: Inspect experiment progress, data quality, and cost tracking for the Linguistic Tax research project. Use this skill whenever the user asks about experiment status, how many runs are complete, what the cost is so far, whether there are gaps in the matrix, database health, check dynamic model results, model registry costs, or anything related to the state of results.db. Also trigger when the user says things like "how's the experiment going", "what's left to run", "check progress", "show me the results so far", "how much have we spent", "check dynamic model results", or "model registry costs".
 ---
 
 # Check Results

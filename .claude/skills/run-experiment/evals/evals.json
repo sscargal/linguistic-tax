@@ -8,10 +8,11 @@
       "files": [],
       "expectations": [
         "Suggests a dry-run first (propt run --dry-run)",
-        "Recommends starting with cheapest/free model",
-        "Shows the recommended execution order (free → cheap → expensive)",
+        "Recommends starting with cheapest/free model from configured models",
+        "Shows the recommended execution order (free -> cheap -> expensive)",
         "Provides the specific CLI commands with --model flags",
-        "Mentions budget-gating option (--budget flag)"
+        "Mentions budget-gating option (--budget flag)",
+        "Uses registry-backed cost estimates from model_registry.compute_cost()"
       ]
     },
     {
@@ -37,6 +38,19 @@
         "Suggests doing a dry-run first for that specific filter",
         "Explains what prompt repetition does (duplicate input per Leviathan et al.)",
         "Suggests comparing results against raw baseline after completion"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "how do i run experiments with the models i configured during setup? i used propt setup to add some models",
+      "expected_output": "Explains how configured models from the registry are used in experiment execution.",
+      "files": [],
+      "expectations": [
+        "Explains that propt run uses models from the model registry configured via propt setup",
+        "Mentions that model_registry.target_models() provides the configured model list",
+        "Suggests propt list-models to see currently configured models",
+        "Explains that env_manager.check_keys() validates API keys before execution",
+        "Mentions config_manager.load_config() for experiment parameters"
       ]
     }
   ]

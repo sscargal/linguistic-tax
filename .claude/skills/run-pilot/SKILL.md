@@ -1,6 +1,6 @@
 ---
 name: run-pilot
-description: Run the 20-prompt pilot experiment for the Linguistic Tax research project. Use this skill whenever the user wants to run the pilot, start a small test run, validate the experiment pipeline, do a dry run, check pilot costs, or kick off initial experiments. Also trigger when the user says "run pilot", "test run", "try 20 prompts", "validate the pipeline", "how much will the pilot cost", or "start small before full run".
+description: Run the 20-prompt pilot experiment for the Linguistic Tax research project. Use this skill whenever the user wants to run the pilot, start a small test run, validate the experiment pipeline, do a dry run, check pilot costs, kick off initial experiments, or validate with configured providers. Also trigger when the user says "run pilot", "test run", "try 20 prompts", "validate the pipeline", "how much will the pilot cost", "start small before full run", or "validate with configured providers".
 ---
 
 # Run Pilot

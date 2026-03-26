@@ -8,26 +8,28 @@
       "files": [],
       "expectations": [
         "Reads the RDD (docs/RDD_Linguistic_Tax_v4.md)",
-        "Reads relevant source files (config.py, noise_generator.py, etc.)",
+        "Reads relevant source files (model_registry.py, config_manager.py, noise_generator.py, etc.)",
         "Checks noise parameters against RDD Section 5.1",
         "Checks intervention definitions against RDD Section 6",
-        "Checks model configuration against RDD Section 4.2",
+        "Checks model configuration via model_registry.target_models() against RDD Section 4.2",
         "Produces a structured compliance table with PASS/FAIL/WARN statuses",
-        "Explains any deviations found with specific file locations and line numbers"
+        "Explains any deviations found with specific file locations and line numbers",
+        "References model_registry instead of hardcoded MODELS constant"
       ]
     },
     {
       "id": 2,
-      "prompt": "I just changed some parameters in config.py and want to verify the experiment matrix still aligns with the RDD. specifically check the noise levels, repetition count, and model list",
+      "prompt": "I just changed some parameters in the config and want to verify the experiment matrix still aligns with the RDD. specifically check the noise levels, repetition count, and model list",
       "expected_output": "A focused validation of the specific parameters mentioned, with comparison against RDD values.",
       "files": [],
       "expectations": [
-        "Reads config.py for current parameter values",
+        "Reads config via config_manager.load_config() for current parameter values",
         "Reads the RDD for expected values",
         "Compares noise levels (5%, 10%, 20%) against RDD Section 5.1",
         "Compares repetition count (5) against RDD Section 4.3",
-        "Compares model list against RDD Section 4.2",
-        "Reports specific deviations if any exist"
+        "Gets model list from model_registry.target_models() not config.py constants",
+        "Reports specific deviations if any exist",
+        "Uses registry.compute_cost() for cost checks not config.py:compute_cost()"
       ]
     },
     {
@@ -43,6 +45,20 @@
         "Reads compute_derived.py for CR and quadrant classification",
         "Compares each against RDD Section 7 specifications",
         "Reports compliance status for each statistical method"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "check if the model registry and config manager are correctly set up to match what the RDD expects. are all the required models registered and is the config schema valid?",
+      "expected_output": "Validates model_registry entries against RDD Section 4.2 model requirements and checks config_manager schema compliance.",
+      "files": [],
+      "expectations": [
+        "Reads model_registry.py and checks target_models() output",
+        "Validates that all RDD-required models are registered in default_models.json",
+        "Checks registry pricing data via get_price() matches RDD cost assumptions",
+        "Validates config_manager schema covers all RDD experimental parameters",
+        "Checks env_manager.check_keys() reports correct environment variable requirements",
+        "References propt list-models command for model discovery"
       ]
     }
   ]

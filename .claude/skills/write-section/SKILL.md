@@ -1,6 +1,6 @@
 ---
 name: write-section
-description: Draft LaTeX sections for the Linguistic Tax ArXiv paper based on experiment results and the RDD whitepaper outline. Use this skill whenever the user wants to write part of the paper, draft a section, generate LaTeX for the paper, write the abstract, write methodology, write results, or assemble the paper. Also trigger when the user says "write the paper", "draft the intro", "write the results section", "generate LaTeX", "help me write section X", "draft the abstract", or "assemble the paper".
+description: Draft LaTeX sections for the Linguistic Tax ArXiv paper based on experiment results and the RDD whitepaper outline. Use this skill whenever the user wants to write part of the paper, draft a section, generate LaTeX for the paper, write the abstract, write methodology, write results, describe dynamic models, or assemble the paper. Also trigger when the user says "write the paper", "draft the intro", "write the results section", "generate LaTeX", "help me write section X", "draft the abstract", "assemble the paper", or "describe configured models".
 ---
 
 # Write Section

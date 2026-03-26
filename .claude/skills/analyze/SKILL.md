@@ -1,6 +1,6 @@
 ---
 name: analyze
-description: Run the statistical analysis pipeline for the Linguistic Tax research project and interpret results against the 5 hypotheses. Use this skill whenever the user wants to analyze experiment results, run statistics, interpret findings, check if hypotheses are supported, compute GLMM/bootstrap/McNemar/Kendall analyses, or understand what the data shows. Also trigger when the user says "analyze results", "run the stats", "what do the results show", "are the hypotheses supported", "compute derived metrics", or "run the analysis pipeline".
+description: Run the statistical analysis pipeline for the Linguistic Tax research project and interpret results against the 5 hypotheses. Use this skill whenever the user wants to analyze experiment results, run statistics, interpret findings, check if hypotheses are supported, compute GLMM/bootstrap/McNemar/Kendall analyses, compare configured models, or understand what the data shows. Also trigger when the user says "analyze results", "run the stats", "what do the results show", "are the hypotheses supported", "compute derived metrics", "run the analysis pipeline", or "compare configured models".
 ---
 
 # Analyze Results

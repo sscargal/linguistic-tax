@@ -1,6 +1,6 @@
 ---
 name: validate-rdd
-description: Verify that the Linguistic Tax codebase correctly implements the Research Design Document (RDD) specification. Use this skill whenever the user asks to validate the implementation against the RDD, check for RDD compliance, verify experimental parameters match the spec, audit the code against the research design, or wants to know if anything has drifted from the specification. Also trigger when the user mentions "RDD compliance", "does the code match the spec", "validate parameters", or "check the implementation".
+description: Verify that the Linguistic Tax codebase correctly implements the Research Design Document (RDD) specification. Use this skill whenever the user asks to validate the implementation against the RDD, check for RDD compliance, verify experimental parameters match the spec, audit the code against the research design, check model registry compliance, validate config schema, or wants to know if anything has drifted from the specification. Also trigger when the user mentions "RDD compliance", "does the code match the spec", "validate parameters", "check the implementation", "check model registry compliance", or "validate config schema".
 ---
 
 # Validate RDD

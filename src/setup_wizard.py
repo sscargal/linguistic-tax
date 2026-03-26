@@ -354,6 +354,10 @@ def _select_models(
     models: list[dict] = []
     global_preproc: str | None = None
 
+    print("\n--- Model Selection ---")
+    print("For each provider, choose the target model (the LLM being tested)")
+    print("and then the pre-processor model (the cheap model that cleans prompts).\n")
+
     for provider in providers:
         name = PROVIDER_NAMES[provider]
 
@@ -364,7 +368,7 @@ def _select_models(
 
         # Target model selection
         while True:
-            prompt = f"Target model for {name} [{default_target}]: "
+            prompt = f"{name} target model (the LLM being tested) [{default_target}]: "
             raw = input_fn(prompt).strip()
             if raw.lower() == "list":
                 selected = _browse_models(provider, input_fn)

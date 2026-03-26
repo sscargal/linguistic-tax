@@ -560,9 +560,13 @@ def validate_api_key(
                 messages=[{"role": "user", "content": "Hi"}],
             )
         elif provider == "openrouter":
+            # Strip openrouter/ prefix — internal convention, not used by the API
+            api_model = (model_id or "nvidia/nemotron-3-nano-30b-a3b:free")
+            if api_model.startswith("openrouter/"):
+                api_model = api_model.removeprefix("openrouter/")
             client = openai.OpenAI(api_key=key, base_url=OPENROUTER_BASE_URL)
             client.chat.completions.create(
-                model=model_id or "nvidia/nemotron-3-nano-30b-a3b:free",
+                model=api_model,
                 max_tokens=1,
                 messages=[{"role": "user", "content": "Hi"}],
             )
@@ -582,6 +586,9 @@ def _validate_models(
     models: list[dict], input_fn: Callable[..., str]
 ) -> list[dict]:
     """Validate each model by pinging the API with the actual target model.
+
+    When validation fails, offers the user choices: keep anyway, enter a
+    different model ID, list available models, or skip the provider.
 
     Args:
         models: List of model config dicts with 'provider', 'target_model'.
@@ -605,9 +612,46 @@ def _validate_models(
             validated.append(entry)
         else:
             print(f"FAILED: {msg}")
-            keep = input_fn("Keep this model? (Y/n): ").strip().lower()
-            if keep in ("", "y", "yes"):
-                validated.append(entry)
+            while True:
+                print("  Options:")
+                print("    y    - Keep this model anyway")
+                print("    n    - Skip this provider")
+                print("    list - Browse available models")
+                print("    Or type a different model ID")
+                choice = input_fn("Choice: ").strip()
+
+                if choice.lower() in ("y", "yes", ""):
+                    validated.append(entry)
+                    break
+                elif choice.lower() == "n":
+                    break
+                elif choice.lower() == "list":
+                    selected = _browse_models(provider, input_fn)
+                    if selected:
+                        entry["target_model"] = selected
+                        # Re-validate the new selection
+                        print(f"\nValidating {selected}... ", end="", flush=True)
+                        ok2, msg2 = validate_api_key(provider, env_var, model_id=selected)
+                        if ok2:
+                            print("OK")
+                            validated.append(entry)
+                            break
+                        else:
+                            print(f"FAILED: {msg2}")
+                            # Loop back to options
+                    # If browse returned None, loop back
+                else:
+                    # Treat as a model ID
+                    entry["target_model"] = choice
+                    print(f"\nValidating {choice}... ", end="", flush=True)
+                    ok2, msg2 = validate_api_key(provider, env_var, model_id=choice)
+                    if ok2:
+                        print("OK")
+                        validated.append(entry)
+                        break
+                    else:
+                        print(f"FAILED: {msg2}")
+                        # Loop back to options
 
     return validated
 

@@ -632,9 +632,12 @@ def _build_parser() -> argparse.ArgumentParser:
 
 def main() -> None:
     """CLI entry point for the execution engine."""
+    from src.env_manager import load_env
+
     parser = _build_parser()
     args = parser.parse_args()
 
+    load_env()
     _check_config_exists()
 
     logging.basicConfig(

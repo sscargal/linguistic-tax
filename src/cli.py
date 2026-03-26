@@ -216,10 +216,14 @@ def build_cli() -> argparse.ArgumentParser:
 
 def main() -> None:
     """CLI entry point. Parses args, routes to subcommand handler."""
+    from src.env_manager import load_env
+
     logging.basicConfig(
         level=logging.INFO,
         format="%(levelname)s: %(message)s",
     )
+
+    load_env()
 
     try:
         parser = build_cli()

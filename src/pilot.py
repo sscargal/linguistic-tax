@@ -1182,9 +1182,12 @@ def _check_config_exists() -> None:
 
 def main() -> None:
     """Entry point for the pilot validation CLI."""
+    from src.env_manager import load_env
+
     parser = _build_parser()
     args = parser.parse_args()
 
+    load_env()
     _check_config_exists()
     result = run_pilot(
         budget=args.budget,

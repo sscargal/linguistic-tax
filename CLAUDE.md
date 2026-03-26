@@ -39,7 +39,7 @@ figures/                 — Generated plots for the paper
 
 ## Tech Stack
 
-- **Language:** Python 3.11+
+- **Language:** Python 3.12+
 - **APIs:** Anthropic (Claude), Google (Gemini) — direct API calls, NOT CLI
 - **Statistics:** statsmodels (GLMM), scipy (McNemar's, bootstrap), bert-score
 - **Data:** SQLite for results, JSON for prompts/configs

@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Configurable Models and Dynamic Pricing
 status: unknown
-stopped_at: Completed 16-02-PLAN.md
-last_updated: "2026-03-26T00:06:08.232Z"
+stopped_at: Completed 16-01-PLAN.md
+last_updated: "2026-03-26T00:06:33.961Z"
 last_activity: "2026-03-25 - Completed quick task 260325-w6g: Support Ctrl-C in the wizard and scripts"
 progress:
   total_phases: 7
   completed_phases: 0
   total_plans: 3
-  completed_plans: 1
+  completed_plans: 2
 ---
 
 # Project State
@@ -48,6 +48,7 @@ Plan: 2 of 3
 
 *Updated after each plan completion*
 | Phase 16 P02 | 2min | 2 tasks | 4 files |
+| Phase 16 P01 | 2min | 1 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -61,6 +62,7 @@ Recent decisions affecting current work:
 - [Phase 14]: print() for CLI output instead of logging for user-facing commands
 - [Phase 15]: Budget gate checks before --yes auto-accept for scripted safety
 - [Phase 16]: env_path parameter on all env_manager functions for test isolation via tmp_path
+- [Phase 16]: Registry initialized from default_models.json at import time; reload() used after config load
 
 ### Pending Todos
 
@@ -89,6 +91,6 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last activity: 2026-03-25 - Completed quick task 260325-w6g: Support Ctrl-C in the wizard and scripts
-Last session: 2026-03-26T00:06:08.230Z
-Stopped at: Completed 16-02-PLAN.md
+Last session: 2026-03-26T00:06:33.959Z
+Stopped at: Completed 16-01-PLAN.md
 Resume file: None

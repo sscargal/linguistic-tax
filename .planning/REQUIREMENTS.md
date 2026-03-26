@@ -9,9 +9,9 @@ Requirements for configurable models and dynamic pricing. Each maps to roadmap p
 
 ### Configuration
 
-- [ ] **CFG-01**: User can configure target and pre-processor models per provider via a `models` list in ExperimentConfig
-- [ ] **CFG-02**: PRICE_TABLE, PREPROC_MODEL_MAP, and RATE_LIMIT_DELAYS are derived from config at load time, not hardcoded
-- [ ] **CFG-03**: `compute_cost()` falls back to $0.00 with a warning for models not in the price table (no crash)
+- [x] **CFG-01**: User can configure target and pre-processor models per provider via a `models` list in ExperimentConfig
+- [x] **CFG-02**: PRICE_TABLE, PREPROC_MODEL_MAP, and RATE_LIMIT_DELAYS are derived from config at load time, not hardcoded
+- [x] **CFG-03**: `compute_cost()` falls back to $0.00 with a warning for models not in the price table (no crash)
 - [ ] **CFG-04**: `validate_config()` warns instead of rejecting unknown model IDs
 - [ ] **CFG-05**: Old flat-field configs (claude_model, gemini_model, etc.) automatically migrate to the new models list format on load
 
@@ -32,9 +32,9 @@ Requirements for configurable models and dynamic pricing. Each maps to roadmap p
 
 ### Pricing
 
-- [ ] **PRC-01**: Curated fallback price table provides pricing for known models when no API pricing is available
+- [x] **PRC-01**: Curated fallback price table provides pricing for known models when no API pricing is available
 - [ ] **PRC-02**: OpenRouter live pricing is fetched via its `/api/v1/models` endpoint
-- [ ] **PRC-03**: Unknown models default to $0.00 pricing with a user-visible warning
+- [x] **PRC-03**: Unknown models default to $0.00 pricing with a user-visible warning
 
 ### Experiment Scope
 
@@ -63,9 +63,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CFG-01 | Phase 16 | Pending |
-| CFG-02 | Phase 16 | Pending |
-| CFG-03 | Phase 16 | Pending |
+| CFG-01 | Phase 16 | Complete |
+| CFG-02 | Phase 16 | Complete |
+| CFG-03 | Phase 16 | Complete |
 | CFG-04 | Phase 16 | Pending |
 | CFG-05 | Phase 16 | Pending |
 | DSC-01 | Phase 18 | Pending |
@@ -77,9 +77,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | WIZ-04 | Phase 19 | Pending |
 | WIZ-05 | Phase 19 | Pending |
 | WIZ-06 | Phase 19 | Pending |
-| PRC-01 | Phase 16 | Pending |
+| PRC-01 | Phase 16 | Complete |
 | PRC-02 | Phase 18 | Pending |
-| PRC-03 | Phase 16 | Pending |
+| PRC-03 | Phase 16 | Complete |
 | EXP-01 | Phase 17 | Pending |
 | EXP-02 | Phase 17 | Pending |
 | EXP-03 | Phase 17 | Pending |

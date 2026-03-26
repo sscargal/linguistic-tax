@@ -106,14 +106,17 @@ class TestConstants:
         assert set(NOISE_TYPES) == expected
 
     def test_interventions_count(self):
-        """INTERVENTIONS has exactly 5 entries."""
-        assert len(INTERVENTIONS) == 5
+        """INTERVENTIONS has exactly 11 entries (5 original + 6 emphasis)."""
+        assert len(INTERVENTIONS) == 11
 
     def test_interventions_contents(self):
         """INTERVENTIONS contains all expected intervention types."""
         expected = {
             "raw", "self_correct", "pre_proc_sanitize",
             "pre_proc_sanitize_compress", "prompt_repetition",
+            "emphasis_bold", "emphasis_caps", "emphasis_quotes",
+            "emphasis_instruction_caps", "emphasis_instruction_bold",
+            "emphasis_lowercase_initial",
         }
         assert set(INTERVENTIONS) == expected
 

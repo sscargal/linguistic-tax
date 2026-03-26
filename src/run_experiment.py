@@ -41,6 +41,12 @@ from src.prompt_compressor import (
     sanitize_and_compress,
 )
 from src.prompt_repeater import repeat_prompt
+from src.emphasis_converter import (
+    load_emphasis_variant,
+    apply_instruction_caps,
+    apply_instruction_bold,
+    lowercase_sentence_initial,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -82,6 +88,7 @@ def apply_intervention(
     intervention: str,
     model: str,
     call_fn: Callable[..., Any],
+    prompt_id: str = "",
 ) -> tuple[str, dict[str, Any]]:
     """Apply the specified intervention strategy to a prompt.
 
@@ -90,15 +97,16 @@ def apply_intervention(
 
     Args:
         prompt_text: The prompt text (may be noisy).
-        intervention: One of the 5 intervention strategies.
+        intervention: One of the known intervention strategies.
         model: The main model identifier (used for pre-processor lookup).
         call_fn: Callable for making API calls (passed to pre-processor interventions).
+        prompt_id: Prompt identifier (used for emphasis cache lookups).
 
     Returns:
         A tuple of (processed_text, metadata_dict).
 
     Raises:
-        ValueError: If intervention is not one of the 5 known strategies.
+        ValueError: If intervention is not a known strategy.
     """
     match intervention:
         case "raw":
@@ -113,6 +121,18 @@ def apply_intervention(
             return sanitize_and_compress(prompt_text, model, call_fn)
         case "compress_only":
             return sanitize_and_compress(prompt_text, model, call_fn)
+        case "emphasis_bold" | "emphasis_caps" | "emphasis_quotes":
+            converted = load_emphasis_variant(
+                prompt_id=prompt_id,
+                intervention=intervention,
+            )
+            return (converted, {})
+        case "emphasis_instruction_caps":
+            return (apply_instruction_caps(prompt_text), {})
+        case "emphasis_instruction_bold":
+            return (apply_instruction_bold(prompt_text), {})
+        case "emphasis_lowercase_initial":
+            return (lowercase_sentence_initial(prompt_text), {})
         case _:
             raise ValueError(f"Unknown intervention: {intervention}")
 
@@ -267,6 +287,7 @@ def _process_item(
         # Apply intervention
         processed_text, preproc_meta = apply_intervention(
             prompt_text, item["intervention"], item["model"], call_model,
+            prompt_id=item["prompt_id"],
         )
 
         # Determine max tokens

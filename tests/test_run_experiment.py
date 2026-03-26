@@ -131,6 +131,73 @@ class TestApplyIntervention:
         with pytest.raises(ValueError, match="Unknown intervention"):
             apply_intervention("hello", "unknown", "claude-sonnet-4-20250514", mock_call_fn)
 
+    def test_emphasis_instruction_caps_routing(self) -> None:
+        from src.run_experiment import apply_intervention
+        text, meta = apply_intervention(
+            "You should validate input.", "emphasis_instruction_caps",
+            "claude-sonnet-4-20250514", mock_call_fn,
+        )
+        assert "SHOULD" in text
+        assert meta == {}
+
+    def test_emphasis_instruction_bold_routing(self) -> None:
+        from src.run_experiment import apply_intervention
+        text, meta = apply_intervention(
+            "You must check.", "emphasis_instruction_bold",
+            "claude-sonnet-4-20250514", mock_call_fn,
+        )
+        assert "**must**" in text
+        assert meta == {}
+
+    def test_emphasis_lowercase_initial_routing(self) -> None:
+        from src.run_experiment import apply_intervention
+        text, meta = apply_intervention(
+            "Write a function.", "emphasis_lowercase_initial",
+            "claude-sonnet-4-20250514", mock_call_fn,
+        )
+        assert text == "write a function."
+        assert meta == {}
+
+    def test_emphasis_bold_routing_calls_cache(self) -> None:
+        from src.run_experiment import apply_intervention
+        with patch("src.run_experiment.load_emphasis_variant", return_value="**bold** text") as mock_load:
+            text, meta = apply_intervention(
+                "original", "emphasis_bold",
+                "claude-sonnet-4-20250514", mock_call_fn,
+                prompt_id="HumanEval/1",
+            )
+            mock_load.assert_called_once_with(
+                prompt_id="HumanEval/1", intervention="emphasis_bold",
+            )
+            assert text == "**bold** text"
+            assert meta == {}
+
+    def test_emphasis_caps_routing_calls_cache(self) -> None:
+        from src.run_experiment import apply_intervention
+        with patch("src.run_experiment.load_emphasis_variant", return_value="CAPS text") as mock_load:
+            text, meta = apply_intervention(
+                "original", "emphasis_caps",
+                "claude-sonnet-4-20250514", mock_call_fn,
+                prompt_id="HumanEval/1",
+            )
+            mock_load.assert_called_once_with(
+                prompt_id="HumanEval/1", intervention="emphasis_caps",
+            )
+            assert text == "CAPS text"
+
+    def test_emphasis_quotes_routing_calls_cache(self) -> None:
+        from src.run_experiment import apply_intervention
+        with patch("src.run_experiment.load_emphasis_variant", return_value="'quoted' text") as mock_load:
+            text, meta = apply_intervention(
+                "original", "emphasis_quotes",
+                "claude-sonnet-4-20250514", mock_call_fn,
+                prompt_id="HumanEval/1",
+            )
+            mock_load.assert_called_once_with(
+                prompt_id="HumanEval/1", intervention="emphasis_quotes",
+            )
+            assert text == "'quoted' text"
+
 
 # ---------------------------------------------------------------------------
 # _order_by_model tests

@@ -79,6 +79,13 @@ INTERVENTIONS: tuple[str, ...] = (
     "pre_proc_sanitize",
     "pre_proc_sanitize_compress",
     "prompt_repetition",
+    # Emphasis experiments (Phase 22)
+    "emphasis_bold",
+    "emphasis_caps",
+    "emphasis_quotes",
+    "emphasis_instruction_caps",
+    "emphasis_instruction_bold",
+    "emphasis_lowercase_initial",
 )
 
 MAX_TOKENS_BY_BENCHMARK: dict[str, int] = {

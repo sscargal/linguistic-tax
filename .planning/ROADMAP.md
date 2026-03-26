@@ -138,13 +138,16 @@ Plans:
 
 ### Phase 21: Update all documentation
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** All 7 user-facing docs (README.md, docs/getting-started.md, docs/architecture.md, docs/contributing.md, docs/analysis-guide.md, docs/README.md, CLAUDE.md) reflect v2.0 architecture -- configurable models via ModelRegistry, .env API key management, overhauled setup wizard, live model discovery, 3 new modules, zero stale references to v1.0 constants
+**Requirements**: DOC-01, DOC-02, DOC-03, DOC-04, DOC-05, DOC-06, DOC-07, DOC-08
 **Depends on:** Phase 20
-**Plans:** 0 plans
+**Plans:** 4 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 21 to break down)
+- [ ] 21-01-PLAN.md -- Update README.md and CLAUDE.md with v2.0 architecture, module counts, Quick Start, CLI reference
+- [ ] 21-02-PLAN.md -- Rewrite docs/getting-started.md wizard section, .env-first API keys, v2.0 config flow
+- [ ] 21-03-PLAN.md -- Update docs/architecture.md module tables, diagrams, Design Decisions; update docs/contributing.md model addition guide
+- [ ] 21-04-PLAN.md -- Update docs/analysis-guide.md and docs/README.md; cross-document stale reference sweep
 
 ### Phase 22: Experiment: All-caps and emphasis formatting effects on LLM attention
 

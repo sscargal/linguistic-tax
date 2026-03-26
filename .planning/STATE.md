@@ -108,6 +108,7 @@ Recent decisions affecting current work:
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 260325-w6g | Support Ctrl-C in the wizard and scripts | 2026-03-25 | d7e40b4 | [260325-w6g-support-ctrl-c-in-the-wizard-and-scripts](./quick/260325-w6g-support-ctrl-c-in-the-wizard-and-scripts/) |
+| 260326-n2y | Git status triage — commit untracked files | 2026-03-26 | 8b08e67 | [260326-n2y-run-git-status-and-decide-what-needs-to-](./quick/260326-n2y-run-git-status-and-decide-what-needs-to-/) |
 
 ## Session Continuity
 

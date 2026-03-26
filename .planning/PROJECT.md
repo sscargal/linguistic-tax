@@ -42,6 +42,7 @@ Produce rigorous, reproducible experimental data showing how prompt noise degrad
 - Experiment scope adapts to configured models
 
 ### Recently Validated
+- ✓ Config schema and defensive fallbacks — ModelConfig dataclass, ModelRegistry, env_manager, ExperimentConfig v2 with migration — Phase 16
 - ✓ Comprehensive documentation and README for new users — root README.md, architecture docs, getting-started guide, analysis guide, contributing guide, docs index — Phase 12
 - ✓ Pre-execution experiment summary and confirmation gate — cost/runtime estimation, structured summary display, three-way confirmation (Y/N/M), --yes/--budget flags, propt run/pilot CLI subcommands, tqdm progress bar, execution plan saving — Phase 15
 - ✓ CLI config subcommands (show/set/reset/validate/diff/list-models) with JSON/text/table output, changed-from-defaults highlighting, and tab completion — Phase 14
@@ -94,4 +95,4 @@ Produce rigorous, reproducible experimental data showing how prompt noise degrad
 | 5 repetitions per condition | Balance statistical power with API cost | — Pending |
 
 ---
-*Last updated: 2026-03-25 after milestone v2.0 started — Configurable Models and Dynamic Pricing*
+*Last updated: 2026-03-26 after Phase 16 complete — Config schema and defensive fallbacks*

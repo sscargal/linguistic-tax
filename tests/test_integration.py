@@ -164,20 +164,20 @@ class TestOpenRouterLifecycle:
         import os
         from unittest.mock import patch, MagicMock
 
-        from src.config import MODELS, PRICE_TABLE, PREPROC_MODEL_MAP, compute_cost
+        from src.model_registry import registry
         from src.api_client import call_model, APIResponse
 
         target = "openrouter/nvidia/nemotron-3-super-120b-a12b:free"
         preproc = "openrouter/nvidia/nemotron-3-nano-30b-a3b:free"
 
-        # Step 1: Verify config entries exist
-        assert target in MODELS, "Target model not in MODELS"
-        assert target in PRICE_TABLE, "Target model not in PRICE_TABLE"
-        assert preproc in PRICE_TABLE, "Preproc model not in PRICE_TABLE"
-        assert PREPROC_MODEL_MAP[target] == preproc, "Preproc mapping wrong"
+        # Step 1: Verify registry entries exist
+        assert target in registry.target_models(), "Target model not in registry targets"
+        assert registry.get_price(target) != (0.0, 0.0) or target in registry._models, "Target model not in registry"
+        assert preproc in registry._models, "Preproc model not in registry"
+        assert registry.get_preproc(target) == preproc, "Preproc mapping wrong"
 
         # Step 2: Verify zero-cost pricing
-        cost = compute_cost(target, 1000, 500)
+        cost = registry.compute_cost(target, 1000, 500)
         assert cost == 0.0, f"Expected 0.0, got {cost}"
 
         # Step 3: Mock the OpenAI client and verify call_model routes correctly

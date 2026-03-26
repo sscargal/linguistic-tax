@@ -1,9 +1,9 @@
-"""Tests for prompt_repeater module and config additions.
+"""Tests for prompt_repeater module and model registry pricing/mappings.
 
 Covers:
 - INTV-02: Prompt repetition (repeat_prompt pure function)
 - INTV-03: Self-correct prefix and build_self_correct_prompt
-- Config: PRICE_TABLE, MAX_TOKENS_BY_BENCHMARK, PREPROC_MODEL_MAP, compute_cost
+- Registry: pricing, MAX_TOKENS_BY_BENCHMARK, preproc mappings, compute_cost
 """
 
 import sys
@@ -81,10 +81,10 @@ class TestSelfCorrect:
 # Config additions tests
 # ---------------------------------------------------------------------------
 class TestPriceTable:
-    """Tests for PRICE_TABLE config constant."""
+    """Tests for model pricing via registry."""
 
     def test_contains_all_eight_models(self) -> None:
-        from src.config import PRICE_TABLE
+        from src.model_registry import registry
 
         expected_models = {
             "claude-sonnet-4-20250514",
@@ -96,24 +96,25 @@ class TestPriceTable:
             "openrouter/nvidia/nemotron-3-super-120b-a12b:free",
             "openrouter/nvidia/nemotron-3-nano-30b-a3b:free",
         }
-        assert set(PRICE_TABLE.keys()) == expected_models
+        assert set(registry._models.keys()) == expected_models
 
     def test_claude_sonnet_input_price(self) -> None:
-        from src.config import PRICE_TABLE
+        from src.model_registry import registry
 
-        assert PRICE_TABLE["claude-sonnet-4-20250514"]["input_per_1m"] == 3.00
+        assert registry.get_price("claude-sonnet-4-20250514")[0] == 3.00
 
     def test_claude_sonnet_output_price(self) -> None:
-        from src.config import PRICE_TABLE
+        from src.model_registry import registry
 
-        assert PRICE_TABLE["claude-sonnet-4-20250514"]["output_per_1m"] == 15.00
+        assert registry.get_price("claude-sonnet-4-20250514")[1] == 15.00
 
     def test_all_models_have_input_and_output(self) -> None:
-        from src.config import PRICE_TABLE
+        from src.model_registry import registry
 
-        for model, prices in PRICE_TABLE.items():
-            assert "input_per_1m" in prices, f"{model} missing input_per_1m"
-            assert "output_per_1m" in prices, f"{model} missing output_per_1m"
+        for model_id in registry._models:
+            inp, out = registry.get_price(model_id)
+            assert isinstance(inp, float), f"{model_id} missing input price"
+            assert isinstance(out, float), f"{model_id} missing output price"
 
 
 class TestMaxTokens:
@@ -136,46 +137,46 @@ class TestMaxTokens:
 
 
 class TestPreprocModelMap:
-    """Tests for PREPROC_MODEL_MAP config constant."""
+    """Tests for preproc model mapping via registry."""
 
     def test_claude_maps_to_haiku(self) -> None:
-        from src.config import PREPROC_MODEL_MAP
+        from src.model_registry import registry
 
-        assert PREPROC_MODEL_MAP["claude-sonnet-4-20250514"] == "claude-haiku-4-5-20250514"
+        assert registry.get_preproc("claude-sonnet-4-20250514") == "claude-haiku-4-5-20250514"
 
     def test_gemini_maps_to_flash(self) -> None:
-        from src.config import PREPROC_MODEL_MAP
+        from src.model_registry import registry
 
-        assert PREPROC_MODEL_MAP["gemini-1.5-pro"] == "gemini-2.0-flash"
+        assert registry.get_preproc("gemini-1.5-pro") == "gemini-2.0-flash"
 
 
 class TestComputeCost:
-    """Tests for compute_cost function."""
+    """Tests for compute_cost via registry."""
 
     def test_claude_sonnet_cost(self) -> None:
-        from src.config import compute_cost
+        from src.model_registry import registry
 
         # 1000 input tokens * 3.00/1M + 500 output tokens * 15.00/1M
         # = 0.003 + 0.0075 = 0.0105
-        result = compute_cost("claude-sonnet-4-20250514", 1000, 500)
+        result = registry.compute_cost("claude-sonnet-4-20250514", 1000, 500)
         assert abs(result - 0.0105) < 1e-10
 
     def test_zero_tokens(self) -> None:
-        from src.config import compute_cost
+        from src.model_registry import registry
 
-        result = compute_cost("claude-sonnet-4-20250514", 0, 0)
+        result = registry.compute_cost("claude-sonnet-4-20250514", 0, 0)
         assert result == 0.0
 
     def test_gemini_flash_cost(self) -> None:
-        from src.config import compute_cost
+        from src.model_registry import registry
 
         # 1000 input * 0.10/1M + 1000 output * 0.40/1M
         # = 0.0001 + 0.0004 = 0.0005
-        result = compute_cost("gemini-2.0-flash", 1000, 1000)
+        result = registry.compute_cost("gemini-2.0-flash", 1000, 1000)
         assert abs(result - 0.0005) < 1e-10
 
     def test_unknown_model_returns_zero(self) -> None:
-        from src.config import compute_cost
+        from src.model_registry import registry
 
-        result = compute_cost("unknown-model", 100, 100)
+        result = registry.compute_cost("unknown-model", 100, 100)
         assert result == 0.0

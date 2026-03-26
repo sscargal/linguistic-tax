@@ -154,7 +154,7 @@ Plans:
 **Goal:** Implement emphasis conversion infrastructure and generate experiment-ready prompt variants for three clusters: (A) key-term emphasis with bold/CAPS/quotes per AQ-NH-05, (B) instruction-word emphasis testing the "shouting confound", and (C) sentence-initial capitalization effects -- producing 1,100 total experiment matrix items across all clusters
 **Requirements**: INFRA, AQ-NH-05, CLUSTER-B, CLUSTER-C
 **Depends on:** Phase 21
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 - [ ] 22-01-PLAN.md -- Emphasis converter module, config.py INTERVENTIONS, run_experiment.py routing, tests

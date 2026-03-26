@@ -42,7 +42,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 **Milestone Goal:** Make models fully configurable at setup time with live pricing, flexible wizard flow, .env API key management, and adaptive experiment scope -- so the toolkit works with any model, not just the four hardcoded ones.
 
-- [ ] **Phase 16: Config Schema and Defensive Fallbacks** - ModelConfig/ModelRegistry abstractions, backward-compatible migration, defensive compute_cost, env_manager
+- [x] **Phase 16: Config Schema and Defensive Fallbacks** - ModelConfig/ModelRegistry abstractions, backward-compatible migration, defensive compute_cost, env_manager (completed 2026-03-26)
 - [ ] **Phase 17: Registry Consumers** - Swap all hardcoded MODELS/PRICE_TABLE/RATE_LIMIT_DELAYS imports to registry lookups across consumer modules
 - [ ] **Phase 18: Pricing Client and Model Discovery** - Live model listing from provider APIs, OpenRouter live pricing, enhanced propt list-models
 - [ ] **Phase 19: Setup Wizard Overhaul** - Free-text model entry, multi-provider loop, .env creation, budget preview, model validation ping
@@ -107,7 +107,7 @@ Phases execute in numeric order: 16 -> 17 -> 18 -> 19
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 16. Config Schema and Defensive Fallbacks | 2/3 | In Progress|  | - |
+| 16. Config Schema and Defensive Fallbacks | 3/3 | Complete   | 2026-03-26 | - |
 | 17. Registry Consumers | v2.0 | 0/TBD | Not started | - |
 | 18. Pricing Client and Model Discovery | v2.0 | 0/TBD | Not started | - |
 | 19. Setup Wizard Overhaul | v2.0 | 0/TBD | Not started | - |
@@ -117,7 +117,7 @@ Phases execute in numeric order: 16 -> 17 -> 18 -> 19
 **Goal:** [To be planned]
 **Requirements**: TBD
 **Depends on:** Phase 19
-**Plans:** 2/3 plans executed
+**Plans:** 3/3 plans complete
 
 Plans:
 - [ ] TBD (run /gsd:plan-phase 20 to break down)

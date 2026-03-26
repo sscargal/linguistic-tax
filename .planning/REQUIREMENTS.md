@@ -12,8 +12,8 @@ Requirements for configurable models and dynamic pricing. Each maps to roadmap p
 - [x] **CFG-01**: User can configure target and pre-processor models per provider via a `models` list in ExperimentConfig
 - [x] **CFG-02**: PRICE_TABLE, PREPROC_MODEL_MAP, and RATE_LIMIT_DELAYS are derived from config at load time, not hardcoded
 - [x] **CFG-03**: `compute_cost()` falls back to $0.00 with a warning for models not in the price table (no crash)
-- [ ] **CFG-04**: `validate_config()` warns instead of rejecting unknown model IDs
-- [ ] **CFG-05**: Old flat-field configs (claude_model, gemini_model, etc.) automatically migrate to the new models list format on load
+- [x] **CFG-04**: `validate_config()` warns instead of rejecting unknown model IDs
+- [x] **CFG-05**: Old flat-field configs (claude_model, gemini_model, etc.) automatically migrate to the new models list format on load
 
 ### Model Discovery
 
@@ -66,8 +66,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CFG-01 | Phase 16 | Complete |
 | CFG-02 | Phase 16 | Complete |
 | CFG-03 | Phase 16 | Complete |
-| CFG-04 | Phase 16 | Pending |
-| CFG-05 | Phase 16 | Pending |
+| CFG-04 | Phase 16 | Complete |
+| CFG-05 | Phase 16 | Complete |
 | DSC-01 | Phase 18 | Pending |
 | DSC-02 | Phase 18 | Pending |
 | DSC-03 | Phase 19 | Pending |

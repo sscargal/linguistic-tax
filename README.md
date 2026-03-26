@@ -6,7 +6,7 @@
 
 How do typos, grammatical errors, and verbose prompts degrade LLM reasoning accuracy? This project measures the "linguistic tax" -- the accuracy penalty that noisy, unpolished prompts impose on large language models. We quantify degradation across multiple noise types and severity levels, then build and test a prompt optimizer (sanitizer + compressor) that recovers lost accuracy and reduces token costs.
 
-The toolkit implements a full factorial experiment across 4 model providers, 8 noise conditions, and 5 intervention strategies. It also tests Google's prompt repetition technique (Leviathan et al.) as a zero-cost alternative to pre-processing. Results feed a forthcoming ArXiv paper with GLMM (Generalized Linear Mixed Model) analysis, bootstrap confidence intervals, and publication-ready figures.
+The toolkit implements a full factorial experiment across configurable model providers, 8 noise conditions, and 5 intervention strategies. It also tests Google's prompt repetition technique (Leviathan et al.) as a zero-cost alternative to pre-processing. Results feed a forthcoming ArXiv paper with GLMM (Generalized Linear Mixed Model) analysis, bootstrap confidence intervals, and publication-ready figures.
 
 ## Quick Start
 
@@ -14,16 +14,14 @@ The toolkit implements a full factorial experiment across 4 model providers, 8 n
 git clone https://github.com/sscargal/linguistic-tax.git
 cd linguistic-tax
 uv sync
-export ANTHROPIC_API_KEY="sk-ant-..."   # At least one provider required
-uv run propt setup
-uv run propt pilot --dry-run
+uv run propt setup    # Wizard handles API keys, model config, and validation
 ```
 
 ## Installation
 
 ### Prerequisites
 
-- Python >= 3.11
+- Python >= 3.12
 - **[uv](https://docs.astral.sh/uv/)** -- install with `curl -LsSf https://astral.sh/uv/install.sh | sh`
 - At least one LLM provider API key (see below)
 
@@ -38,7 +36,20 @@ uv sync
 
 ### API Keys
 
-Set environment variables for the providers you want to use. Only one provider is required at minimum, but the full experiment matrix uses all four.
+Set your API keys so the toolkit can authenticate with LLM providers. Only one provider is required at minimum, but the full experiment matrix uses all four.
+
+**Option 1: `.env` file (recommended)**
+
+Create a `.env` file at the project root (or let `propt setup` create it for you):
+
+```
+ANTHROPIC_API_KEY=sk-ant-...
+GOOGLE_API_KEY=AIza...
+OPENAI_API_KEY=sk-...
+OPENROUTER_API_KEY=sk-or-...
+```
+
+**Option 2: Shell environment variables**
 
 ```bash
 export ANTHROPIC_API_KEY="sk-ant-..."     # For Claude models
@@ -51,13 +62,23 @@ export OPENROUTER_API_KEY="sk-or-..."     # For OpenRouter models (free Nemotron
 
 ### Configuration
 
-Run the guided setup wizard to configure your experiment parameters:
+Run the guided setup wizard to configure your experiment:
 
 ```bash
 propt setup
 ```
 
-The wizard walks you through model selection, working directory, and experiment settings. For CI or scripting, use `propt setup --non-interactive` to write defaults without prompting.
+The wizard walks you through a multi-provider configuration flow:
+
+1. **Provider loop** -- configure 1-4 providers per session (Anthropic, Google, OpenAI, OpenRouter)
+2. **Model entry** -- enter model IDs or accept defaults for each provider
+3. **API key management** -- creates or updates your `.env` file with provider keys
+4. **Validation pings** -- tests each configured model with a live API call
+5. **Budget preview** -- shows estimated cost before committing the configuration
+
+For CI or scripting, use `propt setup --non-interactive` to write defaults without prompting.
+
+For individual property overrides, use `propt set-config` (see [CLI Reference](#cli-reference) below).
 
 Verify your configuration:
 
@@ -78,7 +99,7 @@ The `propt` CLI provides 9 subcommands for configuring and running experiments.
 | `propt reset-config` | Reset properties to defaults | `[properties ...]`, `--all` |
 | `propt validate` | Validate current configuration | *(none)* |
 | `propt diff` | Show properties changed from defaults | *(none)* |
-| `propt list-models` | List available models with pricing | *(none)* |
+| `propt list-models` | List available models with pricing | `--json` |
 | `propt run` | Run experiments with confirmation gate | `--model`, `--limit`, `--intervention`, `--dry-run`, `--yes`, `--budget`, `--retry-failed`, `--db` |
 | `propt pilot` | Run pilot validation (20 prompts) | `--dry-run`, `--yes`, `--budget`, `--db` |
 
@@ -136,7 +157,7 @@ propt pilot --yes --budget 200.00
 propt pilot --db results/pilot.db
 ```
 
-The pilot runs a 20-prompt subset across all configured conditions to validate the pipeline before committing to the full ~82,000-item matrix.
+The pilot runs a 20-prompt subset across all configured conditions to validate the pipeline before committing to the full experiment matrix.
 
 #### `propt show-config` -- Viewing Configuration
 
@@ -145,7 +166,7 @@ The pilot runs a 20-prompt subset across all configured conditions to validate t
 propt show-config
 
 # Show a single property
-propt show-config claude_model
+propt show-config base_seed
 
 # Show as JSON (for scripting)
 propt show-config --json
@@ -161,10 +182,13 @@ propt show-config --verbose
 
 ```bash
 # Set a configuration property
-propt set-config claude_model "claude-sonnet-4-20250514"
+propt set-config repetitions 10
+
+# Set multiple properties at once
+propt set-config temperature 0.1 base_seed 123
 
 # Reset a specific property to its default
-propt reset-config claude_model
+propt reset-config repetitions
 
 # Reset all properties to defaults
 propt reset-config --all
@@ -177,6 +201,9 @@ propt diff
 
 # List all models with pricing
 propt list-models
+
+# List models as JSON (for scripting)
+propt list-models --json
 ```
 
 ## Sample Output
@@ -210,25 +237,26 @@ Proceed? [y/N]
 
 ```
 Changed properties (differs from defaults):
-  claude_model          = claude-sonnet-4-20250514
   results_db_path       = results/results.db
 ```
 
 ## Experiment Design
 
-The toolkit implements a full factorial experiment: every prompt is tested under every noise condition with every intervention across all models, repeated 5 times for stability measurement.
+The toolkit implements a full factorial experiment: every prompt is tested under every noise condition with every intervention across all configured models, repeated 5 times for stability measurement.
 
 ```mermaid
 flowchart LR
     P["200 Prompts<br/>(HumanEval, MBPP, GSM8K)"]
     N["8 Noise Types"]
     I["5 Interventions"]
-    M["4 Target Models"]
+    M["N Target Models<br/>(configurable)"]
     R["5 Repetitions"]
-    O["~82,000 Work Items"]
+    O["prompts x noise x<br/>interventions x models x reps"]
 
     P --> N --> I --> M --> R --> O
 ```
+
+**Work items** = `prompts x noise_types x interventions x models x repetitions`. With 4 default models: 200 x 8 x 5 x 4 x 5 = **~80,000 work items**.
 
 ### Noise Types
 
@@ -253,13 +281,15 @@ Each intervention strategy is applied to the (potentially noisy) prompt before i
 |-----------|-------------|------|
 | `raw` | No intervention, send as-is | Zero |
 | `self_correct` | Zero-overhead prompt prefix asking the model to look past noise | Zero |
-| `pre_proc_sanitize` | Cheap pre-processor model cleans the noisy prompt | Low (Haiku/Flash-tier) |
-| `pre_proc_sanitize_compress` | Cheap model cleans and compresses the prompt | Low (Haiku/Flash-tier) |
+| `pre_proc_sanitize` | Cheap pre-processor model cleans the noisy prompt | Low (configurable per provider) |
+| `pre_proc_sanitize_compress` | Cheap model cleans and compresses the prompt | Low (configurable per provider) |
 | `prompt_repetition` | Query duplication (`<QUERY><QUERY>`) per Leviathan et al. | Zero (doubles input tokens) |
 
 ### Models and Pricing
 
-Each target model has a paired pre-processor model (cheap/fast) used for the sanitize and compress interventions.
+Default models (configurable via `propt setup`):
+
+Each target model has a paired pre-processor model (cheap/fast) used for the sanitize and compress interventions. Model configuration is managed by `ModelRegistry` in `src/model_registry.py`, with defaults loaded from `data/default_models.json`.
 
 | Model | Provider | Input $/1M | Output $/1M | Role |
 |-------|----------|-----------|------------|------|
@@ -272,34 +302,40 @@ Each target model has a paired pre-processor model (cheap/fast) used for the san
 | `nemotron-3-super-120b-a12b:free` | OpenRouter | $0.00 | $0.00 | Target |
 | `nemotron-3-nano-30b-a3b:free` | OpenRouter | $0.00 | $0.00 | Pre-processor |
 
+Use `propt list-models --json` to query live pricing from each provider's API.
+
 ## Project Structure
 
 ```
 linguistic-tax/
-  src/                              # 18 Python modules
+  src/                              # 21 Python modules
     __init__.py
     analyze_results.py              # GLMM, bootstrap CIs, McNemar's, Kendall's tau
     api_client.py                   # Multi-provider API wrapper (Anthropic, Google, OpenAI, OpenRouter)
     cli.py                          # CLI entry point with 9 subcommands
     compute_derived.py              # Consistency Rate, quadrant classification, cost rollups
-    config.py                       # Pinned models, experiment parameters, pricing
+    config.py                       # ExperimentConfig, noise types, intervention constants
     config_commands.py              # Config subcommand handlers
     config_manager.py               # Config file I/O and validation
     db.py                           # SQLite schema and queries
+    env_manager.py                  # .env file loading, writing, and API key management
     execution_summary.py            # Pre-execution summary and confirmation gate
     generate_figures.py             # Publication figure generation
     grade_results.py                # HumanEval sandbox + GSM8K regex grading
+    model_discovery.py              # Live model queries from provider APIs
+    model_registry.py               # Config-driven pricing, preproc mappings, rate limits
     noise_generator.py              # Type A + Type B noise injection
     pilot.py                        # Pilot validation (20-prompt subset)
     prompt_compressor.py            # Sanitize + compress via cheap model
     prompt_repeater.py              # <QUERY><QUERY> duplication
     run_experiment.py               # Execution engine
     setup_wizard.py                 # Interactive setup wizard
-  tests/                            # 19 test files
+  tests/                            # 25 test files
   data/
     prompts.json                    # 200 clean benchmark prompts (HumanEval, MBPP, GSM8K)
-    experiment_matrix.json          # Full factorial design (~82K items)
+    experiment_matrix.json          # Full factorial design
     pilot_prompts.json              # 20-prompt pilot subset
+    default_models.json             # Default model configurations for 4 providers
   docs/
     RDD_Linguistic_Tax_v4.md        # Research Design Document (full experimental spec)
     prompt_format_research.md       # Literature survey on prompt format effects
@@ -364,13 +400,13 @@ Skills are defined in `.claude/skills/` and each has a detailed SKILL.md with fu
 
 ### Technical Terms
 
-- **Experiment matrix** -- Full factorial design of all prompt x noise x intervention x model combinations, producing ~82,000 work items. Stored in `data/experiment_matrix.json`.
+- **Experiment matrix** -- Full factorial design of all prompt x noise x intervention x model combinations. Work item count depends on the number of configured models. Stored in `data/experiment_matrix.json`.
 
 - **Intervention** -- Strategy applied to a prompt before sending to the target model. Five types: Raw, Self-Correct, Pre-Proc Sanitize, Pre-Proc Sanitize+Compress, and Prompt Repetition.
 
-- **Pre-processor model** -- Cheap/fast model (Haiku, Flash, GPT-4o-mini, Nemotron-nano) used to sanitize or compress prompts before sending to the target model. Configured via `PREPROC_MODEL_MAP` in `src/config.py`.
+- **Pre-processor model** -- Cheap/fast model used to sanitize or compress prompts before sending to the target model. Each target model has a paired pre-processor configured via `ModelRegistry` in `src/model_registry.py`.
 
-- **Target model** -- The LLM being evaluated for reasoning accuracy (Sonnet, Gemini Pro, GPT-4o, Nemotron-super). Configured via `MODELS` in `src/config.py`.
+- **Target model** -- The LLM being evaluated for reasoning accuracy. Default targets are Sonnet, Gemini Pro, GPT-4o, and Nemotron-super, configurable via `ModelRegistry` in `src/model_registry.py`.
 
 - **Work item** -- Single row in the experiment matrix: one prompt + noise type + intervention + model + repetition number. The atomic unit of experiment execution.
 
@@ -382,6 +418,8 @@ This project supports a forthcoming ArXiv paper. See the [Research Design Docume
 @article{linguistictax2026,
   title={The Linguistic Tax: Quantifying Prompt Noise and Bloat in LLM Reasoning,
          and the Case for Automated Prompt Optimization},
-  year={2026}
+  author={Author Name},
+  year={2026},
+  url={https://arxiv.org/abs/XXXX.XXXXX}
 }
 ```

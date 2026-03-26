@@ -4,7 +4,7 @@ milestone: v2.0
 milestone_name: Configurable Models and Dynamic Pricing
 status: unknown
 stopped_at: Completed 16-03-PLAN.md
-last_updated: "2026-03-26T00:15:38.814Z"
+last_updated: "2026-03-26T00:19:56.236Z"
 last_activity: "2026-03-25 - Completed quick task 260325-w6g: Support Ctrl-C in the wizard and scripts"
 progress:
   total_phases: 7

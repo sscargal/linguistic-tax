@@ -10,14 +10,18 @@ import json
 from dataclasses import fields as dc_fields
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import patch
 
 import pytest
 
 from src.config import ExperimentConfig
 from src.model_registry import registry
+from src.model_discovery import DiscoveredModel, DiscoveryResult
 from src.config_commands import (
     FIELD_DESCRIPTIONS,
     _coerce_value,
+    _format_price,
+    _format_context_window,
     _format_value,
     _load_raw_overrides,
     handle_diff,
@@ -388,3 +392,224 @@ class TestHelpers:
         for f in dc_fields(ExperimentConfig):
             assert f.name in FIELD_DESCRIPTIONS, f"Missing description for {f.name}"
         assert len(FIELD_DESCRIPTIONS) == len(dc_fields(ExperimentConfig))
+
+    def test_format_price_priced(self):
+        """_format_price with real prices shows $X.XX / $Y.YY format."""
+        assert _format_price(3.0, 15.0) == "$3.00 / $15.00"
+
+    def test_format_price_free(self):
+        """_format_price with 0/0 shows 'free'."""
+        assert _format_price(0.0, 0.0) == "free"
+
+    def test_format_price_unknown(self):
+        """_format_price with None/None shows '--'."""
+        assert _format_price(None, None) == "--"
+
+    def test_format_price_partial_none(self):
+        """_format_price with one None treats it as 0.0."""
+        assert _format_price(3.0, None) == "$3.00 / $0.00"
+
+    def test_format_context_window_value(self):
+        """_format_context_window with int shows comma-separated number."""
+        assert _format_context_window(200000) == "200,000"
+
+    def test_format_context_window_none(self):
+        """_format_context_window with None shows '--'."""
+        assert _format_context_window(None) == "--"
+
+
+# ---------------------------------------------------------------------------
+# Enhanced list-models tests (with model discovery)
+# ---------------------------------------------------------------------------
+
+
+def _make_discovery_result(
+    models: dict[str, list[DiscoveredModel]] | None = None,
+    errors: dict[str, str] | None = None,
+) -> DiscoveryResult:
+    """Create a DiscoveryResult with defaults."""
+    return DiscoveryResult(
+        models=models or {},
+        errors=errors or {},
+    )
+
+
+class TestListModelsEnhanced:
+    """Tests for enhanced handle_list_models with live discovery."""
+
+    def _mock_result(self) -> DiscoveryResult:
+        """Create a standard mock DiscoveryResult with two providers."""
+        return _make_discovery_result(
+            models={
+                "anthropic": [
+                    DiscoveredModel(
+                        model_id="claude-sonnet-4-20250514",
+                        provider="anthropic",
+                        context_window=200000,
+                        input_price_per_1m=None,
+                        output_price_per_1m=None,
+                    ),
+                    DiscoveredModel(
+                        model_id="claude-opus-4-20250514",
+                        provider="anthropic",
+                        context_window=200000,
+                        input_price_per_1m=None,
+                        output_price_per_1m=None,
+                    ),
+                ],
+                "openrouter": [
+                    DiscoveredModel(
+                        model_id="anthropic/claude-sonnet-4",
+                        provider="openrouter",
+                        context_window=200000,
+                        input_price_per_1m=3.0,
+                        output_price_per_1m=15.0,
+                    ),
+                    DiscoveredModel(
+                        model_id="google/gemini-2.0-flash",
+                        provider="openrouter",
+                        context_window=1000000,
+                        input_price_per_1m=0.0,
+                        output_price_per_1m=0.0,
+                    ),
+                ],
+            }
+        )
+
+    @patch("src.config_commands.discover_all_models")
+    def test_list_models_provider_headers(self, mock_discover, capsys):
+        """Output contains uppercase provider headers."""
+        mock_discover.return_value = self._mock_result()
+        handle_list_models(make_args())
+        output = capsys.readouterr().out
+        assert "ANTHROPIC" in output
+        assert "OPENROUTER" in output
+
+    @patch("src.config_commands.discover_all_models")
+    def test_list_models_configured_status(self, mock_discover, capsys):
+        """Configured models show 'configured' status."""
+        mock_discover.return_value = self._mock_result()
+        handle_list_models(make_args())
+        output = capsys.readouterr().out
+        assert "configured" in output
+
+    @patch("src.config_commands.discover_all_models")
+    def test_list_models_available_status(self, mock_discover, capsys):
+        """Non-configured models show 'available' status."""
+        mock_discover.return_value = _make_discovery_result(
+            models={
+                "anthropic": [
+                    DiscoveredModel(
+                        model_id="claude-unknown-model",
+                        provider="anthropic",
+                        context_window=100000,
+                        input_price_per_1m=None,
+                        output_price_per_1m=None,
+                    ),
+                ],
+            }
+        )
+        handle_list_models(make_args())
+        output = capsys.readouterr().out
+        assert "available" in output
+
+    @patch("src.config_commands.discover_all_models")
+    def test_list_models_pricing_format_priced(self, mock_discover, capsys):
+        """Model with input=3.0/output=15.0 displays '$3.00 / $15.00'."""
+        mock_discover.return_value = self._mock_result()
+        handle_list_models(make_args())
+        output = capsys.readouterr().out
+        assert "$3.00 / $15.00" in output
+
+    @patch("src.config_commands.discover_all_models")
+    def test_list_models_pricing_format_free(self, mock_discover, capsys):
+        """Model with 0/0 pricing displays 'free'."""
+        mock_discover.return_value = self._mock_result()
+        handle_list_models(make_args())
+        output = capsys.readouterr().out
+        assert "free" in output
+
+    @patch("src.config_commands.discover_all_models")
+    def test_list_models_pricing_format_unknown(self, mock_discover, capsys):
+        """Model with None/None pricing displays '--'."""
+        mock_discover.return_value = self._mock_result()
+        handle_list_models(make_args())
+        output = capsys.readouterr().out
+        assert "--" in output
+
+    @patch("src.config_commands.discover_all_models")
+    @patch("src.config_commands._get_fallback_models")
+    def test_list_models_fallback_on_error(self, mock_fallback, mock_discover, capsys):
+        """Provider in errors dict shows fallback models with 'fallback' status."""
+        mock_discover.return_value = _make_discovery_result(
+            errors={"anthropic": "Skipping anthropic: ANTHROPIC_API_KEY not set"}
+        )
+        mock_fallback.return_value = [
+            DiscoveredModel(
+                model_id="claude-sonnet-4-20250514",
+                provider="anthropic",
+                context_window=None,
+                input_price_per_1m=3.0,
+                output_price_per_1m=15.0,
+            ),
+        ]
+        handle_list_models(make_args())
+        output = capsys.readouterr().out
+        assert "fallback" in output
+        assert "ANTHROPIC" in output
+        mock_fallback.assert_called_once_with("anthropic")
+
+    @patch("src.config_commands.discover_all_models")
+    def test_list_models_skipped_provider_warning(self, mock_discover, capsys):
+        """Skipped provider shows warning message."""
+        mock_discover.return_value = _make_discovery_result(
+            errors={"google": "Skipping google: GOOGLE_API_KEY not set"}
+        )
+        handle_list_models(make_args())
+        output = capsys.readouterr().out
+        assert "Warning:" in output
+        assert "GOOGLE_API_KEY" in output
+
+    @patch("src.config_commands.discover_all_models")
+    def test_list_models_json_output(self, mock_discover, capsys):
+        """--json flag produces valid JSON output."""
+        mock_discover.return_value = self._mock_result()
+        handle_list_models(make_args(json=True))
+        output = capsys.readouterr().out
+        data = json.loads(output)
+        assert isinstance(data, dict)
+        assert "anthropic" in data
+        assert "openrouter" in data
+        # Check model entries have expected keys
+        first_model = data["anthropic"][0]
+        assert "model_id" in first_model
+        assert "context_window" in first_model
+        assert "status" in first_model
+
+    @patch("src.config_commands.discover_all_models")
+    def test_list_models_context_window_display(self, mock_discover, capsys):
+        """Context window displays as formatted integer."""
+        mock_discover.return_value = self._mock_result()
+        handle_list_models(make_args())
+        output = capsys.readouterr().out
+        assert "200,000" in output
+
+    @patch("src.config_commands.discover_all_models")
+    def test_list_models_context_window_none(self, mock_discover, capsys):
+        """Context window None displays as '--'."""
+        mock_discover.return_value = _make_discovery_result(
+            models={
+                "openai": [
+                    DiscoveredModel(
+                        model_id="gpt-4o",
+                        provider="openai",
+                        context_window=None,
+                        input_price_per_1m=None,
+                        output_price_per_1m=None,
+                    ),
+                ],
+            }
+        )
+        handle_list_models(make_args())
+        output = capsys.readouterr().out
+        assert "--" in output

@@ -127,13 +127,14 @@ Phases execute in numeric order: 16 -> 17 -> 18 -> 19
 
 ### Phase 20: Update skills and agents in .claude using the skill-creator skill and re-run all optimizations and evaluations
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** All 7 .claude/skills/ reflect v2.0 codebase changes -- stale references to removed config.py constants replaced with model_registry/config_manager/env_manager APIs, evals regenerated against current codebase, trigger descriptions re-optimized for new CLI commands
+**Requirements**: SKL-01, SKL-02, SKL-03, SKL-04, SKL-05, SKL-06, SKL-07
 **Depends on:** Phase 19
-**Plans:** 2/2 plans complete
+**Plans:** 2 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 20 to break down)
+- [ ] 20-01-PLAN.md -- Update all 7 SKILL.md files and db-context.md with v2.0 module references
+- [ ] 20-02-PLAN.md -- Delete old workspaces, regenerate evals, re-optimize triggers, verify pass rates
 
 ### Phase 21: Update all documentation
 

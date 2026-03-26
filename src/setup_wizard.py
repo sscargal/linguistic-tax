@@ -394,8 +394,7 @@ def _select_models(
             if auto_preproc is None:
                 auto_preproc = target_model
 
-            print(f"  Pre-processor: {auto_preproc} (auto-assigned). Enter to accept or type model ID:")
-            raw_preproc = input_fn(f"  Pre-processor [{auto_preproc}]: ").strip()
+            raw_preproc = input_fn(f"  Pre-processor (auto-assigned) [{auto_preproc}]: ").strip()
             if raw_preproc.lower() == "list":
                 selected = _browse_models(provider, input_fn)
                 preproc_model = selected if selected else auto_preproc

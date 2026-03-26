@@ -403,16 +403,14 @@ check_config() {
     run_check "ExperimentConfig instantiates" python3 -c "
 from src.config import ExperimentConfig
 c = ExperimentConfig()
-print(f'Models: claude={c.claude_model}, gemini={c.gemini_model}, openai={c.openai_model}')
+print(f'Config version: {c.config_version}, base_seed: {c.base_seed}')
 "
 
-    run_check "Pinned model versions are non-empty" python3 -c "
-from src.config import ExperimentConfig
-c = ExperimentConfig()
-for name in ['claude_model', 'gemini_model', 'openai_model']:
-    val = getattr(c, name)
-    assert isinstance(val, str) and len(val) > 0, f'{name} is empty or not string'
-print('All model versions non-empty')
+    run_check "Registry has target models" python3 -c "
+from src.model_registry import registry
+targets = registry.target_models()
+assert len(targets) >= 1, 'No target models in registry'
+print(f'Target models: {len(targets)}')
 "
 
     run_check "Seed derivation is deterministic" python3 -c "
@@ -423,29 +421,29 @@ assert s1 == s2, f'Seeds differ: {s1} != {s2}'
 print(f'Deterministic seed: {s1}')
 "
 
-    # OpenRouter config entries
-    run_check "OpenRouter target model in MODELS tuple" python3 -c "
-from src.config import MODELS
-assert 'openrouter/nvidia/nemotron-3-super-120b-a12b:free' in MODELS
+    # OpenRouter config entries (via model_registry)
+    run_check "OpenRouter target model in registry" python3 -c "
+from src.model_registry import registry
+assert 'openrouter/nvidia/nemotron-3-super-120b-a12b:free' in registry.target_models()
 print('OK')
 "
 
-    run_check "OpenRouter preproc model in PRICE_TABLE" python3 -c "
-from src.config import PRICE_TABLE
-p = PRICE_TABLE['openrouter/nvidia/nemotron-3-nano-30b-a3b:free']
-assert p['input_per_1m'] == 0.0 and p['output_per_1m'] == 0.0
+    run_check "OpenRouter preproc model pricing" python3 -c "
+from src.model_registry import registry
+inp, out = registry.get_price('openrouter/nvidia/nemotron-3-nano-30b-a3b:free')
+assert inp == 0.0 and out == 0.0
 print('OK: pricing is \$0')
 "
 
-    run_check "OpenRouter PREPROC_MODEL_MAP entry" python3 -c "
-from src.config import PREPROC_MODEL_MAP
-assert PREPROC_MODEL_MAP['openrouter/nvidia/nemotron-3-super-120b-a12b:free'] == 'openrouter/nvidia/nemotron-3-nano-30b-a3b:free'
+    run_check "OpenRouter preproc mapping" python3 -c "
+from src.model_registry import registry
+assert registry.get_preproc('openrouter/nvidia/nemotron-3-super-120b-a12b:free') == 'openrouter/nvidia/nemotron-3-nano-30b-a3b:free'
 print('OK')
 "
 
     run_check "OpenRouter zero-cost compute_cost" python3 -c "
-from src.config import compute_cost
-c = compute_cost('openrouter/nvidia/nemotron-3-super-120b-a12b:free', 10000, 5000)
+from src.model_registry import registry
+c = registry.compute_cost('openrouter/nvidia/nemotron-3-super-120b-a12b:free', 10000, 5000)
 assert c == 0.0, f'Expected 0.0, got {c}'
 print('OK: cost is \$0.00')
 "

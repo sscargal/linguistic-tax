@@ -42,6 +42,7 @@ Produce rigorous, reproducible experimental data showing how prompt noise degrad
 - Experiment scope adapts to configured models
 
 ### Recently Validated
+- ✓ Pricing client and model discovery — live model listing from 4 provider APIs, OpenRouter live pricing, enhanced propt list-models with context windows and --json flag — Phase 18
 - ✓ Registry consumers — all modules migrated from hardcoded constants to ModelRegistry, shims removed, custom models flow through entire pipeline — Phase 17
 - ✓ Config schema and defensive fallbacks — ModelConfig dataclass, ModelRegistry, env_manager, ExperimentConfig v2 with migration — Phase 16
 - ✓ Comprehensive documentation and README for new users — root README.md, architecture docs, getting-started guide, analysis guide, contributing guide, docs index — Phase 12
@@ -96,4 +97,4 @@ Produce rigorous, reproducible experimental data showing how prompt noise degrad
 | 5 repetitions per condition | Balance statistical power with API cost | — Pending |
 
 ---
-*Last updated: 2026-03-26 after Phase 17 complete — Registry consumers*
+*Last updated: 2026-03-26 after Phase 18 complete — Pricing Client and Model Discovery*

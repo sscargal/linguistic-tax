@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from src.config import PRICE_TABLE, PREPROC_MODEL_MAP, RATE_LIMIT_DELAYS, compute_cost
+from src.model_registry import registry
 from src.execution_summary import (
     AVG_TOKENS,
     PREPROC_INTERVENTIONS,
@@ -59,7 +59,7 @@ class TestCostEstimation:
         """Single raw HumanEval item has correct target cost and zero preproc."""
         items = [_make_item()]
         result = estimate_cost(items)
-        expected_target = compute_cost("claude-sonnet-4-20250514", 500, 200)
+        expected_target = registry.compute_cost("claude-sonnet-4-20250514", 500, 200)
         assert result["target_cost"] == pytest.approx(expected_target)
         assert result["preproc_cost"] == 0.0
         assert result["total_cost"] == pytest.approx(expected_target)
@@ -71,15 +71,15 @@ class TestCostEstimation:
         assert result["preproc_cost"] > 0.0
 
         # Preproc cost uses haiku model with input=500, output=int(500*0.8)=400
-        preproc_model = PREPROC_MODEL_MAP["claude-sonnet-4-20250514"]
-        expected_preproc = compute_cost(preproc_model, 500, 400)
+        preproc_model = registry.get_preproc("claude-sonnet-4-20250514")
+        expected_preproc = registry.compute_cost(preproc_model, 500, 400)
         assert result["preproc_cost"] == pytest.approx(expected_preproc)
 
     def test_estimate_cost_gsm8k_uses_different_tokens(self):
         """GSM8K items use 300 input / 100 output tokens."""
         items = [_make_item(prompt_id="gsm8k_1")]
         result = estimate_cost(items)
-        expected = compute_cost("claude-sonnet-4-20250514", 300, 100)
+        expected = registry.compute_cost("claude-sonnet-4-20250514", 300, 100)
         assert result["target_cost"] == pytest.approx(expected)
 
     def test_estimate_cost_empty_list(self):
@@ -134,7 +134,7 @@ class TestRuntimeEstimation:
         """10 claude-sonnet items at 0.2s each = 2.0 seconds."""
         items = [_make_item() for _ in range(10)]
         result = estimate_runtime(items)
-        expected = 10 * RATE_LIMIT_DELAYS["claude-sonnet-4-20250514"]
+        expected = 10 * registry.get_delay("claude-sonnet-4-20250514")
         assert result == pytest.approx(expected)
 
     def test_estimate_runtime_mixed_models(self):
@@ -143,8 +143,8 @@ class TestRuntimeEstimation:
         items += [_make_item(model="gemini-1.5-pro") for _ in range(5)]
         result = estimate_runtime(items)
         expected = (
-            5 * RATE_LIMIT_DELAYS["claude-sonnet-4-20250514"]
-            + 5 * RATE_LIMIT_DELAYS["gemini-1.5-pro"]
+            5 * registry.get_delay("claude-sonnet-4-20250514")
+            + 5 * registry.get_delay("gemini-1.5-pro")
         )
         assert result == pytest.approx(expected)
 

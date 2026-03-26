@@ -13,7 +13,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from src.config import ExperimentConfig, PRICE_TABLE
+from src.config import ExperimentConfig
+from src.model_registry import registry
 from src.config_commands import (
     FIELD_DESCRIPTIONS,
     _coerce_value,
@@ -335,12 +336,12 @@ class TestListModels:
     """Tests for handle_list_models."""
 
     def test_list_models_all_entries(self, capsys):
-        """list-models output contains all 8 PRICE_TABLE model names."""
+        """list-models output contains all registry model names."""
         handle_list_models(make_args())
         output = capsys.readouterr().out
-        for model in PRICE_TABLE:
-            assert model in output, f"Missing model: {model}"
-        assert len(PRICE_TABLE) == 8
+        for model_id in registry._models:
+            assert model_id in output, f"Missing model: {model_id}"
+        assert len(registry._models) == 8
 
     def test_list_models_free_indicator(self, capsys):
         """Output contains 'free' for openrouter models."""

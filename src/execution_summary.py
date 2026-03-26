@@ -18,12 +18,7 @@ from typing import Any
 
 from tabulate import tabulate
 
-from src.config import (
-    PRICE_TABLE,
-    PREPROC_MODEL_MAP,
-    RATE_LIMIT_DELAYS,
-    compute_cost,
-)
+from src.model_registry import registry
 
 logger = logging.getLogger(__name__)
 
@@ -139,13 +134,13 @@ def estimate_cost(items: list[dict[str, Any]]) -> dict[str, float]:
         tokens = AVG_TOKENS.get(benchmark, AVG_TOKENS["humaneval"])
 
         # Target model cost
-        target_cost += compute_cost(item["model"], tokens["input"], tokens["output"])
+        target_cost += registry.compute_cost(item["model"], tokens["input"], tokens["output"])
 
         # Pre-processor cost for applicable interventions
         if item["intervention"] in PREPROC_INTERVENTIONS:
-            preproc_model = PREPROC_MODEL_MAP.get(item["model"], item["model"])
+            preproc_model = registry.get_preproc(item["model"]) or item["model"]
             preproc_output = int(tokens["input"] * 0.8)
-            preproc_cost += compute_cost(preproc_model, tokens["input"], preproc_output)
+            preproc_cost += registry.compute_cost(preproc_model, tokens["input"], preproc_output)
 
     return {
         "target_cost": target_cost,
@@ -169,7 +164,7 @@ def estimate_runtime(items: list[dict[str, Any]]) -> float:
     model_counts: Counter[str] = Counter(item["model"] for item in items)
     total_seconds = 0.0
     for model, count in model_counts.items():
-        delay = RATE_LIMIT_DELAYS.get(model, 0.5)
+        delay = registry.get_delay(model)
         total_seconds += count * delay
     return total_seconds
 
@@ -247,7 +242,7 @@ def format_summary(
     model_table = []
     for model, count in sorted(model_counts.items()):
         per_model_cost = sum(
-            compute_cost(item["model"], AVG_TOKENS.get(_get_benchmark(item["prompt_id"]), AVG_TOKENS["humaneval"])["input"],
+            registry.compute_cost(item["model"], AVG_TOKENS.get(_get_benchmark(item["prompt_id"]), AVG_TOKENS["humaneval"])["input"],
                          AVG_TOKENS.get(_get_benchmark(item["prompt_id"]), AVG_TOKENS["humaneval"])["output"])
             for item in items if item["model"] == model
         )

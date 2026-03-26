@@ -14,7 +14,8 @@ from typing import Any
 
 from tabulate import tabulate
 
-from src.config import ExperimentConfig, PRICE_TABLE
+from src.config import ExperimentConfig
+from src.model_registry import registry
 from src.config_manager import (
     find_config_path,
     load_config,
@@ -324,14 +325,13 @@ def handle_list_models(args: Any) -> None:
         args: Parsed argparse namespace (no specific attributes needed).
     """
     rows = []
-    for model, prices in sorted(PRICE_TABLE.items()):
-        inp = prices["input_per_1m"]
-        out = prices["output_per_1m"]
+    for model_id in sorted(registry._models):
+        inp, out = registry.get_price(model_id)
         if inp == 0 and out == 0:
             cost_str = "free"
         else:
             cost_str = f"${inp:.2f} / ${out:.2f}"
-        rows.append([model, cost_str])
+        rows.append([model_id, cost_str])
 
     print(tabulate(rows, headers=["Model", "Input / Output (per 1M tokens)"], tablefmt="simple"))
 

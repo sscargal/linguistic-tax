@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Configurable Models and Dynamic Pricing
 status: unknown
-stopped_at: Phase 17 context gathered
-last_updated: "2026-03-26T00:28:04.735Z"
-last_activity: 2026-03-26 - Phase 16 complete, transitioning to Phase 20
+stopped_at: Completed 17-01-PLAN.md
+last_updated: "2026-03-26T00:45:18.801Z"
+last_activity: 2026-03-26
 progress:
   total_phases: 7
   completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
+  total_plans: 6
+  completed_plans: 4
 ---
 
 # Project State
@@ -20,12 +20,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-26)
 
 **Core value:** Produce rigorous, reproducible experimental data showing how prompt noise degrades LLM accuracy and whether automated prompt optimization recovers it
-**Current focus:** Phase 20 — update-skills-and-agents-in-claude-using-the-skill-creator-skill-and-re-run-all-optimizations-and-evaluations
+**Current focus:** Phase 17 — registry-consumers
 
 ## Current Position
 
-Phase: 16 (config-schema-and-defensive-fallbacks) — COMPLETE
-Plan: 3 of 3
+Phase: 17 (registry-consumers) — EXECUTING
+Plan: 2 of 3
 
 ## Performance Metrics
 
@@ -50,6 +50,7 @@ Plan: 3 of 3
 | Phase 16 P02 | 2min | 2 tasks | 4 files |
 | Phase 16 P01 | 2min | 1 tasks | 3 files |
 | Phase 16 P03 | 6min | 2 tasks | 8 files |
+| Phase 17 P01 | 4min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -65,6 +66,7 @@ Recent decisions affecting current work:
 - [Phase 16]: env_path parameter on all env_manager functions for test isolation via tmp_path
 - [Phase 16]: Registry initialized from default_models.json at import time; reload() used after config load
 - [Phase 16]: Added registry-backed backward-compat shims for MODELS/PRICE_TABLE/etc. to bridge Phase 16-17 transition
+- [Phase 17]: Unknown preproc models warn and return model-itself as fallback instead of raising ValueError
 
 ### Pending Todos
 
@@ -92,7 +94,7 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last activity: 2026-03-26 - Phase 16 complete, transitioning to Phase 20
-Last session: 2026-03-26T00:28:04.732Z
-Stopped at: Phase 17 context gathered
-Resume file: .planning/phases/17-registry-consumers/17-CONTEXT.md
+Last activity: 2026-03-26
+Last session: 2026-03-26T00:45:18.799Z
+Stopped at: Completed 17-01-PLAN.md
+Resume file: None

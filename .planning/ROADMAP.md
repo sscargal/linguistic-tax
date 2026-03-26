@@ -75,7 +75,12 @@ Plans:
   2. Running `propt run --model <custom-model>` with a configured custom model does not raise "unknown model" errors
   3. Pilot run with a subset of providers (e.g., only Anthropic and OpenRouter) completes without errors about missing providers
   4. Derived metrics computation (compute_derived.py) processes results for exactly the configured models, no more and no less
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 17-01-PLAN.md -- Migrate leaf consumers (api_client, prompt_compressor, config_commands, execution_summary) to registry
+- [ ] 17-02-PLAN.md -- Migrate pipeline consumers (compute_derived, run_experiment, pilot, generate_matrix, setup_wizard) to registry
+- [ ] 17-03-PLAN.md -- Remove backward-compat shims from config.py, migrate remaining tests
 
 ### Phase 18: Pricing Client and Model Discovery
 **Goal**: Researcher can query live model availability and pricing from provider APIs -- propt list-models shows real model IDs, context windows, and pricing where available, with graceful fallback when APIs are unreachable
@@ -108,7 +113,7 @@ Phases execute in numeric order: 16 -> 17 -> 18 -> 19
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 16. Config Schema and Defensive Fallbacks | 3/3 | Complete    | 2026-03-26 | - |
-| 17. Registry Consumers | v2.0 | 0/TBD | Not started | - |
+| 17. Registry Consumers | v2.0 | 0/3 | Not started | - |
 | 18. Pricing Client and Model Discovery | v2.0 | 0/TBD | Not started | - |
 | 19. Setup Wizard Overhaul | v2.0 | 0/TBD | Not started | - |
 

@@ -75,7 +75,7 @@ CREATE TABLE grading_details (
   - ~70 HumanEval, ~70 MBPP, ~60 GSM8K
 - **Noise types**: 8 (clean + 3 Type A levels + 4 Type B L1 patterns)
 - **Interventions**: 5 (raw, self_correct, pre_proc_sanitize, pre_proc_sanitize_compress, prompt_repetition)
-- **Models**: Up to 4 (claude, gemini, gpt-4o, openrouter/nemotron)
+- **Models**: Dynamically configured via model registry (default: claude, gemini, gpt-4o, openrouter/nemotron)
 - **Repetitions**: 5 per condition
 - **Expected total**: ~20,000 runs (200 prompts x various conditions x 5 reps)
   - Experiment 1 (noise + recovery): 200 x 8 noise x 5 interventions x models x 5 reps
@@ -97,8 +97,11 @@ CREATE TABLE grading_details (
 - `python -m src.compute_derived --db results/results.db` — compute CR, quadrants, cost rollups
 - `python -m src.analyze_results all --db results/results.db` — full statistical analysis
 - `python -m src.generate_figures all --db results/results.db` — generate paper figures
+- `propt list-models` — list available models from configured providers
 
 ## Price table (USD per 1M tokens)
+
+> **NOTE:** These are approximate default prices. Actual pricing is loaded dynamically from the model registry via `model_registry.get_price(model_id)`. For OpenRouter models, live pricing is fetched from the OpenRouter API.
 
 | Model | Input | Output |
 |-------|-------|--------|

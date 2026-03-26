@@ -41,14 +41,14 @@ Read `src/prompt_compressor.py`, `src/prompt_repeater.py`, `src/run_experiment.p
 
 ### 3. Model configuration (RDD Section 4.2)
 
-Read `src/config.py` and `src/api_client.py`:
+Read `src/model_registry.py`, `src/config.py`, and `src/api_client.py`:
 
 | Parameter | RDD Spec | Where to check |
 |-----------|----------|----------------|
-| Models under test | Claude Sonnet + Gemini 1.5 Pro (2 models) | `config.py:MODELS` |
-| Model versions pinned | Exact version strings, not "latest" | `config.py` model string constants |
+| Models under test | Dynamically configured models from model registry (1-4+ models) | `model_registry.target_models()` (from `src/model_registry.py`) |
+| Model versions pinned | Exact version strings, not "latest" | `model_registry` model configs (`ModelConfig.model_id`) |
 | Temperature | 0.0 for all calls | `config.py:temperature`, `api_client.py` call sites |
-| Pre-processor models | Cheap models (Haiku/Flash) for sanitize/compress | `config.py:PREPROC_MODEL_MAP` |
+| Pre-processor models | Cheap models (Haiku/Flash) for sanitize/compress | `model_registry.get_preproc(model_id)` (from `src/model_registry.py`) |
 
 ### 4. Experiment design (RDD Section 4.1, 4.3)
 
@@ -96,8 +96,22 @@ Read `src/run_experiment.py`, `src/db.py`:
 | TTFT logging | Time to first token | `run_experiment.py` / `api_client.py` timing |
 | TTLT logging | Time to last token | Same |
 | Token counts | Input and output tokens per call | `db.py` schema columns |
-| Cost tracking | Per-call USD cost | `db.py` cost columns, `config.py:compute_cost()` |
+| Cost tracking | Per-call USD cost | `db.py` cost columns, `model_registry.compute_cost(model_id, in_tok, out_tok)` (from `src/model_registry.py`) |
 | Pre-proc tracking | Separate logging for optimizer calls | `db.py` preproc columns |
+
+### 8. Configuration management
+
+Read `src/config_manager.py`, `src/model_registry.py`, `src/env_manager.py`, `src/setup_wizard.py`, `src/model_discovery.py`:
+
+| Parameter | Expected | Where to check |
+|-----------|----------|----------------|
+| Config loading | `load_config()` loads ExperimentConfig v2 with `models` list field | `config_manager.py:load_config()` |
+| Config persistence | `save_config()` persists to JSON | `config_manager.py:save_config()` |
+| Config validation | `validate_config()` validates the config | `config_manager.py:validate_config()` |
+| Model registry | `ModelRegistry` singleton is the source of truth for model data | `model_registry.py:ModelRegistry` |
+| API key validation | `check_keys()` validates API keys are present | `env_manager.py:check_keys()` |
+| Setup wizard | `run_setup_wizard()` configures models and providers | `setup_wizard.py:run_setup_wizard()` |
+| Model discovery | `discover_all_models()` queries live model listings | `model_discovery.py:discover_all_models()` |
 
 ## Process
 

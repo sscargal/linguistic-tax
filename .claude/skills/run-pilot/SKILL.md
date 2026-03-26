@@ -20,13 +20,13 @@ The RDD (Section 4.3) explicitly warns: "Do NOT run the full 20,000-call matrix 
 
 Before running the pilot, verify:
 
-1. **API keys are set** as environment variables:
+1. **API keys are set** as environment variables (verify programmatically with `env_manager.check_keys()`):
    ```bash
    echo $ANTHROPIC_API_KEY  # For Claude
    echo $GOOGLE_API_KEY     # For Gemini (or GOOGLE_GENAI_API_KEY)
    ```
 
-2. **Config exists** — run `propt setup` if not:
+2. **Config exists** — run `propt setup` if not. Config is loaded via `config_manager.load_config()`:
    ```bash
    propt validate
    ```
@@ -130,7 +130,7 @@ Based on pilot results, decide:
 | Issue | Diagnosis | Fix |
 |-------|-----------|-----|
 | "No config found" | Config not initialized | Run `propt setup` |
-| API rate limits | Too many concurrent calls | Rate limit delays are in `config.py:RATE_LIMIT_DELAYS` |
+| API rate limits | Too many concurrent calls | Rate limit delays via `model_registry.get_delay(model_id)` (from `src/model_registry.py`) |
 | All runs failing | API key issue | Check `$ANTHROPIC_API_KEY`, `$GOOGLE_API_KEY` |
 | 100% pass rate on noisy prompts | Grading too lenient or noise not applied | Check `noise_generator.py` output manually |
 | Cost higher than expected | Pre-processing adds overhead | Check `preproc_cost_usd` column in results |
@@ -141,3 +141,4 @@ Based on pilot results, decide:
 - Pilot results persist in the database and are NOT discarded; the full run builds on them
 - Seed determinism means re-running the pilot produces identical prompt selections
 - The pilot's 20 prompts are a subset of the full 200 — they're included in the full run
+- The pilot uses dynamically configured models from the model registry — run `propt setup` to configure providers and models before piloting

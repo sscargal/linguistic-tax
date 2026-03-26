@@ -40,6 +40,8 @@ if not os.path.exists(db_path):
         with open(config_path) as f:
             cfg = json.load(f)
         db_path = cfg.get("results_db_path", db_path)
+    # Note: Model pricing comes from model_registry.get_price(model_id),
+    # not a hardcoded table. Use registry.compute_cost() for precise costs.
 
 if not os.path.exists(db_path):
     # Tell the user no database exists yet
@@ -163,7 +165,7 @@ Format output as clean markdown tables. Include:
 ### 4. Recommendations
 
 Based on what you find, suggest next steps:
-- If no data: suggest running the pilot first (`propt pilot`)
+- If no data: suggest running the pilot first (`propt pilot`). Use `propt list-models` to discover available models
 - If pilot complete but full run not started: suggest `propt run`
 - If gaps exist: suggest targeted runs (`propt run --model X --intervention Y`)
 - If data quality issues: suggest re-grading or investigating failures
@@ -177,3 +179,4 @@ Based on what you find, suggest next steps:
 - Cost values are in USD
 - pass_fail is 1 for pass, 0 for fail, NULL if not yet graded
 - status values are: 'pending', 'completed', 'failed', 'error'
+- Model pricing is dynamically loaded from model_registry — the hardcoded price table in db-context.md is approximate; use `registry.compute_cost()` for precise costs

@@ -12,7 +12,7 @@ Execute experiment runs from the Linguistic Tax experimental matrix. Supports fu
 Before running, ensure:
 1. **Pilot completed successfully** — use `/check-results` to verify
 2. **Config valid** — `propt validate`
-3. **API keys set** — check environment variables for all target models
+3. **API keys set** — check environment variables for all target models. Verify with `env_manager.check_keys()` or `propt validate`
 4. **Budget understood** — always do a dry run first
 
 ## Execution modes
@@ -136,7 +136,7 @@ Or use the `/check-results` skill for a formatted report.
 
 | Issue | Fix |
 |-------|-----|
-| Rate limit errors | Built-in delays per model in `config.py:RATE_LIMIT_DELAYS` |
+| Rate limit errors | Built-in delays per model via `model_registry.get_delay(model_id)` (from `src/model_registry.py`) |
 | API key errors | Check environment variables for the target model |
 | Partial completion | Just re-run — engine resumes from where it left off |
 | Cost overrun | Use `--budget` flag or `--limit` to cap |
@@ -149,3 +149,5 @@ Or use the `/check-results` skill for a formatted report.
 - Each condition has 5 repetitions for stability measurement
 - The engine uses deterministic run IDs — re-running produces the same IDs, enabling dedup
 - Pre-processing interventions make a separate cheap-model API call before the main call
+- Model resolution uses `config_manager.load_config()` and `model_registry` — models are dynamically configured, not hardcoded
+- Cost estimation uses `model_registry.compute_cost()` with registry-backed pricing

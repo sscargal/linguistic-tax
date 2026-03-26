@@ -2,16 +2,15 @@
 gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Configurable Models and Dynamic Pricing
-status: planning
-stopped_at: Phase 16 context gathered
-last_updated: "2026-03-25T23:05:28.302Z"
-last_activity: 2026-03-25 — Roadmap created for v2.0 (Phases 16-19)
+status: unknown
+stopped_at: Completed 16-02-PLAN.md
+last_updated: "2026-03-26T00:06:08.232Z"
+last_activity: "2026-03-25 - Completed quick task 260325-w6g: Support Ctrl-C in the wizard and scripts"
 progress:
-  total_phases: 4
+  total_phases: 7
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_plans: 3
+  completed_plans: 1
 ---
 
 # Project State
@@ -21,16 +20,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-25)
 
 **Core value:** Produce rigorous, reproducible experimental data showing how prompt noise degrades LLM accuracy and whether automated prompt optimization recovers it
-**Current focus:** v2.0 — Configurable Models and Dynamic Pricing
+**Current focus:** Phase 16 — config-schema-and-defensive-fallbacks
 
 ## Current Position
 
-Phase: 16 of 19 (Config Schema and Defensive Fallbacks)
-Plan: —
-Status: Ready to plan
-Last activity: 2026-03-25 — Roadmap created for v2.0 (Phases 16-19)
-
-Progress: [░░░░░░░░░░] 0%
+Phase: 16 (config-schema-and-defensive-fallbacks) — EXECUTING
+Plan: 2 of 3
 
 ## Performance Metrics
 
@@ -52,6 +47,7 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: Stable (~4min/plan)
 
 *Updated after each plan completion*
+| Phase 16 P02 | 2min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -64,6 +60,7 @@ Recent decisions affecting current work:
 - [Phase 13]: input_fn parameter injection for wizard testability instead of monkeypatching builtins.input
 - [Phase 14]: print() for CLI output instead of logging for user-facing commands
 - [Phase 15]: Budget gate checks before --yes auto-accept for scripted safety
+- [Phase 16]: env_path parameter on all env_manager functions for test isolation via tmp_path
 
 ### Pending Todos
 
@@ -92,6 +89,6 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last activity: 2026-03-25 - Completed quick task 260325-w6g: Support Ctrl-C in the wizard and scripts
-Last session: 2026-03-25T23:05:28.300Z
-Stopped at: Phase 16 context gathered
-Resume file: .planning/phases/16-config-schema-and-defensive-fallbacks/16-CONTEXT.md
+Last session: 2026-03-26T00:06:08.230Z
+Stopped at: Completed 16-02-PLAN.md
+Resume file: None

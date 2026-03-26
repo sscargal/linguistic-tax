@@ -107,7 +107,7 @@ Phases execute in numeric order: 16 -> 17 -> 18 -> 19
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 16. Config Schema and Defensive Fallbacks | v2.0 | 0/3 | Planning complete | - |
+| 16. Config Schema and Defensive Fallbacks | 1/3 | In Progress|  | - |
 | 17. Registry Consumers | v2.0 | 0/TBD | Not started | - |
 | 18. Pricing Client and Model Discovery | v2.0 | 0/TBD | Not started | - |
 | 19. Setup Wizard Overhaul | v2.0 | 0/TBD | Not started | - |
@@ -117,7 +117,7 @@ Phases execute in numeric order: 16 -> 17 -> 18 -> 19
 **Goal:** [To be planned]
 **Requirements**: TBD
 **Depends on:** Phase 19
-**Plans:** 0 plans
+**Plans:** 1/3 plans executed
 
 Plans:
 - [ ] TBD (run /gsd:plan-phase 20 to break down)

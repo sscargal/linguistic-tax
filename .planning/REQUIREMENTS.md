@@ -17,7 +17,7 @@ Requirements for configurable models and dynamic pricing. Each maps to roadmap p
 
 ### Model Discovery
 
-- [ ] **DSC-01**: `propt list-models` queries live models from each configured provider's API
+- [x] **DSC-01**: `propt list-models` queries live models from each configured provider's API
 - [ ] **DSC-02**: `propt list-models` displays model ID, context window, and pricing (where available from provider)
 - [ ] **DSC-03**: User can enter any model ID as free text during setup (not limited to a hardcoded list)
 
@@ -33,7 +33,7 @@ Requirements for configurable models and dynamic pricing. Each maps to roadmap p
 ### Pricing
 
 - [x] **PRC-01**: Curated fallback price table provides pricing for known models when no API pricing is available
-- [ ] **PRC-02**: OpenRouter live pricing is fetched via its `/api/v1/models` endpoint
+- [x] **PRC-02**: OpenRouter live pricing is fetched via its `/api/v1/models` endpoint
 - [x] **PRC-03**: Unknown models default to $0.00 pricing with a user-visible warning
 
 ### Experiment Scope
@@ -68,7 +68,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CFG-03 | Phase 16 | Complete |
 | CFG-04 | Phase 16 | Complete |
 | CFG-05 | Phase 16 | Complete |
-| DSC-01 | Phase 18 | Pending |
+| DSC-01 | Phase 18 | Complete |
 | DSC-02 | Phase 18 | Pending |
 | DSC-03 | Phase 19 | Pending |
 | WIZ-01 | Phase 19 | Pending |
@@ -78,7 +78,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | WIZ-05 | Phase 19 | Pending |
 | WIZ-06 | Phase 19 | Pending |
 | PRC-01 | Phase 16 | Complete |
-| PRC-02 | Phase 18 | Pending |
+| PRC-02 | Phase 18 | Complete |
 | PRC-03 | Phase 16 | Complete |
 | EXP-01 | Phase 17 | Complete |
 | EXP-02 | Phase 17 | Complete |

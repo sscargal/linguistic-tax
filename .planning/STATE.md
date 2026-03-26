@@ -17,10 +17,10 @@ progress:
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-03-25)
+See: .planning/PROJECT.md (updated 2026-03-26)
 
 **Core value:** Produce rigorous, reproducible experimental data showing how prompt noise degrades LLM accuracy and whether automated prompt optimization recovers it
-**Current focus:** Phase 16 — config-schema-and-defensive-fallbacks
+**Current focus:** Phase 20 — update-skills-and-agents-in-claude-using-the-skill-creator-skill-and-re-run-all-optimizations-and-evaluations
 
 ## Current Position
 
@@ -92,7 +92,7 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last activity: 2026-03-25 - Completed quick task 260325-w6g: Support Ctrl-C in the wizard and scripts
-Last session: 2026-03-26T00:15:38.811Z
-Stopped at: Completed 16-03-PLAN.md
+Last activity: 2026-03-26 - Phase 16 complete, transitioning to Phase 20
+Last session: 2026-03-26
+Stopped at: Phase 16 complete, ready to discuss Phase 20
 Resume file: None

@@ -38,10 +38,10 @@ Requirements for configurable models and dynamic pricing. Each maps to roadmap p
 
 ### Experiment Scope
 
-- [ ] **EXP-01**: Experiment matrix generation uses configured models (not hardcoded MODELS tuple)
+- [x] **EXP-01**: Experiment matrix generation uses configured models (not hardcoded MODELS tuple)
 - [x] **EXP-02**: `--model` flag on `propt run` works with any configured model
-- [ ] **EXP-03**: Pilot run adapts to configured models (runs only configured providers)
-- [ ] **EXP-04**: Derived metrics computation adapts to configured models
+- [x] **EXP-03**: Pilot run adapts to configured models (runs only configured providers)
+- [x] **EXP-04**: Derived metrics computation adapts to configured models
 
 ## v1.0 Requirements (Validated)
 
@@ -80,10 +80,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PRC-01 | Phase 16 | Complete |
 | PRC-02 | Phase 18 | Pending |
 | PRC-03 | Phase 16 | Complete |
-| EXP-01 | Phase 17 | Pending |
+| EXP-01 | Phase 17 | Complete |
 | EXP-02 | Phase 17 | Complete |
-| EXP-03 | Phase 17 | Pending |
-| EXP-04 | Phase 17 | Pending |
+| EXP-03 | Phase 17 | Complete |
+| EXP-04 | Phase 17 | Complete |
 
 **Coverage:**
 - v2.0 requirements: 21 total

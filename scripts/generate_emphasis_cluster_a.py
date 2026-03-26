@@ -20,6 +20,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.emphasis_converter import (
+    _replace_terms,
     apply_bold_emphasis,
     apply_caps_emphasis,
     apply_quotes_emphasis,
@@ -80,10 +81,15 @@ def generate_variants(
         "quotes": {},
     }
 
-    converters = {
-        "bold": apply_bold_emphasis,
-        "caps": apply_caps_emphasis,
-        "quotes": apply_quotes_emphasis,
+    # Use _replace_terms directly instead of apply_*_emphasis to bypass
+    # code-block protection. HumanEval prompts have docstrings inside 4-space
+    # indented function bodies, which the code protector incorrectly treats as
+    # code. Our key terms are carefully chosen natural-language terms that do
+    # not conflict with code syntax, so direct replacement is safe.
+    formatters = {
+        "bold": lambda t: f"**{t}**",
+        "caps": lambda t: t.upper(),
+        "quotes": lambda t: f"'{t}'",
     }
 
     for prompt_id, term_info in key_terms_map.items():
@@ -94,18 +100,24 @@ def generate_variants(
         base_text = prompts[prompt_id]
         terms = term_info["key_terms"]
 
-        for variant_name, converter_fn in converters.items():
-            converted = converter_fn(base_text, terms)
+        for variant_name, fmt_fn in formatters.items():
+            converted = _replace_terms(base_text, terms, fmt_fn)
 
-            # Validate: no double-wrapping
-            if variant_name == "bold" and "****" in converted:
-                logger.error(
-                    "Double-wrapping detected in bold variant for %s", prompt_id
-                )
-            if variant_name == "quotes" and "''" in converted:
-                logger.error(
-                    "Double-wrapping detected in quotes variant for %s", prompt_id
-                )
+            # Validate: no double-wrapping of key terms
+            if variant_name == "bold":
+                for term in terms:
+                    if f"****{term}****" in converted:
+                        logger.error(
+                            "Double-wrapping detected in bold variant for %s: %s",
+                            prompt_id, term,
+                        )
+            if variant_name == "quotes":
+                for term in terms:
+                    if f"''{term}''" in converted:
+                        logger.error(
+                            "Double-wrapping detected in quotes variant for %s: %s",
+                            prompt_id, term,
+                        )
 
             variants[variant_name][prompt_id] = converted
 

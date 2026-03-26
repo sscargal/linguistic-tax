@@ -14,17 +14,31 @@ This is NOT a web app or service. It is a research toolkit:
 
 ```
 src/
+  analyze_results.py     — GLMM, bootstrap CIs, McNemar's, Kendall's tau
+  api_client.py          — Multi-provider API wrapper (Anthropic, Google, OpenAI, OpenRouter)
+  cli.py                 — CLI entry point with 9 subcommands
+  compute_derived.py     — Stability (CR), quadrant classification, cost rollups
+  config.py              — ExperimentConfig, noise types, intervention constants
+  config_commands.py     — Config subcommand handlers
+  config_manager.py      — Config file I/O and validation
+  db.py                  — SQLite schema and queries
+  env_manager.py         — .env file loading, writing, and API key management
+  execution_summary.py   — Pre-execution summary and confirmation gate
+  generate_figures.py    — Publication figure generation
+  grade_results.py       — Auto-grade outputs (HumanEval sandbox, GSM8K regex)
+  model_discovery.py     — Live model queries from provider APIs
+  model_registry.py      — Config-driven pricing, preproc mappings, rate limits
   noise_generator.py     — Inject controlled typos/ESL patterns into prompts
+  pilot.py               — Pilot validation (20-prompt subset)
   prompt_compressor.py   — Compress prompts via dedup + condensation
   prompt_repeater.py     — Implement <QUERY><QUERY> repetition (Leviathan et al.)
   run_experiment.py      — Execution harness: send prompts to LLMs, log everything
-  grade_results.py       — Auto-grade outputs (HumanEval sandbox, GSM8K regex)
-  analyze_results.py     — GLMM, bootstrap CIs, McNemar's, Kendall's tau
-  compute_derived.py     — Stability (CR), quadrant classification, cost rollups
+  setup_wizard.py        — Interactive setup wizard
 
 data/
   prompts.json           — 200 clean benchmark prompts (HumanEval, MBPP, GSM8K)
   experiment_matrix.json — Full experimental design (prompt x noise x intervention)
+  default_models.json    — Default model configurations for 4 providers
   real_world_noisy/      — 20 real noisy prompts from public sources
 
 results/                 — Populated by experiments (gitignored)
@@ -40,7 +54,7 @@ figures/                 — Generated plots for the paper
 ## Tech Stack
 
 - **Language:** Python 3.12+
-- **APIs:** Anthropic (Claude), Google (Gemini) — direct API calls, NOT CLI
+- **APIs:** Anthropic (Claude), Google (Gemini), OpenAI (GPT), OpenRouter — direct API calls, NOT CLI
 - **Statistics:** statsmodels (GLMM), scipy (McNemar's, bootstrap), bert-score
 - **Data:** SQLite for results, JSON for prompts/configs
 - **Grading:** HumanEval execution sandbox, regex matching for GSM8K
@@ -63,7 +77,7 @@ figures/                 — Generated plots for the paper
   Sanitize, Pre-Proc Sanitize+Compress, and Prompt Repetition
 - Noise types: Type A (character-level, 5/10/20%) and Type B (ESL syntactic)
 - We measure BOTH correctness AND stability (5 repetitions per condition)
-- Pre-processor calls use a CHEAP model (Haiku or Flash)
+- Pre-processor calls use a CHEAP model (configurable per provider via ModelRegistry)
 
 ## What NOT To Do
 

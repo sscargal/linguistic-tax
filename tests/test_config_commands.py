@@ -339,16 +339,29 @@ class TestDiff:
 class TestListModels:
     """Tests for handle_list_models."""
 
-    def test_list_models_all_entries(self, capsys):
+    @patch("src.config_commands.discover_all_models")
+    def test_list_models_all_entries(self, mock_discover, capsys):
         """list-models output contains all registry model names."""
+        # Force fallback to registry for all providers so output is deterministic
+        mock_discover.return_value = DiscoveryResult(
+            models={},
+            errors={p: f"Skipping {p}: key not set" for p in
+                    ["anthropic", "google", "openai", "openrouter"]},
+        )
         handle_list_models(make_args())
         output = capsys.readouterr().out
         for model_id in registry._models:
             assert model_id in output, f"Missing model: {model_id}"
         assert len(registry._models) == 8
 
-    def test_list_models_free_indicator(self, capsys):
+    @patch("src.config_commands.discover_all_models")
+    def test_list_models_free_indicator(self, mock_discover, capsys):
         """Output contains 'free' for openrouter models."""
+        mock_discover.return_value = DiscoveryResult(
+            models={},
+            errors={p: f"Skipping {p}: key not set" for p in
+                    ["anthropic", "google", "openai", "openrouter"]},
+        )
         handle_list_models(make_args())
         output = capsys.readouterr().out
         assert "free" in output

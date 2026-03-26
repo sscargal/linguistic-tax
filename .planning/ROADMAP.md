@@ -90,7 +90,11 @@ Plans:
   1. Running `propt list-models` queries each configured provider's API and displays available model IDs
   2. Model listing output includes context window size and pricing columns (with pricing populated for OpenRouter, marked as "fallback" for other providers)
   3. When a provider API is unreachable (timeout or error), list-models falls back gracefully with a warning instead of crashing
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 18-01-PLAN.md -- Model discovery module with per-provider query functions, parallel orchestration, fallback
+- [ ] 18-02-PLAN.md -- CLI integration: enhanced handle_list_models with provider grouping, --json flag
 
 ### Phase 19: Setup Wizard Overhaul
 **Goal**: Researcher can configure any combination of models and providers through the setup wizard -- free-text model entry with defaults, multi-provider flow, .env key management, model validation, and budget preview before committing
@@ -114,7 +118,7 @@ Phases execute in numeric order: 16 -> 17 -> 18 -> 19
 |-------|-----------|----------------|--------|-----------|
 | 16. Config Schema and Defensive Fallbacks | 3/3 | Complete    | 2026-03-26 | - |
 | 17. Registry Consumers | 3/3 | Complete    | 2026-03-26 | - |
-| 18. Pricing Client and Model Discovery | v2.0 | 0/TBD | Not started | - |
+| 18. Pricing Client and Model Discovery | v2.0 | 0/2 | Not started | - |
 | 19. Setup Wizard Overhaul | v2.0 | 0/TBD | Not started | - |
 
 ### Phase 20: Update skills and agents in .claude using the skill-creator skill and re-run all optimizations and evaluations

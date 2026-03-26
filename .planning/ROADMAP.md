@@ -106,7 +106,11 @@ Plans:
   3. When the researcher provides API keys during setup, a .env file is created (or updated) with correct file permissions and the keys are available immediately without restarting
   4. Wizard validates each selected model by making a small API call and reports success or failure before completing setup
   5. Wizard displays estimated experiment cost based on selected models before the researcher confirms the configuration
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 19-01-PLAN.md -- Complete wizard rewrite: multi-provider flow, free-text model entry, .env key management, validation pings, budget preview
+- [ ] 19-02-PLAN.md -- Test suite rewrite: comprehensive tests for all wizard functions and flows
 
 ## Progress
 
@@ -119,7 +123,7 @@ Phases execute in numeric order: 16 -> 17 -> 18 -> 19
 | 16. Config Schema and Defensive Fallbacks | 3/3 | Complete    | 2026-03-26 | - |
 | 17. Registry Consumers | 3/3 | Complete    | 2026-03-26 | - |
 | 18. Pricing Client and Model Discovery | 2/2 | Complete    | 2026-03-26 | - |
-| 19. Setup Wizard Overhaul | v2.0 | 0/TBD | Not started | - |
+| 19. Setup Wizard Overhaul | v2.0 | 0/2 | Not started | - |
 
 ### Phase 20: Update skills and agents in .claude using the skill-creator skill and re-run all optimizations and evaluations
 

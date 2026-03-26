@@ -1,0 +1,90 @@
+{
+  "metadata": {
+    "description": "Key terms for AQ-NH-05 emphasis experiment (Cluster A)",
+    "selection_criteria": "HumanEval/MBPP prompts with 3+ identifiable key terms (function name, return type, primary constraint)",
+    "prompt_count": 20,
+    "created_by": "Phase 22 Plan 02"
+  },
+  "prompts": {
+    "HumanEval/1": {
+      "key_terms": ["separate_paren_groups", "List[str]", "balanced"],
+      "term_types": ["function_name", "return_type", "constraint"]
+    },
+    "HumanEval/103": {
+      "key_terms": ["rounded_avg", "binary", "nearest integer"],
+      "term_types": ["function_name", "return_type", "constraint"]
+    },
+    "HumanEval/107": {
+      "key_terms": ["even_odd_palindrome", "tuple", "inclusive"],
+      "term_types": ["function_name", "return_type", "constraint"]
+    },
+    "HumanEval/111": {
+      "key_terms": ["histogram", "dictionary", "most repetition"],
+      "term_types": ["function_name", "return_type", "constraint"]
+    },
+    "HumanEval/114": {
+      "key_terms": ["minSubArraySum", "minimum sum", "non-empty"],
+      "term_types": ["function_name", "return_type", "constraint"]
+    },
+    "HumanEval/135": {
+      "key_terms": ["can_arrange", "largest index", "not greater than"],
+      "term_types": ["function_name", "return_type", "constraint"]
+    },
+    "HumanEval/149": {
+      "key_terms": ["sorted_list_sum", "sorted order", "odd lengths"],
+      "term_types": ["function_name", "return_type", "constraint"]
+    },
+    "HumanEval/71": {
+      "key_terms": ["triangle_area", "2 decimal points", "valid triangle"],
+      "term_types": ["function_name", "return_type", "constraint"]
+    },
+    "HumanEval/73": {
+      "key_terms": ["smallest_change", "minimum number", "palindromic"],
+      "term_types": ["function_name", "return_type", "constraint"]
+    },
+    "HumanEval/90": {
+      "key_terms": ["next_smallest", "2nd smallest", "None"],
+      "term_types": ["function_name", "return_type", "constraint"]
+    },
+    "mbpp_108": {
+      "key_terms": ["merge", "sorted list", "three lists"],
+      "term_types": ["function_name", "return_type", "constraint"]
+    },
+    "mbpp_120": {
+      "key_terms": ["maximum absolute product", "pairs of tuples", "given list"],
+      "term_types": ["function_name", "return_type", "constraint"]
+    },
+    "mbpp_128": {
+      "key_terms": ["words", "longer than n characters", "list of words"],
+      "term_types": ["function_name", "return_type", "constraint"]
+    },
+    "mbpp_223": {
+      "key_terms": ["majority element", "sorted array", "more than n/2 times"],
+      "term_types": ["function_name", "return_type", "constraint"]
+    },
+    "mbpp_229": {
+      "key_terms": ["negative elements", "positive ones", "relative order"],
+      "term_types": ["function_name", "return_type", "constraint"]
+    },
+    "mbpp_247": {
+      "key_terms": ["longest palindromic subsequence", "length", "given string"],
+      "term_types": ["function_name", "return_type", "constraint"]
+    },
+    "mbpp_277": {
+      "key_terms": ["dictionary", "greater than or equal to n", "filters"],
+      "term_types": ["function_name", "return_type", "constraint"]
+    },
+    "mbpp_280": {
+      "key_terms": ["tuple", "boolean", "index position"],
+      "term_types": ["function_name", "return_type", "constraint"]
+    },
+    "mbpp_407": {
+      "key_terms": ["next bigger number", "rearranging", "digits"],
+      "term_types": ["function_name", "return_type", "constraint"]
+    },
+    "mbpp_463": {
+      "key_terms": ["maximum product subarray", "given array", "subarray"],
+      "term_types": ["function_name", "return_type", "constraint"]
+    }
+  }
+}

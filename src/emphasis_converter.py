@@ -22,6 +22,7 @@ logger = logging.getLogger(__name__)
 
 _FENCED_CODE_RE = re.compile(r"(```[\s\S]*?```)", re.MULTILINE)
 _INDENTED_LINE_RE = re.compile(r"^(    .*)$", re.MULTILINE)
+_DOCSTRING_RE = re.compile(r'("""[\s\S]*?"""|\'\'\'[\s\S]*?\'\'\')', re.MULTILINE)
 
 
 def _split_code_and_text(text: str) -> list[tuple[str, bool]]:
@@ -29,7 +30,10 @@ def _split_code_and_text(text: str) -> list[tuple[str, bool]]:
 
     Code blocks are identified by:
     - Triple-backtick fenced blocks
-    - Lines indented with 4+ spaces
+    - Lines indented with 4+ spaces (but NOT inside Python docstrings)
+
+    Python docstrings (triple-quoted strings) are treated as natural
+    language text, not code, even when indented.
 
     Args:
         text: The input text to split.
@@ -43,11 +47,24 @@ def _split_code_and_text(text: str) -> list[tuple[str, bool]]:
     for m in _FENCED_CODE_RE.finditer(text):
         code_spans.append((m.start(), m.end()))
 
+    # Identify docstring regions (triple-quoted strings) to exclude
+    # indented lines inside them from code classification
+    docstring_spans: list[tuple[int, int]] = []
+    for m in _DOCSTRING_RE.finditer(text):
+        # Only count as docstring if not inside a fenced code block
+        ds, de = m.start(), m.end()
+        inside_fenced = any(cs <= ds and de <= ce for cs, ce in code_spans)
+        if not inside_fenced:
+            docstring_spans.append((ds, de))
+
     for m in _INDENTED_LINE_RE.finditer(text):
-        # Only mark as code if not already inside a fenced block
+        # Only mark as code if not inside a fenced block or docstring
         start, end = m.start(), m.end()
         inside_fenced = any(cs <= start and end <= ce for cs, ce in code_spans)
-        if not inside_fenced:
+        inside_docstring = any(
+            ds <= start and end <= de for ds, de in docstring_spans
+        )
+        if not inside_fenced and not inside_docstring:
             code_spans.append((start, end))
 
     if not code_spans:

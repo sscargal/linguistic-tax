@@ -4,7 +4,7 @@
 
 | Document | Description |
 |----------|-------------|
-| [Getting Started](getting-started.md) | End-to-end walkthrough: install, configure, run pilot, view results |
+| [Getting Started](getting-started.md) | End-to-end walkthrough: install, run setup wizard, configure providers, run pilot |
 | [Analysis Guide](analysis-guide.md) | Interpreting statistical output, metrics, figures, and SQLite queries |
 
 ## Technical Reference

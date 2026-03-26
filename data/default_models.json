@@ -1,0 +1,76 @@
+{
+  "models": [
+    {
+      "model_id": "claude-sonnet-4-20250514",
+      "provider": "anthropic",
+      "role": "target",
+      "preproc_model_id": "claude-haiku-4-5-20250514",
+      "input_price_per_1m": 3.00,
+      "output_price_per_1m": 15.00,
+      "rate_limit_delay": 0.2
+    },
+    {
+      "model_id": "claude-haiku-4-5-20250514",
+      "provider": "anthropic",
+      "role": "preproc",
+      "preproc_model_id": null,
+      "input_price_per_1m": 1.00,
+      "output_price_per_1m": 5.00,
+      "rate_limit_delay": 0.1
+    },
+    {
+      "model_id": "gemini-1.5-pro",
+      "provider": "google",
+      "role": "target",
+      "preproc_model_id": "gemini-2.0-flash",
+      "input_price_per_1m": 1.25,
+      "output_price_per_1m": 5.00,
+      "rate_limit_delay": 0.1
+    },
+    {
+      "model_id": "gemini-2.0-flash",
+      "provider": "google",
+      "role": "preproc",
+      "preproc_model_id": null,
+      "input_price_per_1m": 0.10,
+      "output_price_per_1m": 0.40,
+      "rate_limit_delay": 0.05
+    },
+    {
+      "model_id": "gpt-4o-2024-11-20",
+      "provider": "openai",
+      "role": "target",
+      "preproc_model_id": "gpt-4o-mini-2024-07-18",
+      "input_price_per_1m": 2.50,
+      "output_price_per_1m": 10.00,
+      "rate_limit_delay": 0.2
+    },
+    {
+      "model_id": "gpt-4o-mini-2024-07-18",
+      "provider": "openai",
+      "role": "preproc",
+      "preproc_model_id": null,
+      "input_price_per_1m": 0.15,
+      "output_price_per_1m": 0.60,
+      "rate_limit_delay": 0.1
+    },
+    {
+      "model_id": "openrouter/nvidia/nemotron-3-super-120b-a12b:free",
+      "provider": "openrouter",
+      "role": "target",
+      "preproc_model_id": "openrouter/nvidia/nemotron-3-nano-30b-a3b:free",
+      "input_price_per_1m": 0.0,
+      "output_price_per_1m": 0.0,
+      "rate_limit_delay": 0.5
+    },
+    {
+      "model_id": "openrouter/nvidia/nemotron-3-nano-30b-a3b:free",
+      "provider": "openrouter",
+      "role": "preproc",
+      "preproc_model_id": null,
+      "input_price_per_1m": 0.0,
+      "output_price_per_1m": 0.0,
+      "rate_limit_delay": 0.5
+    }
+  ]
+}

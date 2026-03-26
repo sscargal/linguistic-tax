@@ -151,10 +151,12 @@ Plans:
 
 ### Phase 22: Experiment: All-caps and emphasis formatting effects on LLM attention
 
-**Goal:** Investigate whether all-caps words, bold/markdown emphasis, and capitalization patterns affect LLM attention and instruction-following. Test cases: "WILL" vs "will", "DO NOT" vs "**do not**" vs "Do **not**", sentence-initial capitalization effects.
-**Requirements**: TBD
+**Goal:** Implement emphasis conversion infrastructure and generate experiment-ready prompt variants for three clusters: (A) key-term emphasis with bold/CAPS/quotes per AQ-NH-05, (B) instruction-word emphasis testing the "shouting confound", and (C) sentence-initial capitalization effects -- producing 1,100 total experiment matrix items across all clusters
+**Requirements**: INFRA, AQ-NH-05, CLUSTER-B, CLUSTER-C
 **Depends on:** Phase 21
-**Plans:** 0 plans
+**Plans:** 3 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 22 to break down)
+- [ ] 22-01-PLAN.md -- Emphasis converter module, config.py INTERVENTIONS, run_experiment.py routing, tests
+- [ ] 22-02-PLAN.md -- Cluster A: select 20 prompts, identify key terms, generate bold/CAPS/quotes variants, 400-item matrix
+- [ ] 22-03-PLAN.md -- Clusters B+C: select prompts, generate instruction emphasis and capitalization variants, 700-item matrix

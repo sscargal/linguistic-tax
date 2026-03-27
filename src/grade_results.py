@@ -345,6 +345,8 @@ def grade_code(raw_output: str, prompt_record: dict) -> GradeResult:
         fail_reason = "syntax_error"
     elif "ImportError" in stderr or "ModuleNotFoundError" in stderr:
         fail_reason = "import_error"
+    elif "AssertionError" in stderr:
+        fail_reason = "wrong_answer"
     else:
         fail_reason = "crash"
 

@@ -241,7 +241,7 @@ class TestGradeCode:
         }
         result = grade_code(llm_output, prompt_record)
         assert result.passed is False
-        assert result.fail_reason in ("crash", "assertion_error")
+        assert result.fail_reason == "wrong_answer"
 
     def test_mbpp_pass(self):
         """grade_code with correct MBPP solution returns passed=True."""

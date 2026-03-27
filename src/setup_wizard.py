@@ -378,6 +378,9 @@ def _select_models(
         if existing_models and provider in existing_models:
             default_target = existing_models[provider].get("target", default_target)
 
+        # Fetch provider models once for validation and browsing
+        provider_models = _get_provider_models(provider)
+
         # Target model selection
         while True:
             prompt = f"{name} target model (the LLM being tested) [{default_target}]: "
@@ -387,14 +390,17 @@ def _select_models(
                 if selected:
                     target_model = selected
                     break
-                # If browse returned None, loop back
                 continue
             elif raw == "":
                 target_model = default_target
                 break
             else:
-                target_model = raw
-                break
+                validated = _validate_model_name(raw, provider, input_fn, provider_models)
+                if validated:
+                    target_model = validated
+                    break
+                # Empty string means user rejected — re-prompt
+                continue
 
         # Preproc model selection
         if preproc_scope == "global" and global_preproc is not None:
@@ -431,6 +437,106 @@ def _select_models(
         })
 
     return models
+
+
+def _get_provider_models(provider: str, timeout: float = 5.0) -> list:
+    """Query live models for a provider, with fallback to registry.
+
+    Args:
+        provider: Provider key to query.
+        timeout: Timeout for the API query.
+
+    Returns:
+        List of DiscoveredModel instances, or empty list on failure.
+    """
+    from src.model_discovery import (
+        _query_anthropic,
+        _query_google,
+        _query_openai,
+        _query_openrouter,
+        _get_fallback_models,
+    )
+
+    query_map = {
+        "anthropic": _query_anthropic,
+        "google": _query_google,
+        "openai": _query_openai,
+        "openrouter": _query_openrouter,
+    }
+
+    query_fn = query_map.get(provider)
+    if query_fn is None:
+        return []
+
+    try:
+        models = query_fn(timeout=timeout)
+        return models if models else _get_fallback_models(provider)
+    except Exception:
+        return _get_fallback_models(provider)
+
+
+def _validate_model_name(
+    model_id: str,
+    provider: str,
+    input_fn: Callable[..., str],
+    cached_models: list | None = None,
+) -> str:
+    """Validate a model name against the provider's live API.
+
+    If the model isn't found, suggests similar names and lets the user
+    choose one or keep their input.
+
+    Args:
+        model_id: The model ID entered by the user.
+        provider: Provider key for API query.
+        input_fn: Callable for reading user input.
+        cached_models: Pre-fetched model list to avoid re-querying.
+
+    Returns:
+        Validated (or user-confirmed) model ID.
+    """
+    models = cached_models if cached_models is not None else _get_provider_models(provider)
+    if not models:
+        return model_id  # Can't validate without model list
+
+    known_ids = {m.model_id for m in models}
+
+    # Exact match — valid
+    if model_id in known_ids:
+        return model_id
+
+    # Find similar models (substring match)
+    search = model_id.lower()
+    similar = [m.model_id for m in models if search in m.model_id.lower()]
+
+    # Also try prefix match
+    if not similar:
+        similar = [m.model_id for m in models if m.model_id.lower().startswith(search)]
+
+    if similar:
+        # Show top 5 suggestions
+        similar = sorted(similar)[:5]
+        print(f"\n  '{model_id}' not found. Did you mean:")
+        for i, s in enumerate(similar, 1):
+            print(f"    {i}. {s}")
+        print(f"    k. Keep '{model_id}' anyway")
+        choice = input_fn("  Choice: ").strip()
+        if choice.lower() == "k":
+            return model_id
+        try:
+            idx = int(choice) - 1
+            if 0 <= idx < len(similar):
+                print(f"  Selected: {similar[idx]}")
+                return similar[idx]
+        except ValueError:
+            pass
+        return model_id
+    else:
+        print(f"\n  '{model_id}' not found in {PROVIDER_NAMES.get(provider, provider)} models.")
+        choice = input_fn(f"  Keep '{model_id}' anyway? (y/N): ").strip().lower()
+        if choice in ("y", "yes"):
+            return model_id
+        return ""  # Empty signals re-prompt
 
 
 def _browse_models(

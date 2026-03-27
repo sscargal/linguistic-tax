@@ -213,14 +213,16 @@ class TestSelectModels:
         assert result[0]["target_model"] == "claude-sonnet-4-20250514"
 
     def test_select_models_free_text_entry(self):
-        """Free text entry accepts any string as target model (DSC-03)."""
-        inputs = ["my-custom-model-v2", ""]  # custom target, accept preproc
+        """Free text entry validates and accepts model (DSC-03)."""
+        inputs = ["my-custom-model-v2", "y", ""]  # custom target, keep anyway, accept preproc
         input_fn = lambda prompt="": inputs.pop(0)
 
         with patch("src.setup_wizard.registry") as mock_reg:
             mock_reg.get_preproc.return_value = "my-custom-model-v2"
+            mock_reg._models = {}
             with patch("src.setup_wizard.DEFAULT_TARGET_MODELS", {"anthropic": "claude-sonnet-4-20250514"}):
-                result = _select_models(["anthropic"], "per-provider", input_fn)
+                with patch("src.setup_wizard._get_provider_models", return_value=[]):
+                    result = _select_models(["anthropic"], "per-provider", input_fn)
 
         assert result[0]["target_model"] == "my-custom-model-v2"
 

@@ -493,7 +493,7 @@ def run_engine(args: argparse.Namespace, config: ExperimentConfig | None = None)
     logger.info("Processing %d items", len(pending))
 
     # Confirmation gate
-    cost_estimate = estimate_cost(pending)
+    cost_estimate = estimate_cost(pending, prompts_path=config.prompts_path)
     runtime_seconds = estimate_runtime(pending)
     completed_count = len(completed_runs)
     total_count = len(matrix)

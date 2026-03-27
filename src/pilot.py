@@ -236,7 +236,7 @@ def run_pilot(
     )
 
     # Confirmation gate for pilot
-    cost_estimate = estimate_cost(filtered)
+    cost_estimate = estimate_cost(filtered, prompts_path=config.prompts_path)
     runtime_seconds = estimate_runtime(filtered)
     summary = format_summary(
         filtered, 0, len(filtered), cost_estimate, runtime_seconds

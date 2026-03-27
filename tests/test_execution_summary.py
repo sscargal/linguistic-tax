@@ -53,13 +53,20 @@ def _make_item(
 
 
 class TestCostEstimation:
-    """Tests for estimate_cost function."""
+    """Tests for estimate_cost function.
+
+    Uses prompts_path="/nonexistent" to force fallback to AVG_TOKENS
+    estimates, making tests deterministic without real prompt data.
+    """
+
+    _NO_PROMPTS = "/nonexistent/prompts.json"
 
     def test_estimate_cost_single_raw_item(self):
         """Single raw HumanEval item has correct target cost and zero preproc."""
         items = [_make_item()]
-        result = estimate_cost(items)
-        expected_target = registry.compute_cost("claude-sonnet-4-20250514", 500, 200)
+        result = estimate_cost(items, prompts_path=self._NO_PROMPTS)
+        # Fallback: input=500, output=int(500*1.5)=750
+        expected_target = registry.compute_cost("claude-sonnet-4-20250514", 500, 750)
         assert result["target_cost"] == pytest.approx(expected_target)
         assert result["preproc_cost"] == 0.0
         assert result["total_cost"] == pytest.approx(expected_target)
@@ -67,7 +74,7 @@ class TestCostEstimation:
     def test_estimate_cost_preproc_item_adds_preproc_cost(self):
         """Pre-processor intervention adds non-zero preproc cost."""
         items = [_make_item(intervention="pre_proc_sanitize")]
-        result = estimate_cost(items)
+        result = estimate_cost(items, prompts_path=self._NO_PROMPTS)
         assert result["preproc_cost"] > 0.0
 
         # Preproc cost uses haiku model with input=500, output=int(500*0.8)=400
@@ -76,15 +83,15 @@ class TestCostEstimation:
         assert result["preproc_cost"] == pytest.approx(expected_preproc)
 
     def test_estimate_cost_gsm8k_uses_different_tokens(self):
-        """GSM8K items use 300 input / 100 output tokens."""
+        """GSM8K items use fallback 300 input, output_ratio 1.0 -> 300 output."""
         items = [_make_item(prompt_id="gsm8k_1")]
-        result = estimate_cost(items)
-        expected = registry.compute_cost("claude-sonnet-4-20250514", 300, 100)
+        result = estimate_cost(items, prompts_path=self._NO_PROMPTS)
+        expected = registry.compute_cost("claude-sonnet-4-20250514", 300, 300)
         assert result["target_cost"] == pytest.approx(expected)
 
     def test_estimate_cost_empty_list(self):
         """Empty item list returns all zeros."""
-        result = estimate_cost([])
+        result = estimate_cost([], prompts_path=self._NO_PROMPTS)
         assert result["target_cost"] == 0.0
         assert result["preproc_cost"] == 0.0
         assert result["total_cost"] == 0.0
@@ -96,10 +103,11 @@ class TestCostEstimation:
             _make_item(prompt_id="gsm8k_2"),
             _make_item(prompt_id="Mbpp/3"),
         ]
-        total_result = estimate_cost(items)
+        total_result = estimate_cost(items, prompts_path=self._NO_PROMPTS)
 
         individual_sum = sum(
-            estimate_cost([item])["total_cost"] for item in items
+            estimate_cost([item], prompts_path=self._NO_PROMPTS)["total_cost"]
+            for item in items
         )
         assert total_result["total_cost"] == pytest.approx(individual_sum)
 
@@ -110,8 +118,17 @@ class TestCostEstimation:
                 model="openrouter/nvidia/nemotron-3-super-120b-a12b:free"
             )
         ]
-        result = estimate_cost(items)
+        result = estimate_cost(items, prompts_path=self._NO_PROMPTS)
         assert result["total_cost"] == 0.0
+
+    def test_estimate_cost_returns_token_counts(self):
+        """Cost estimate includes token count breakdowns."""
+        items = [_make_item(), _make_item(intervention="pre_proc_sanitize")]
+        result = estimate_cost(items, prompts_path=self._NO_PROMPTS)
+        assert result["target_input_tokens"] > 0
+        assert result["target_output_tokens"] > 0
+        assert result["preproc_input_tokens"] > 0
+        assert result["preproc_output_tokens"] > 0
 
     def test_estimate_cost_all_preproc_interventions(self):
         """All three PREPROC_INTERVENTIONS trigger preproc cost."""

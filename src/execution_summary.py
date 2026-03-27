@@ -32,6 +32,14 @@ AVG_TOKENS: dict[str, dict[str, int]] = {
     "gsm8k": {"input": 300, "output": 100},
 }
 
+# Estimated output/input ratio per benchmark (output tokens are harder
+# to predict — use benchmark-appropriate multipliers)
+_OUTPUT_RATIO: dict[str, float] = {
+    "humaneval": 1.5,  # Code generation: output typically longer than prompt
+    "mbpp": 2.0,       # Short prompts, longer code output
+    "gsm8k": 1.0,      # Math: output roughly matches input length
+}
+
 PREPROC_INTERVENTIONS: set[str] = {
     "pre_proc_sanitize",
     "pre_proc_sanitize_compress",
@@ -42,6 +50,28 @@ PREPROC_INTERVENTIONS: set[str] = {
 # ---------------------------------------------------------------------------
 # Private helpers
 # ---------------------------------------------------------------------------
+
+
+def _compute_prompt_tokens(prompts_path: str = "data/prompts.json") -> dict[str, int]:
+    """Compute actual input token counts per prompt from the prompts file.
+
+    Uses tiktoken cl100k_base encoding for token counting.
+
+    Args:
+        prompts_path: Path to the prompts JSON file.
+
+    Returns:
+        Dict mapping prompt_id to input token count.
+    """
+    try:
+        import tiktoken
+        enc = tiktoken.get_encoding("cl100k_base")
+        with open(prompts_path) as f:
+            prompts = json.load(f)
+        return {p["problem_id"]: len(enc.encode(p["prompt_text"])) for p in prompts}
+    except Exception:
+        logger.debug("Could not compute prompt tokens, using estimates")
+        return {}
 
 
 def _get_benchmark(prompt_id: str) -> str:
@@ -112,40 +142,63 @@ def _format_duration(seconds: float) -> str:
 # ---------------------------------------------------------------------------
 
 
-def estimate_cost(items: list[dict[str, Any]]) -> dict[str, float]:
+def estimate_cost(
+    items: list[dict[str, Any]],
+    prompts_path: str = "data/prompts.json",
+) -> dict[str, float]:
     """Estimate total cost for a set of experiment items.
 
-    Uses static average token counts per benchmark and PRICE_TABLE for
-    per-model pricing.  Pre-processor costs are computed separately for
-    interventions that require a cheap pre-processing model call.
+    Computes actual input token counts from the prompts file via tiktoken,
+    falling back to static averages if unavailable. Pre-processor costs
+    are computed separately for interventions that use a cheap model call.
 
     Args:
         items: List of experiment matrix item dicts, each containing
             at minimum "prompt_id", "model", and "intervention" keys.
+        prompts_path: Path to prompts JSON for actual token counting.
 
     Returns:
-        Dict with keys "target_cost", "preproc_cost", "total_cost" in USD.
+        Dict with keys "target_cost", "preproc_cost", "total_cost" in USD,
+        plus "target_input_tokens", "target_output_tokens",
+        "preproc_input_tokens", "preproc_output_tokens" counts.
     """
+    prompt_tokens = _compute_prompt_tokens(prompts_path)
+
     target_cost = 0.0
     preproc_cost = 0.0
+    target_input_tokens = 0
+    target_output_tokens = 0
+    preproc_input_tokens = 0
+    preproc_output_tokens = 0
 
     for item in items:
         benchmark = _get_benchmark(item["prompt_id"])
-        tokens = AVG_TOKENS.get(benchmark, AVG_TOKENS["humaneval"])
+        fallback = AVG_TOKENS.get(benchmark, AVG_TOKENS["humaneval"])
+        input_toks = prompt_tokens.get(item["prompt_id"], fallback["input"])
+        output_ratio = _OUTPUT_RATIO.get(benchmark, 1.5)
+        output_toks = int(input_toks * output_ratio)
 
         # Target model cost
-        target_cost += registry.compute_cost(item["model"], tokens["input"], tokens["output"])
+        target_cost += registry.compute_cost(item["model"], input_toks, output_toks)
+        target_input_tokens += input_toks
+        target_output_tokens += output_toks
 
         # Pre-processor cost for applicable interventions
         if item["intervention"] in PREPROC_INTERVENTIONS:
             preproc_model = registry.get_preproc(item["model"]) or item["model"]
-            preproc_output = int(tokens["input"] * 0.8)
-            preproc_cost += registry.compute_cost(preproc_model, tokens["input"], preproc_output)
+            preproc_output = int(input_toks * 0.8)
+            preproc_cost += registry.compute_cost(preproc_model, input_toks, preproc_output)
+            preproc_input_tokens += input_toks
+            preproc_output_tokens += preproc_output
 
     return {
         "target_cost": target_cost,
         "preproc_cost": preproc_cost,
         "total_cost": target_cost + preproc_cost,
+        "target_input_tokens": target_input_tokens,
+        "target_output_tokens": target_output_tokens,
+        "preproc_input_tokens": preproc_input_tokens,
+        "preproc_output_tokens": preproc_output_tokens,
     }
 
 
@@ -238,53 +291,70 @@ def format_summary(
         lines.append("")
 
     # Models section — show target models and their pre-processors
+    prompt_tokens = _compute_prompt_tokens()
     model_counts: Counter[str] = Counter(item["model"] for item in items)
     model_table = []
     for model, count in sorted(model_counts.items()):
-        per_model_cost = sum(
-            registry.compute_cost(item["model"], AVG_TOKENS.get(_get_benchmark(item["prompt_id"]), AVG_TOKENS["humaneval"])["input"],
-                         AVG_TOKENS.get(_get_benchmark(item["prompt_id"]), AVG_TOKENS["humaneval"])["output"])
-            for item in items if item["model"] == model
-        )
+        per_model_cost = 0.0
+        for item in items:
+            if item["model"] == model:
+                benchmark = _get_benchmark(item["prompt_id"])
+                fallback = AVG_TOKENS.get(benchmark, AVG_TOKENS["humaneval"])
+                input_toks = prompt_tokens.get(item["prompt_id"], fallback["input"])
+                output_toks = int(input_toks * _OUTPUT_RATIO.get(benchmark, 1.5))
+                per_model_cost += registry.compute_cost(model, input_toks, output_toks)
         model_table.append([model, "target", count, f"${per_model_cost:.2f}"])
 
         # Show the pre-processor model for this target
         preproc_model = registry.get_preproc(model)
         if preproc_model and preproc_model != model:
-            preproc_items = sum(1 for item in items
+            preproc_calls = sum(1 for item in items
                                 if item["model"] == model
                                 and item["intervention"] in PREPROC_INTERVENTIONS)
             preproc_per_model = 0.0
             for item in items:
                 if item["model"] == model and item["intervention"] in PREPROC_INTERVENTIONS:
-                    tokens = AVG_TOKENS.get(_get_benchmark(item["prompt_id"]), AVG_TOKENS["humaneval"])
-                    preproc_output = int(tokens["input"] * 0.8)
-                    preproc_per_model += registry.compute_cost(preproc_model, tokens["input"], preproc_output)
-            model_table.append([f"  {preproc_model}", "preproc", preproc_items, f"${preproc_per_model:.2f}"])
+                    benchmark = _get_benchmark(item["prompt_id"])
+                    fallback = AVG_TOKENS.get(benchmark, AVG_TOKENS["humaneval"])
+                    input_toks = prompt_tokens.get(item["prompt_id"], fallback["input"])
+                    preproc_output = int(input_toks * 0.8)
+                    preproc_per_model += registry.compute_cost(preproc_model, input_toks, preproc_output)
+            model_table.append([f"  {preproc_model}", "preproc", preproc_calls, f"${preproc_per_model:.2f}"])
 
     lines.append("Models:")
-    lines.append(tabulate(model_table, headers=["Model", "Role", "Items", "Est. Cost"], tablefmt="simple"))
+    lines.append(tabulate(model_table, headers=["Model", "Role", "API Calls", "Est. Cost"], tablefmt="simple"))
     lines.append("")
 
     # Interventions section
     intervention_counts: Counter[str] = Counter(item["intervention"] for item in items)
     intervention_table = [[intervention, count] for intervention, count in sorted(intervention_counts.items())]
     lines.append("Interventions:")
-    lines.append(tabulate(intervention_table, headers=["Intervention", "Items"], tablefmt="simple"))
+    lines.append(tabulate(intervention_table, headers=["Intervention", "API Calls"], tablefmt="simple"))
     lines.append("")
 
     # Noise Conditions section
     noise_counts: Counter[str] = Counter(item["noise_type"] for item in items)
     noise_table = [[noise_type, count] for noise_type, count in sorted(noise_counts.items())]
     lines.append("Noise Conditions:")
-    lines.append(tabulate(noise_table, headers=["Noise Type", "Items"], tablefmt="simple"))
+    lines.append(tabulate(noise_table, headers=["Noise Type", "API Calls"], tablefmt="simple"))
     lines.append("")
 
-    # Cost section
-    lines.append("Cost:")
-    lines.append(f"  Target model cost:    ${cost_estimate['target_cost']:.2f}")
-    lines.append(f"  Pre-processor cost:   ${cost_estimate['preproc_cost']:.2f}")
-    lines.append(f"  Total estimated cost:  ${cost_estimate['total_cost']:.2f}")
+    # Token and cost section
+    target_in = cost_estimate.get("target_input_tokens", 0)
+    target_out = cost_estimate.get("target_output_tokens", 0)
+    preproc_in = cost_estimate.get("preproc_input_tokens", 0)
+    preproc_out = cost_estimate.get("preproc_output_tokens", 0)
+
+    lines.append("Estimated Tokens:")
+    lines.append(f"  Target model:      {target_in:,} in / {target_out:,} out")
+    lines.append(f"  Pre-processor:     {preproc_in:,} in / {preproc_out:,} out")
+    lines.append(f"  Total:             {target_in + preproc_in:,} in / {target_out + preproc_out:,} out")
+    lines.append("")
+
+    lines.append("Estimated Cost:")
+    lines.append(f"  Target model:      ${cost_estimate['target_cost']:.2f}")
+    lines.append(f"  Pre-processor:     ${cost_estimate['preproc_cost']:.2f}")
+    lines.append(f"  Total:             ${cost_estimate['total_cost']:.2f}")
     lines.append("")
 
     # Runtime section

@@ -682,7 +682,24 @@ def run_engine(args: argparse.Namespace, config: ExperimentConfig | None = None)
         print(f"  {skipped_count} items skipped.")
         print("  Re-run with `propt run --retry-failed` after the quota resets.")
 
-    logger.info("Engine complete: %d items processed", total)
+    # Post-execution summary
+    failed_count = total - completed_count_run - skipped_count
+    pass_rate_final = (pass_count / completed_count_run * 100) if completed_count_run > 0 else 0
+    print(f"\n{'─' * 50}")
+    print(f"Complete: {completed_count_run:,} items processed")
+    if failed_count > 0:
+        print(f"  Failed:  {failed_count:,}")
+    if skipped_count > 0:
+        print(f"  Skipped: {skipped_count:,} (quota exhausted)")
+    print(f"  Pass rate: {pass_rate_final:.1f}%")
+    print(f"  Cost:      ${cost_so_far:.2f}")
+    print(f"  Tokens:    {_fmt_tokens(tokens_in)} in / {_fmt_tokens(tokens_out)} out")
+    print(f"\nNext steps:")
+    print(f"  propt report              — detailed post-run report")
+    if failed_count > 0:
+        print(f"  propt run --retry-failed  — reprocess {failed_count:,} failed items")
+    print(f"  propt clean               — reset and start fresh")
+    print(f"{'─' * 50}")
     conn.close()
 
 

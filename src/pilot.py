@@ -158,9 +158,11 @@ def run_pilot(
     """
     import argparse
 
-    config = ExperimentConfig()
+    from src.config_manager import load_config
+
+    config = load_config()
     if db_path:
-        config = ExperimentConfig(results_db_path=db_path)
+        config.results_db_path = db_path
 
     # Select pilot prompts
     if not analyze_only:

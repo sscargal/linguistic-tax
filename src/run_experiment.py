@@ -405,9 +405,11 @@ def run_engine(args: argparse.Namespace, config: ExperimentConfig | None = None)
 
     Args:
         args: Parsed CLI arguments.
-        config: Optional experiment configuration (defaults to ExperimentConfig()).
+        config: Optional experiment configuration (defaults to load_config()).
     """
-    config = config or ExperimentConfig()
+    if config is None:
+        from src.config_manager import load_config
+        config = load_config()
 
     # Override DB path if specified
     db_path = args.db if args.db else config.results_db_path

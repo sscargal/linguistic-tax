@@ -367,7 +367,8 @@ def _select_models(
 
     print("\n--- Model Selection ---")
     print("For each provider, choose the target model (the LLM being tested)")
-    print("and then the pre-processor model (the cheap model that cleans prompts).\n")
+    print("and then the pre-processor model (the cheap model that cleans prompts).")
+    print("Type 'list' at any model prompt to browse available models.\n")
 
     for provider in providers:
         name = PROVIDER_NAMES[provider]

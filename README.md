@@ -14,7 +14,12 @@ The toolkit implements a full factorial experiment across configurable model pro
 git clone https://github.com/sscargal/linguistic-tax.git
 cd linguistic-tax
 uv sync
-uv run propt setup    # Wizard handles API keys, model config, and validation
+uv run propt setup              # Configure providers and API keys
+uv run propt pilot --dry-run    # Preview pilot cost and scope
+uv run propt pilot              # Run 20-prompt validation
+uv run propt report             # Check results
+uv run propt run --dry-run      # Preview full experiment
+uv run propt run                # Run full experiment matrix
 ```
 
 ## Installation

@@ -212,6 +212,18 @@ def build_cli() -> argparse.ArgumentParser:
     )
     report_parser.set_defaults(func=handle_report)
 
+    # --- clean ---
+    clean_parser = subparsers.add_parser(
+        "clean", help="Delete experiment results and start fresh"
+    )
+    clean_parser.add_argument(
+        "--db", type=str, default=None, help="Override database path"
+    )
+    clean_parser.add_argument(
+        "--yes", action="store_true", help="Skip confirmation prompt"
+    )
+    clean_parser.set_defaults(func=handle_clean)
+
     # --- argcomplete ---
     try:
         import argcomplete
@@ -234,6 +246,57 @@ def handle_report(args: argparse.Namespace) -> None:
     conn = init_database(db_path)
     print(format_post_run_report(conn))
     conn.close()
+
+
+def handle_clean(args: argparse.Namespace) -> None:
+    """Delete experiment results database and associated files to start fresh."""
+    from pathlib import Path
+    from src.config_manager import load_config
+
+    config = load_config()
+    db_path = Path(args.db if args.db else config.results_db_path)
+
+    files_to_delete: list[Path] = []
+    if db_path.exists():
+        files_to_delete.append(db_path)
+    # Also clean up execution plan and pilot prompts if they exist
+    plan_path = db_path.parent / "execution_plan.json"
+    pilot_plan_path = db_path.parent / "pilot_plan.json"
+    pilot_prompts_path = Path("data/pilot_prompts.json")
+    for p in [plan_path, pilot_plan_path, pilot_prompts_path]:
+        if p.exists():
+            files_to_delete.append(p)
+
+    if not files_to_delete:
+        print("Nothing to clean — no results found.")
+        return
+
+    print("Files to delete:")
+    for f in files_to_delete:
+        size = f.stat().st_size
+        if size >= 1_048_576:
+            size_str = f"{size / 1_048_576:.1f} MB"
+        elif size >= 1024:
+            size_str = f"{size / 1024:.1f} KB"
+        else:
+            size_str = f"{size} bytes"
+        print(f"  {f} ({size_str})")
+
+    if not args.yes:
+        try:
+            confirm = input("\nDelete these files? This cannot be undone. (y/N): ").strip().lower()
+        except KeyboardInterrupt:
+            print("\nAborted.")
+            return
+        if confirm not in ("y", "yes"):
+            print("Aborted.")
+            return
+
+    for f in files_to_delete:
+        f.unlink()
+        print(f"  Deleted: {f}")
+
+    print("\nClean complete. Run `propt pilot` or `propt run` to start fresh.")
 
 
 def main() -> None:

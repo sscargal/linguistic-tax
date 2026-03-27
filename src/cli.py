@@ -224,6 +224,15 @@ def build_cli() -> argparse.ArgumentParser:
     )
     clean_parser.set_defaults(func=handle_clean)
 
+    # --- regrade ---
+    regrade_parser = subparsers.add_parser(
+        "regrade", help="Re-grade existing results with updated grading logic"
+    )
+    regrade_parser.add_argument(
+        "--db", type=str, default=None, help="Override database path"
+    )
+    regrade_parser.set_defaults(func=handle_regrade)
+
     # --- argcomplete ---
     try:
         import argcomplete
@@ -246,6 +255,64 @@ def handle_report(args: argparse.Namespace) -> None:
     conn = init_database(db_path)
     print(format_post_run_report(conn))
     conn.close()
+
+
+def handle_regrade(args: argparse.Namespace) -> None:
+    """Re-grade all existing results with updated grading logic."""
+    import sqlite3
+    from src.config_manager import load_config
+    from src.db import init_database
+    from src.grade_results import batch_grade
+    from src.run_experiment import _get_benchmark
+
+    config = load_config()
+    db_path = args.db if args.db else config.results_db_path
+    conn = init_database(db_path)
+
+    # Count totals before
+    total = conn.execute("SELECT COUNT(*) FROM experiment_runs").fetchone()[0]
+    if total == 0:
+        print("No runs to regrade.")
+        conn.close()
+        return
+
+    old_passed = conn.execute("SELECT COUNT(*) FROM experiment_runs WHERE pass_fail = 1").fetchone()[0]
+    old_rate = old_passed / total * 100
+
+    # Fix benchmark column for misdetected prompts
+    fixed = 0
+    rows = conn.execute("SELECT DISTINCT prompt_id, benchmark FROM experiment_runs").fetchall()
+    for prompt_id, current_bench in rows:
+        correct_bench = _get_benchmark(prompt_id)
+        if correct_bench != current_bench:
+            conn.execute(
+                "UPDATE experiment_runs SET benchmark = ? WHERE prompt_id = ?",
+                (correct_bench, prompt_id),
+            )
+            fixed += 1
+    if fixed > 0:
+        conn.commit()
+        print(f"Fixed benchmark classification for {fixed} prompt(s)")
+
+    conn.close()
+
+    # Re-grade all runs
+    print(f"Re-grading {total:,} runs...")
+    summary = batch_grade(db_path, force=True, prompts_path=config.prompts_path)
+
+    new_passed = summary["passed"]
+    new_rate = new_passed / summary["total"] * 100 if summary["total"] > 0 else 0
+
+    print(f"\nRegrade complete:")
+    print(f"  Before: {old_passed:,}/{total:,} passed ({old_rate:.1f}%)")
+    print(f"  After:  {new_passed:,}/{summary['total']:,} passed ({new_rate:.1f}%)")
+    change = new_rate - old_rate
+    if abs(change) > 0.1:
+        direction = "+" if change > 0 else ""
+        print(f"  Change: {direction}{change:.1f}pp")
+    if summary["errors"] > 0:
+        print(f"  Errors: {summary['errors']}")
+    print(f"\nRun `propt report` to see updated results.")
 
 
 def handle_clean(args: argparse.Namespace) -> None:

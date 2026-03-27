@@ -365,7 +365,7 @@ def _process_item(
             grade_result.execution_time_ms, grade_result.extraction_method,
         )
 
-        logger.info(
+        logger.debug(
             "[%d/%d] %s | %s | %s | %s | %.0fms | $%.4f",
             index + 1, total, item["prompt_id"], item["noise_type"],
             item["intervention"], "PASS" if grade_result.passed else "FAIL",

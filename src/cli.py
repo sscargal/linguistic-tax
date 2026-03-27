@@ -245,6 +245,12 @@ def main() -> None:
         format="%(levelname)s: %(message)s",
     )
 
+    # Suppress noisy HTTP-level logs from SDK clients
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("httpcore").setLevel(logging.WARNING)
+    logging.getLogger("openai").setLevel(logging.WARNING)
+    logging.getLogger("anthropic").setLevel(logging.WARNING)
+
     load_env()
 
     try:

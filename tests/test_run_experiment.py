@@ -608,10 +608,10 @@ class TestRunEngine:
         )
 
         args = _make_test_args(db=db_path)
-        with caplog.at_level(logging.INFO, logger="src.run_experiment"):
+        with caplog.at_level(logging.DEBUG, logger="src.run_experiment"):
             run_engine(args, config=config)
 
-        # Check log contains expected format elements
+        # Check debug log contains expected format elements
         progress_logs = [r for r in caplog.records if "[1/1]" in r.message]
         assert len(progress_logs) == 1
         msg = progress_logs[0].message

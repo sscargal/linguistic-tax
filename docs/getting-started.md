@@ -92,6 +92,17 @@ The `.env` file is loaded automatically at startup and does not override existin
 
 All model names and pricing come from the `ModelRegistry` (loaded from `data/default_models.json`). Use `propt list-models` to see all available models with live pricing.
 
+> **Pre-processor model choice matters.** Reasoning models (e.g., `gpt-5-nano`, `o3-mini`, `o4-mini`) generate hidden chain-of-thought that inflates output tokens (5x ratio observed) and increases latency (3.6s TTFT). Use non-reasoning models for pre-processing:
+>
+> | Provider | Recommended Pre-processor |
+> |----------|--------------------------|
+> | Anthropic | `claude-haiku-4-5-20250514` |
+> | Google | `gemini-2.0-flash` |
+> | OpenAI | `gpt-4o-mini` |
+> | OpenRouter | Any non-reasoning model |
+>
+> The toolkit automatically skips pre-processing for clean and ESL prompts (where it provides no benefit), only running it for typo-injected (type_a) noise conditions.
+
 ### Manual Configuration
 
 Set individual experiment properties without the wizard:

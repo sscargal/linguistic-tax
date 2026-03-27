@@ -332,6 +332,11 @@ def _explain_model_roles(input_fn: Callable[..., str]) -> str:
         "clean up prompts before they reach the target model. They run on every\n"
         "prompt, so cost matters."
     )
+    print(
+        "\nIMPORTANT: Use non-reasoning models for pre-processing. Reasoning models\n"
+        "(gpt-5-nano, o3-mini, o4-mini) produce bloated output and high latency.\n"
+        "Recommended: gpt-4o-mini, claude-haiku, gemini-2.0-flash.\n"
+    )
     print()
     print("Use a separate pre-processor per provider, or one global pre-processor?")
     print("  1. Per-provider (default)")

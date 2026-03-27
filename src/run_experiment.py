@@ -16,7 +16,7 @@ from typing import Any
 
 from tqdm import tqdm
 
-from src.api_client import APIResponse, call_model, _validate_api_keys
+from src.api_client import APIResponse, call_model, _validate_api_keys, _is_quota_error
 from src.config_manager import find_config_path, CONFIG_FILENAME
 from src.config import (
     ExperimentConfig,
@@ -261,7 +261,7 @@ def _process_item(
     config: ExperimentConfig,
     index: int,
     total: int,
-) -> None:
+) -> bool:
     """Process a single experiment matrix item through the full pipeline.
 
     Applies noise, routes through intervention, calls the LLM API,
@@ -274,6 +274,10 @@ def _process_item(
         config: Experiment configuration.
         index: Zero-based index of current item in the processing queue.
         total: Total number of items to process.
+
+    Returns:
+        True if a quota/daily-limit error was detected (caller should
+        skip remaining items for this model). False otherwise.
     """
     run_id = make_run_id(item)
     benchmark = _get_benchmark(item["prompt_id"])
@@ -371,12 +375,10 @@ def _process_item(
             item["intervention"], "PASS" if grade_result.passed else "FAIL",
             response.ttlt_ms, total_cost,
         )
+        return False
 
     except Exception as e:
-        # Let quota errors propagate — retrying won't help
-        from src.api_client import _is_quota_error
-        if _is_quota_error(e):
-            raise
+        is_quota = _is_quota_error(e)
         logger.error(
             "[%d/%d] %s | %s | %s | FAILED: %s",
             index + 1, total, item["prompt_id"], item["noise_type"],
@@ -400,6 +402,7 @@ def _process_item(
             insert_run(conn, run_data)
         except Exception:
             logger.exception("Failed to insert failed run record for %s", run_id)
+        return is_quota
 
 
 # ---------------------------------------------------------------------------
@@ -566,10 +569,41 @@ def run_engine(args: argparse.Namespace, config: ExperimentConfig | None = None)
             return f"{n / 1_000:.1f}K"
         return str(n)
 
+    quota_exhausted_models: set[str] = set()
+    skipped_count = 0
+
     try:
         with tqdm(total=total, desc="Experiments", unit="item") as pbar:
             for i, item in enumerate(pending):
-                _process_item(item, conn, prompts_by_id, config, i, total)
+                model = item["model"]
+
+                # Skip items for models that hit quota limits
+                if model in quota_exhausted_models:
+                    skipped_count += 1
+                    pbar.update(1)
+                    continue
+
+                # Also skip if preproc model is exhausted and this needs preproc
+                preproc_model = registry.get_preproc(model)
+                if (preproc_model and preproc_model in quota_exhausted_models
+                        and item["intervention"] in (
+                            "pre_proc_sanitize", "pre_proc_sanitize_compress",
+                            "compress_only")):
+                    skipped_count += 1
+                    pbar.update(1)
+                    continue
+
+                quota_hit = _process_item(item, conn, prompts_by_id, config, i, total)
+
+                if quota_hit:
+                    quota_exhausted_models.add(model)
+                    # Also mark the preproc model as exhausted if it's the same provider
+                    if preproc_model:
+                        quota_exhausted_models.add(preproc_model)
+                    tqdm.write(
+                        f"  Quota exhausted for {model} — skipping remaining items for this model."
+                    )
+
                 # Query metrics from last inserted row
                 row = conn.execute(
                     "SELECT total_cost_usd, pass_fail, prompt_tokens, "
@@ -580,20 +614,21 @@ def run_engine(args: argparse.Namespace, config: ExperimentConfig | None = None)
                 last_result = "?"
                 last_ms = 0.0
                 if row:
-                    if row[0]:
-                        cost_so_far += row[0]
-                    if row[2]:
-                        tokens_in += row[2]
-                    if row[3]:
-                        tokens_out += row[3]
-                    if row[5] == "completed":
+                    if row[5] == "failed":
+                        # Check if this was a quota error by re-reading the item
+                        last_result = "ERR"
+                    elif row[5] == "completed":
+                        if row[0]:
+                            cost_so_far += row[0]
+                        if row[2]:
+                            tokens_in += row[2]
+                        if row[3]:
+                            tokens_out += row[3]
                         completed_count_run += 1
                         if row[1] is not None:
                             if row[1]:
                                 pass_count += 1
                             last_result = "PASS" if row[1] else "FAIL"
-                    else:
-                        last_result = "ERR"
                     last_ms = row[4] or 0.0
 
                 pass_rate = (pass_count / completed_count_run * 100) if completed_count_run > 0 else 0
@@ -606,17 +641,14 @@ def run_engine(args: argparse.Namespace, config: ExperimentConfig | None = None)
     except KeyboardInterrupt:
         print("\nInterrupted. Saving progress...")
         conn.close()
-        print(f"Completed {i} of {total} items.")
+        print(f"Completed {completed_count_run} of {total} items.")
         sys.exit(130)
-    except Exception as e:
-        from src.api_client import _is_quota_error
-        if _is_quota_error(e):
-            print(f"\nQuota exceeded — stopping. {completed_count_run} of {total} items completed.")
-            print(f"  {e}")
-            print(f"\nRe-run with `propt run --retry-failed` after the quota resets.")
-            conn.close()
-            sys.exit(1)
-        raise
+
+    # Report quota-exhausted models
+    if quota_exhausted_models:
+        print(f"\nQuota exhausted for: {', '.join(sorted(quota_exhausted_models))}")
+        print(f"  {skipped_count} items skipped.")
+        print("  Re-run with `propt run --retry-failed` after the quota resets.")
 
     logger.info("Engine complete: %d items processed", total)
     conn.close()

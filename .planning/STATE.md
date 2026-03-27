@@ -108,9 +108,7 @@ Recent decisions affecting current work:
 - Inspect pre-processor output and fix chatty responses (general)
 - Add benchmark breakdown to propt report (general)
 - Support multiple target models per provider in setup wizard (general)
-- Investigate grading crash failures in pilot data (general)
 - Investigate pre-processor performance anomaly — slow TTFT, high output (general)
-- Improve MBPP function aliasing for edge cases (general)
 - Investigate why pre_proc_sanitize hurts accuracy vs raw (general)
 
 ### Roadmap Evolution

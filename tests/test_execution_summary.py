@@ -459,3 +459,139 @@ class TestBenchmarkBreakdown:
         report = format_post_run_report(conn, benchmark=False)
         conn.close()
         assert "No runs found" in report
+
+
+# ---------------------------------------------------------------------------
+# Helper: multi-model test database
+# ---------------------------------------------------------------------------
+
+
+def _make_multi_model_db(tmp_path):
+    """Create a SQLite db with rows for 2 models across interventions and noise types."""
+    import sqlite3
+    from src.db import init_database
+
+    db_path = str(tmp_path / "multi_model.db")
+    conn = init_database(db_path)
+
+    test_rows = [
+        # model-a, raw, clean — 2 pass
+        ("p1|clean|raw|model-a|1", "p1", "humaneval", "clean", None, "raw", "model-a", 1, 1, 100.0, 200.0, 0.001, 0.002, 0.003, "completed"),
+        ("p2|clean|raw|model-a|1", "p2", "humaneval", "clean", None, "raw", "model-a", 1, 1, 100.0, 200.0, 0.001, 0.002, 0.003, "completed"),
+        # model-a, raw, typo_5 — 1 pass 1 fail
+        ("p1|typo_5|raw|model-a|1", "p1", "humaneval", "typo_5", "5", "raw", "model-a", 1, 1, 100.0, 200.0, 0.001, 0.002, 0.003, "completed"),
+        ("p2|typo_5|raw|model-a|1", "p2", "humaneval", "typo_5", "5", "raw", "model-a", 1, 0, 100.0, 200.0, 0.001, 0.002, 0.003, "completed"),
+        # model-a, pre_proc_sanitize, clean — 1 pass 1 fail
+        ("p1|clean|pps|model-a|1", "p1", "humaneval", "clean", None, "pre_proc_sanitize", "model-a", 1, 1, 100.0, 200.0, 0.001, 0.002, 0.003, "completed"),
+        ("p2|clean|pps|model-a|1", "p2", "humaneval", "clean", None, "pre_proc_sanitize", "model-a", 1, 0, 100.0, 200.0, 0.001, 0.002, 0.003, "completed"),
+        # model-b, raw, clean — 1 pass 1 fail
+        ("p1|clean|raw|model-b|1", "p1", "humaneval", "clean", None, "raw", "model-b", 1, 1, 100.0, 200.0, 0.001, 0.002, 0.003, "completed"),
+        ("p2|clean|raw|model-b|1", "p2", "humaneval", "clean", None, "raw", "model-b", 1, 0, 100.0, 200.0, 0.001, 0.002, 0.003, "completed"),
+        # model-b, raw, typo_5 — 0 pass 2 fail
+        ("p1|typo_5|raw|model-b|1", "p1", "humaneval", "typo_5", "5", "raw", "model-b", 1, 0, 100.0, 200.0, 0.001, 0.002, 0.003, "completed"),
+        ("p2|typo_5|raw|model-b|1", "p2", "humaneval", "typo_5", "5", "raw", "model-b", 1, 0, 100.0, 200.0, 0.001, 0.002, 0.003, "completed"),
+        # model-b, pre_proc_sanitize, clean — 2 pass
+        ("p1|clean|pps|model-b|1", "p1", "humaneval", "clean", None, "pre_proc_sanitize", "model-b", 1, 1, 100.0, 200.0, 0.001, 0.002, 0.003, "completed"),
+        ("p2|clean|pps|model-b|1", "p2", "humaneval", "clean", None, "pre_proc_sanitize", "model-b", 1, 1, 100.0, 200.0, 0.001, 0.002, 0.003, "completed"),
+    ]
+
+    for row in test_rows:
+        conn.execute("""
+            INSERT INTO experiment_runs (
+                run_id, prompt_id, benchmark, noise_type, noise_level,
+                intervention, model, repetition, pass_fail, ttft_ms, ttlt_ms,
+                main_model_input_cost_usd, main_model_output_cost_usd,
+                total_cost_usd, status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, row)
+    conn.commit()
+    return conn
+
+
+class TestMultiModelPivot:
+    """Tests for multi-model pivot tables in format_post_run_report."""
+
+    def test_pivot_tables_appear_with_two_models(self, tmp_path):
+        """Multi-model DB produces Intervention x Model and Noise x Model headers."""
+        conn = _make_multi_model_db(tmp_path)
+        report = format_post_run_report(conn)
+        conn.close()
+        assert "Intervention x Model" in report
+        assert "Noise x Model" in report
+
+    def test_pivot_tables_contain_both_model_names(self, tmp_path):
+        """Both model names appear in pivot tables."""
+        conn = _make_multi_model_db(tmp_path)
+        report = format_post_run_report(conn)
+        conn.close()
+        # Both model names should appear in the pivot sections
+        assert "model-a" in report
+        assert "model-b" in report
+
+    def test_pivot_skipped_single_model(self, tmp_path):
+        """Single-model DB does not show pivot table headers."""
+        conn = _make_test_db(tmp_path)
+        report = format_post_run_report(conn)
+        conn.close()
+        assert "Intervention x Model" not in report
+        assert "Noise x Model" not in report
+
+    def test_intervention_pivot_pass_rates(self, tmp_path):
+        """Intervention x Model pivot shows correct pass rates."""
+        conn = _make_multi_model_db(tmp_path)
+        report = format_post_run_report(conn)
+        conn.close()
+        # model-a raw: 3 pass / 4 total = 75.0%
+        # model-b raw: 1 pass / 4 total = 25.0%
+        assert "75.0%" in report
+        assert "25.0%" in report
+
+    def test_noise_pivot_pass_rates(self, tmp_path):
+        """Noise x Model pivot shows correct pass rates per noise type."""
+        conn = _make_multi_model_db(tmp_path)
+        report = format_post_run_report(conn)
+        conn.close()
+        # model-b typo_5: 0 pass / 2 total = 0.0%
+        assert "0.0%" in report
+
+
+class TestReportFormats:
+    """Tests for output_format parameter of format_post_run_report."""
+
+    def test_json_format_valid(self, tmp_path):
+        """output_format='json' returns valid JSON with expected keys."""
+        conn = _make_multi_model_db(tmp_path)
+        report = format_post_run_report(conn, output_format="json")
+        conn.close()
+        data = json.loads(report)
+        assert "models" in data
+        assert "interventions" in data
+        assert "noise" in data
+        assert "costs" in data
+
+    def test_csv_format(self, tmp_path):
+        """output_format='csv' returns comma-separated values."""
+        conn = _make_multi_model_db(tmp_path)
+        report = format_post_run_report(conn, output_format="csv")
+        conn.close()
+        # CSV should have comma-separated rows
+        assert "," in report
+        # Should have section headers
+        assert "# Models" in report or "# models" in report.lower()
+
+    def test_markdown_format(self, tmp_path):
+        """output_format='markdown' returns pipe-delimited table rows."""
+        conn = _make_multi_model_db(tmp_path)
+        report = format_post_run_report(conn, output_format="markdown")
+        conn.close()
+        # Markdown tables use pipes
+        assert "|" in report
+        # GitHub-flavored markdown has separator rows with dashes
+        assert "---" in report
+
+    def test_text_format_backward_compat(self, tmp_path):
+        """output_format='text' returns same format as current behavior."""
+        conn = _make_multi_model_db(tmp_path)
+        report = format_post_run_report(conn, output_format="text")
+        conn.close()
+        assert "=== Post-Run Report ===" in report

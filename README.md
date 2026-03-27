@@ -58,8 +58,6 @@ export OPENAI_API_KEY="sk-..."            # For GPT models
 export OPENROUTER_API_KEY="sk-or-..."     # For OpenRouter models (free Nemotron)
 ```
 
-> **Tip:** OpenRouter provides free access to Nemotron models, making it a zero-cost option for initial experiments.
-
 ### Configuration
 
 Run the guided setup wizard to configure your experiment:

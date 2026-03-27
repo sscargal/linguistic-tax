@@ -210,6 +210,10 @@ def build_cli() -> argparse.ArgumentParser:
     report_parser.add_argument(
         "--db", type=str, default=None, help="Override database path"
     )
+    report_parser.add_argument(
+        "--benchmark", action="store_true",
+        help="Show per-benchmark cross-tabulation with noise types and baselines"
+    )
     report_parser.set_defaults(func=handle_report)
 
     # --- clean ---
@@ -253,7 +257,7 @@ def handle_report(args: argparse.Namespace) -> None:
     config = load_config()
     db_path = args.db if args.db else config.results_db_path
     conn = init_database(db_path)
-    print(format_post_run_report(conn))
+    print(format_post_run_report(conn, benchmark=args.benchmark))
     conn.close()
 
 

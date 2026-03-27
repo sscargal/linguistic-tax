@@ -51,6 +51,8 @@ PROVIDER_ENV_VARS: dict[str, str] = {
     "openrouter": "OPENROUTER_API_KEY",
 }
 
+MAX_TARGETS_PER_PROVIDER: int = 4
+
 # ---------------------------------------------------------------------------
 # Default model lookup from registry
 # ---------------------------------------------------------------------------
@@ -158,11 +160,12 @@ def _detect_existing_config() -> dict | None:
     """Detect and parse an existing config file.
 
     Calls find_config_path(). If found, extracts the models list and
-    groups by provider.
+    groups by provider, supporting multiple targets per provider.
 
     Returns:
         Dict with 'providers' list and 'models' dict mapping provider
-        to {'target': model_id, 'preproc': model_id}, or None if no config.
+        to {'targets': [{'target': model_id, 'preproc': model_id}, ...]},
+        or None if no config.
     """
     config_path = find_config_path()
     if config_path is None:
@@ -179,7 +182,7 @@ def _detect_existing_config() -> dict | None:
         return None
 
     providers: list[str] = []
-    models: dict[str, dict[str, str]] = {}
+    models: dict[str, dict] = {}
 
     for entry in models_list:
         provider = entry.get("provider", "")
@@ -187,15 +190,16 @@ def _detect_existing_config() -> dict | None:
         model_id = entry.get("model_id", "")
 
         if provider not in models:
-            models[provider] = {}
+            models[provider] = {"targets": []}
         if provider not in providers and role == "target":
             providers.append(provider)
 
         if role == "target":
-            models[provider]["target"] = model_id
+            target_entry: dict[str, str] = {"target": model_id}
             preproc = entry.get("preproc_model_id")
             if preproc:
-                models[provider]["preproc"] = preproc
+                target_entry["preproc"] = preproc
+            models[provider]["targets"].append(target_entry)
 
     return {"providers": providers, "models": models}
 
@@ -215,10 +219,20 @@ def _handle_existing_config(
     print("\nExisting configuration found:")
     for provider in existing["providers"]:
         model_info = existing["models"].get(provider, {})
-        target = model_info.get("target", "unknown")
-        preproc = model_info.get("preproc", "none")
         name = PROVIDER_NAMES.get(provider, provider)
-        print(f"  {name}: target={target}, preproc={preproc}")
+        targets = model_info.get("targets", [])
+        if not targets:
+            # Backward compat: old single-target format
+            target = model_info.get("target", "unknown")
+            preproc = model_info.get("preproc", "none")
+            print(f"  {name}: target={target}, preproc={preproc}")
+        elif len(targets) == 1:
+            t = targets[0]
+            print(f"  {name}: target={t.get('target', 'unknown')}, preproc={t.get('preproc', 'none')}")
+        else:
+            print(f"  {name}: {len(targets)} targets")
+            for i, t in enumerate(targets, 1):
+                print(f"    {i}. {t.get('target', 'unknown')} (preproc: {t.get('preproc', 'none')})")
 
     print("\nWhat would you like to do?")
     print("  1. Add a provider")
@@ -371,9 +385,13 @@ def _select_models(
     global_preproc: str | None = None
 
     print("\n--- Model Selection ---")
-    print("For each provider, choose the target model (the LLM being tested)")
-    print("and then the pre-processor model (the cheap model that cleans prompts).")
-    print("Type 'list' at any model prompt to browse available models.\n")
+    print("For each provider, select 1-4 target models to test. More models =")
+    print("broader comparison but higher cost. You can add/remove models before")
+    print("saving.")
+    print()
+    print("For each target, you will also pick a pre-processor model (a cheap")
+    print("model that cleans prompts). Type 'list' at any model prompt to browse")
+    print("available models.\n")
 
     for provider in providers:
         name = PROVIDER_NAMES[provider]
@@ -381,67 +399,198 @@ def _select_models(
         # Determine default target model
         default_target = DEFAULT_TARGET_MODELS.get(provider, "")
         if existing_models and provider in existing_models:
-            default_target = existing_models[provider].get("target", default_target)
+            provider_info = existing_models[provider]
+            # Support new multi-target format and old single-target format
+            targets_list = provider_info.get("targets", [])
+            if targets_list:
+                default_target = targets_list[0].get("target", default_target)
+            else:
+                default_target = provider_info.get("target", default_target)
 
         # Fetch provider models once for validation and browsing
         provider_models = _get_provider_models(provider)
 
-        # Target model selection
-        while True:
-            prompt = f"{name} target model (the LLM being tested) [{default_target}]: "
-            raw = input_fn(prompt).strip()
-            if raw.lower() == "list":
-                selected = _browse_models(provider, input_fn)
-                if selected:
-                    target_model = selected
-                    break
-                continue
-            elif raw == "":
-                target_model = default_target
-                break
-            else:
-                validated = _validate_model_name(raw, provider, input_fn, provider_models)
-                if validated:
-                    target_model = validated
-                    break
-                # Empty string means user rejected — re-prompt
-                continue
+        # Per-provider model list (supports multiple targets)
+        provider_entries: list[dict] = []
 
-        # Preproc model selection
-        if preproc_scope == "global" and global_preproc is not None:
-            preproc_model = global_preproc
-            print(f"  Pre-processor: {preproc_model} (global)")
-        else:
-            # Auto-assign from registry (exact match first, then provider fallback)
-            auto_preproc = registry.get_preproc(target_model)
-            if auto_preproc is None:
-                # Find default preproc for this provider
-                for mc in registry._models.values():
-                    if mc.provider == provider and mc.role == "preproc":
-                        auto_preproc = mc.model_id
-                        break
-            if auto_preproc is None:
-                auto_preproc = target_model
-
-            raw_preproc = input_fn(f"  Pre-processor (auto-assigned) [{auto_preproc}]: ").strip()
-            if raw_preproc.lower() == "list":
-                selected = _browse_models(provider, input_fn)
-                preproc_model = selected if selected else auto_preproc
-            elif raw_preproc == "":
-                preproc_model = auto_preproc
-            else:
-                preproc_model = raw_preproc
-
-            if preproc_scope == "global" and global_preproc is None:
-                global_preproc = preproc_model
-
-        models.append({
+        # Select first target + preproc
+        target_model, preproc_model = _select_single_target(
+            provider, name, default_target, preproc_scope,
+            global_preproc, input_fn, provider_models,
+        )
+        if preproc_scope == "global" and global_preproc is None:
+            global_preproc = preproc_model
+        provider_entries.append({
             "provider": provider,
             "target_model": target_model,
             "preproc_model": preproc_model,
         })
 
+        # Multi-model management sub-menu
+        while True:
+            _show_provider_models(name, provider_entries)
+            remaining = MAX_TARGETS_PER_PROVIDER - len(provider_entries)
+
+            options: list[str] = []
+            if remaining > 0:
+                options.append(f"a  - Add another model ({remaining} remaining)")
+            if provider_entries:
+                options.append("r# - Remove model (e.g., r1)")
+                options.append("m# - Modify model (e.g., m1)")
+            options.append("d  - Done with this provider")
+
+            print("\n  Options:")
+            for opt in options:
+                print(f"    {opt}")
+
+            choice = input_fn("  Choice [d]: ").strip().lower()
+
+            if choice == "" or choice == "d":
+                break
+            elif choice == "a" and remaining > 0:
+                t, p = _select_single_target(
+                    provider, name, default_target, preproc_scope,
+                    global_preproc, input_fn, provider_models,
+                )
+                if preproc_scope == "global" and global_preproc is None:
+                    global_preproc = p
+                provider_entries.append({
+                    "provider": provider,
+                    "target_model": t,
+                    "preproc_model": p,
+                })
+            elif choice == "a" and remaining <= 0:
+                print(f"  Maximum of {MAX_TARGETS_PER_PROVIDER} targets reached for {name}.")
+            elif choice.startswith("r") and len(choice) > 1:
+                try:
+                    idx = int(choice[1:]) - 1
+                    if 0 <= idx < len(provider_entries):
+                        removed = provider_entries.pop(idx)
+                        print(f"  Removed: {removed['target_model']}")
+                        if not provider_entries:
+                            print("  No models left. Adding one...")
+                            t, p = _select_single_target(
+                                provider, name, default_target, preproc_scope,
+                                global_preproc, input_fn, provider_models,
+                            )
+                            if preproc_scope == "global" and global_preproc is None:
+                                global_preproc = p
+                            provider_entries.append({
+                                "provider": provider,
+                                "target_model": t,
+                                "preproc_model": p,
+                            })
+                    else:
+                        print("  Invalid number.")
+                except ValueError:
+                    print("  Invalid input. Use r1, r2, etc.")
+            elif choice.startswith("m") and len(choice) > 1:
+                try:
+                    idx = int(choice[1:]) - 1
+                    if 0 <= idx < len(provider_entries):
+                        print(f"  Modifying model {idx + 1}...")
+                        t, p = _select_single_target(
+                            provider, name, default_target, preproc_scope,
+                            global_preproc, input_fn, provider_models,
+                        )
+                        if preproc_scope == "global" and global_preproc is None:
+                            global_preproc = p
+                        provider_entries[idx] = {
+                            "provider": provider,
+                            "target_model": t,
+                            "preproc_model": p,
+                        }
+                    else:
+                        print("  Invalid number.")
+                except ValueError:
+                    print("  Invalid input. Use m1, m2, etc.")
+            else:
+                print("  Unknown option.")
+
+        models.extend(provider_entries)
+
     return models
+
+
+def _show_provider_models(name: str, entries: list[dict]) -> None:
+    """Display the current model selections for a provider.
+
+    Args:
+        name: Display name of the provider.
+        entries: List of model dicts with 'target_model' and 'preproc_model'.
+    """
+    print(f"\n  Models for {name}:")
+    for i, entry in enumerate(entries, 1):
+        print(f"    {i}. {entry['target_model']} (preproc: {entry['preproc_model']})")
+
+
+def _select_single_target(
+    provider: str,
+    name: str,
+    default_target: str,
+    preproc_scope: str,
+    global_preproc: str | None,
+    input_fn: Callable[..., str],
+    provider_models: list,
+) -> tuple[str, str]:
+    """Select a single target + preproc model pair for a provider.
+
+    Args:
+        provider: Provider key.
+        name: Display name of the provider.
+        default_target: Default target model ID.
+        preproc_scope: 'per-provider' or 'global'.
+        global_preproc: Current global preproc model (if set).
+        input_fn: Callable for reading user input.
+        provider_models: Pre-fetched model list for validation.
+
+    Returns:
+        Tuple of (target_model, preproc_model).
+    """
+    # Target model selection
+    while True:
+        prompt = f"{name} target model (the LLM being tested) [{default_target}]: "
+        raw = input_fn(prompt).strip()
+        if raw.lower() == "list":
+            selected = _browse_models(provider, input_fn)
+            if selected:
+                target_model = selected
+                break
+            continue
+        elif raw == "":
+            target_model = default_target
+            break
+        else:
+            validated = _validate_model_name(raw, provider, input_fn, provider_models)
+            if validated:
+                target_model = validated
+                break
+            continue
+
+    # Preproc model selection
+    if preproc_scope == "global" and global_preproc is not None:
+        preproc_model = global_preproc
+        print(f"  Pre-processor: {preproc_model} (global)")
+    else:
+        auto_preproc = registry.get_preproc(target_model)
+        if auto_preproc is None:
+            for mc in registry._models.values():
+                if mc.provider == provider and mc.role == "preproc":
+                    auto_preproc = mc.model_id
+                    break
+        if auto_preproc is None:
+            auto_preproc = target_model
+
+        raw_preproc = input_fn(f"  Pre-processor (auto-assigned) [{auto_preproc}]: ").strip()
+        if raw_preproc.lower() == "list":
+            selected = _browse_models(provider, input_fn)
+            preproc_model = selected if selected else auto_preproc
+        elif raw_preproc == "":
+            preproc_model = auto_preproc
+        else:
+            preproc_model = raw_preproc
+
+    return target_model, preproc_model
 
 
 def _get_provider_models(provider: str, timeout: float = 5.0) -> list:
@@ -1114,10 +1263,15 @@ def run_setup_wizard(
                 existing_models = existing["models"]
 
         # Step 3: Provider selection
+        print("Each provider gives access to different LLM families. Select all")
+        print("providers whose models you want to test. You only need an API key")
+        print("for selected providers.")
         providers = _select_providers(input_fn, existing_providers=existing_providers)
 
         # Step 4: API key collection
-        print("\nAPI Key Configuration\n")
+        print("\nAPI Key Configuration")
+        print("API keys authenticate your requests. Keys are stored in .env")
+        print("(gitignored) and never sent anywhere except the provider's API.\n")
         keys = _collect_api_keys(providers, input_fn)
 
         # Step 5: Model role explanation and preproc scope

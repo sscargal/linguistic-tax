@@ -110,6 +110,7 @@ Recent decisions affecting current work:
 - Support multiple target models per provider in setup wizard (general)
 - Investigate pre-processor performance anomaly — slow TTFT, high output (general)
 - Investigate why pre_proc_sanitize hurts accuracy vs raw (general)
+- Report output formats and multi-model comparison layout (general)
 
 ### Roadmap Evolution
 

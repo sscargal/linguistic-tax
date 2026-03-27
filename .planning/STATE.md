@@ -129,10 +129,11 @@ Recent decisions affecting current work:
 | 260326-vzd | Fix slicer references and QA script failures | 2026-03-26 | 1dcef07 | [260326-vzd-fix-slicer-references-and-qa-script-fail](./quick/260326-vzd-fix-slicer-references-and-qa-script-fail/) |
 | 260326-w5r | Fix pytest warnings and test failures | 2026-03-26 | 3732002 | [260326-w5r-fix-pytest-failures](./quick/260326-w5r-fix-pytest-failures/) |
 | 260327-19a | Add post-run report command | 2026-03-27 | c267936 | [260327-19a-add-post-run-report-comparing-projected-](./quick/260327-19a-add-post-run-report-comparing-projected-/) |
+| 260327-3tc | Add OpenRouter rate limit check | 2026-03-27 | 99f5d24 | [260327-3tc-add-openrouter-rate-limit-check-to-pre-e](./quick/260327-3tc-add-openrouter-rate-limit-check-to-pre-e/) |
 
 ## Session Continuity
 
-Last activity: 2026-03-27 - Completed quick task 260327-19a: Add post-run report command
+Last activity: 2026-03-27 - Completed quick task 260327-3tc: Add OpenRouter rate limit check
 Last session: 2026-03-26T20:47:04.547Z
 Stopped at: Completed 22-03-PLAN.md
 Resume file: None

@@ -921,15 +921,26 @@ def _show_confirmation(
         key_status = "set" if keys.get(provider) else "not set"
         print(f"{name:<20} {target:<40} {preproc:<35} {key_status:<10}")
 
-    # Config validation warnings
+    # Build config and reload registry with pricing data
     config_dict = _build_config_dict(models)
-    errors = validate_config(config_dict)
-    if errors:
-        print("\nValidation warnings:")
-        for err in errors:
-            print(f"  - {err}")
 
-    # Budget preview
+    # Reload registry so budget preview and cost estimates use correct pricing
+    from src.model_registry import ModelConfig
+    model_configs = [
+        ModelConfig(
+            model_id=m["model_id"],
+            provider=m.get("provider", "unknown"),
+            role=m.get("role", "target"),
+            preproc_model_id=m.get("preproc_model_id"),
+            input_price_per_1m=m.get("input_price_per_1m"),
+            output_price_per_1m=m.get("output_price_per_1m"),
+            rate_limit_delay=m.get("rate_limit_delay"),
+        )
+        for m in config_dict.get("models", [])
+    ]
+    registry.reload(model_configs)
+
+    # Budget preview (now uses reloaded registry with pricing)
     preview = _build_budget_preview(models)
     print(preview)
 

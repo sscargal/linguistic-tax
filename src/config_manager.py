@@ -302,19 +302,11 @@ def validate_config(config_dict: dict) -> list[str]:
     """
     errors: list[str] = []
 
-    # Models list: warn on unknown model_ids and providers (not errors)
+    # Models list: warn on unknown providers (not model IDs — users can configure any model)
     if "models" in config_dict and config_dict["models"] is not None:
-        defaults = _load_default_models()
-        known_ids = {m.model_id for m in defaults}
         for model_entry in config_dict["models"]:
-            model_id = model_entry.get("model_id", "")
-            if model_id and model_id not in known_ids:
-                logger.warning(
-                    "Unknown model '%s' in config. "
-                    "Run 'propt list-models' to verify.",
-                    model_id,
-                )
             provider = model_entry.get("provider", "")
+            model_id = model_entry.get("model_id", "")
             if provider and provider not in _KNOWN_PROVIDERS:
                 logger.warning(
                     "Unknown provider '%s' for model '%s'. "

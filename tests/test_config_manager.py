@@ -221,17 +221,15 @@ class TestValidateConfig:
         errors = validate_config(d)
         assert errors == []
 
-    def test_validate_unknown_model_warns_not_rejects(self, caplog) -> None:
-        """validate_config warns but does not reject unknown model IDs."""
+    def test_validate_unknown_model_accepted(self) -> None:
+        """validate_config accepts unknown model IDs without warning."""
         config_dict = {
             "models": [
                 {"model_id": "totally-unknown-model", "provider": "anthropic", "role": "target"}
             ]
         }
-        with caplog.at_level(logging.WARNING):
-            errors = validate_config(config_dict)
+        errors = validate_config(config_dict)
         assert errors == []
-        assert "Unknown model 'totally-unknown-model'" in caplog.text
 
     def test_validate_unknown_provider_warns(self, caplog) -> None:
         """validate_config warns on unknown provider strings."""

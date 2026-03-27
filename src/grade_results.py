@@ -197,9 +197,11 @@ def _build_humaneval_harness(llm_code: str, test_code: str, entry_point: str) ->
 
 
 def _build_mbpp_harness(llm_code: str, test_code: str) -> str:
-    """Assemble MBPP execution script.
+    """Assemble MBPP execution script with function name aliasing.
 
-    Concatenates the LLM code and the direct assert statements.
+    Extracts the expected function name from test assertions and the
+    actual function name from the LLM code. If they differ, adds an
+    alias so the tests can find the function.
 
     Args:
         llm_code: Extracted code from LLM response.
@@ -208,7 +210,19 @@ def _build_mbpp_harness(llm_code: str, test_code: str) -> str:
     Returns:
         Complete Python script string for execution.
     """
-    return f"{llm_code}\n\n{test_code}\n"
+    # Extract expected function name from test assertions
+    expected_match = re.search(r'assert (\w+)\(', test_code)
+    # Extract actual function name from LLM code
+    actual_match = re.search(r'def (\w+)\(', llm_code)
+
+    alias = ""
+    if expected_match and actual_match:
+        expected_name = expected_match.group(1)
+        actual_name = actual_match.group(1)
+        if expected_name != actual_name:
+            alias = f"\n{expected_name} = {actual_name}\n"
+
+    return f"{llm_code}\n{alias}\n{test_code}\n"
 
 
 def _extract_entry_point(prompt_text: str) -> str | None:

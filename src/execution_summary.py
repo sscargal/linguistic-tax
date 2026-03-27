@@ -91,7 +91,7 @@ def _get_benchmark(prompt_id: str) -> str:
     """
     if prompt_id.startswith("HumanEval/"):
         return "humaneval"
-    elif prompt_id.startswith("Mbpp/"):
+    elif prompt_id.startswith("Mbpp/") or prompt_id.startswith("mbpp_"):
         return "mbpp"
     elif prompt_id.startswith("gsm8k"):
         return "gsm8k"

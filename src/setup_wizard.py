@@ -401,8 +401,14 @@ def _select_models(
             preproc_model = global_preproc
             print(f"  Pre-processor: {preproc_model} (global)")
         else:
-            # Auto-assign from registry
+            # Auto-assign from registry (exact match first, then provider fallback)
             auto_preproc = registry.get_preproc(target_model)
+            if auto_preproc is None:
+                # Find default preproc for this provider
+                for mc in registry._models.values():
+                    if mc.provider == provider and mc.role == "preproc":
+                        auto_preproc = mc.model_id
+                        break
             if auto_preproc is None:
                 auto_preproc = target_model
 

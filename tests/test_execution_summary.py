@@ -18,6 +18,7 @@ from src.execution_summary import (
     count_completed,
     estimate_cost,
     estimate_runtime,
+    format_post_run_report,
     format_summary,
     save_execution_plan,
 )
@@ -370,3 +371,91 @@ class TestCountCompleted:
         assert completed == 0
         assert total == 5
         assert len(pending) == 5
+
+
+# ---------------------------------------------------------------------------
+# TestBenchmarkBreakdown
+# ---------------------------------------------------------------------------
+
+
+def _make_test_db(tmp_path):
+    """Create an in-memory SQLite db with test rows for benchmark breakdown tests."""
+    import sqlite3
+    from src.db import init_database
+
+    db_path = str(tmp_path / "test_report.db")
+    conn = init_database(db_path)
+
+    # Insert test rows covering multiple benchmarks and noise types
+    test_rows = [
+        # HumanEval - clean/raw - pass
+        ("HumanEval/1|clean|none|raw|model-a|1", "HumanEval/1", "humaneval",
+         "clean", None, "raw", "model-a", 1, 1, 100.0, 200.0, 0.001, 0.002, 0.003, "completed"),
+        # HumanEval - clean/raw - fail
+        ("HumanEval/2|clean|none|raw|model-a|1", "HumanEval/2", "humaneval",
+         "clean", None, "raw", "model-a", 1, 0, 150.0, 250.0, 0.001, 0.002, 0.003, "completed"),
+        # MBPP - clean/raw - pass
+        ("Mbpp/1|clean|none|raw|model-a|1", "Mbpp/1", "mbpp",
+         "clean", None, "raw", "model-a", 1, 1, 120.0, 220.0, 0.002, 0.003, 0.005, "completed"),
+        # GSM8K - clean/raw - pass
+        ("gsm8k_1|clean|none|raw|model-a|1", "gsm8k_1", "gsm8k",
+         "clean", None, "raw", "model-a", 1, 1, 80.0, 150.0, 0.0005, 0.001, 0.0015, "completed"),
+        # HumanEval - typo_5/raw - fail
+        ("HumanEval/1|typo_5|5|raw|model-a|1", "HumanEval/1", "humaneval",
+         "typo_5", "5", "raw", "model-a", 1, 0, 100.0, 200.0, 0.001, 0.002, 0.003, "completed"),
+        # MBPP - typo_5/raw - pass
+        ("Mbpp/1|typo_5|5|raw|model-a|1", "Mbpp/1", "mbpp",
+         "typo_5", "5", "raw", "model-a", 1, 1, 120.0, 220.0, 0.002, 0.003, 0.005, "completed"),
+        # GSM8K - typo_5/raw - fail
+        ("gsm8k_1|typo_5|5|raw|model-a|1", "gsm8k_1", "gsm8k",
+         "typo_5", "5", "raw", "model-a", 1, 0, 80.0, 150.0, 0.0005, 0.001, 0.0015, "completed"),
+    ]
+
+    for row in test_rows:
+        conn.execute("""
+            INSERT INTO experiment_runs (
+                run_id, prompt_id, benchmark, noise_type, noise_level,
+                intervention, model, repetition, pass_fail, ttft_ms, ttlt_ms,
+                main_model_input_cost_usd, main_model_output_cost_usd,
+                total_cost_usd, status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, row)
+    conn.commit()
+    return conn
+
+
+class TestBenchmarkBreakdown:
+    """Tests for benchmark breakdown in format_post_run_report."""
+
+    def test_per_benchmark_section_always_shown(self, tmp_path):
+        """format_post_run_report with benchmark=False includes Per-Benchmark section."""
+        conn = _make_test_db(tmp_path)
+        report = format_post_run_report(conn, benchmark=False)
+        conn.close()
+        assert "Per-Benchmark:" in report
+        assert "humaneval" in report.lower()
+        assert "mbpp" in report.lower()
+        assert "gsm8k" in report.lower()
+
+    def test_benchmark_crosstab_shown_when_flag_true(self, tmp_path):
+        """format_post_run_report with benchmark=True includes cross-tabulation."""
+        conn = _make_test_db(tmp_path)
+        report = format_post_run_report(conn, benchmark=True)
+        conn.close()
+        assert "Benchmark x Noise:" in report
+
+    def test_benchmark_baselines_shown_when_flag_true(self, tmp_path):
+        """format_post_run_report with benchmark=True includes baselines section."""
+        conn = _make_test_db(tmp_path)
+        report = format_post_run_report(conn, benchmark=True)
+        conn.close()
+        assert "Benchmark Baselines" in report
+
+    def test_no_runs_returns_no_runs_found(self, tmp_path):
+        """format_post_run_report with no completed runs returns 'No runs found'."""
+        from src.db import init_database
+        db_path = str(tmp_path / "empty.db")
+        conn = init_database(db_path)
+        report = format_post_run_report(conn, benchmark=False)
+        conn.close()
+        assert "No runs found" in report

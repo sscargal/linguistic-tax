@@ -492,15 +492,18 @@ def save_execution_plan(
     logger.debug("Execution plan saved to %s", output_path)
 
 
-def format_post_run_report(conn: Any) -> str:
+def format_post_run_report(conn: Any, benchmark: bool = False) -> str:
     """Generate a post-run report comparing actual metrics against estimates.
 
     Queries results.db for completed runs and summarizes actual token counts,
-    costs, timing, and pass rates. Shows per-model and per-intervention
-    breakdowns.
+    costs, timing, and pass rates. Shows per-model, per-intervention, and
+    per-benchmark breakdowns. When benchmark=True, adds cross-tabulation
+    of benchmark x noise type and clean+raw baselines.
 
     Args:
         conn: An open SQLite database connection.
+        benchmark: If True, include benchmark x noise cross-tabulation
+            and clean+raw baseline sections.
 
     Returns:
         Multi-line formatted report string.
@@ -672,6 +675,97 @@ def format_post_run_report(conn: Any) -> str:
             tablefmt="simple",
         ))
         lines.append("")
+
+    # Per-benchmark breakdown (always shown)
+    benchmark_rows = conn.execute("""
+        SELECT benchmark, COUNT(*) as calls,
+               SUM(CASE WHEN pass_fail=1 THEN 1 ELSE 0 END) as passed,
+               COALESCE(SUM(total_cost_usd), 0) as cost,
+               AVG(ttlt_ms) as avg_ttlt
+        FROM experiment_runs WHERE status='completed'
+        GROUP BY benchmark ORDER BY benchmark
+    """).fetchall()
+
+    if benchmark_rows:
+        bench_table = []
+        for r in benchmark_rows:
+            pass_rate = (r["passed"] / r["calls"] * 100) if r["calls"] > 0 else 0
+            bench_table.append([
+                r["benchmark"],
+                f"{r['calls']:,}",
+                f"{pass_rate:.1f}%",
+                f"${r['cost']:.4f}",
+                f"{r['avg_ttlt']:.0f}ms",
+            ])
+        lines.append("Per-Benchmark:")
+        lines.append(tabulate(
+            bench_table,
+            headers=["Benchmark", "API Calls", "Pass Rate", "Cost", "Avg TTLT"],
+            tablefmt="simple",
+        ))
+        lines.append("")
+
+    # Benchmark x Noise cross-tabulation and baselines (when benchmark=True)
+    if benchmark and benchmark_rows:
+        # Cross-tabulation: benchmark x noise_type pass rates
+        crosstab_rows = conn.execute("""
+            SELECT benchmark, noise_type,
+                   COUNT(*) as calls,
+                   SUM(CASE WHEN pass_fail=1 THEN 1 ELSE 0 END) as passed
+            FROM experiment_runs WHERE status='completed'
+            GROUP BY benchmark, noise_type
+            ORDER BY benchmark, noise_type
+        """).fetchall()
+
+        if crosstab_rows:
+            # Build pivot: collect all noise types and benchmarks
+            noise_types: list[str] = sorted({r["noise_type"] for r in crosstab_rows})
+            benchmarks: list[str] = sorted({r["benchmark"] for r in crosstab_rows})
+            pivot: dict[str, dict[str, str]] = {}
+            for r in crosstab_rows:
+                if r["benchmark"] not in pivot:
+                    pivot[r["benchmark"]] = {}
+                rate = (r["passed"] / r["calls"] * 100) if r["calls"] > 0 else 0
+                pivot[r["benchmark"]][r["noise_type"]] = f"{rate:.1f}%"
+
+            crosstab_table = []
+            for b in benchmarks:
+                row_data = [b] + [pivot.get(b, {}).get(nt, "--") for nt in noise_types]
+                crosstab_table.append(row_data)
+
+            lines.append("Benchmark x Noise:")
+            lines.append(tabulate(
+                crosstab_table,
+                headers=["Benchmark"] + noise_types,
+                tablefmt="simple",
+            ))
+            lines.append("")
+
+        # Baselines: clean + raw pass rates per benchmark
+        baseline_rows = conn.execute("""
+            SELECT benchmark,
+                   COUNT(*) as calls,
+                   SUM(CASE WHEN pass_fail=1 THEN 1 ELSE 0 END) as passed
+            FROM experiment_runs
+            WHERE status='completed' AND noise_type='clean' AND intervention='raw'
+            GROUP BY benchmark
+            ORDER BY benchmark
+        """).fetchall()
+
+        if baseline_rows:
+            baseline_table = []
+            for r in baseline_rows:
+                rate = (r["passed"] / r["calls"] * 100) if r["calls"] > 0 else 0
+                baseline_table.append([
+                    r["benchmark"], f"{r['calls']:,}", f"{rate:.1f}%",
+                ])
+            lines.append("Benchmark Baselines (clean + raw):")
+            lines.append(tabulate(
+                baseline_table,
+                headers=["Benchmark", "API Calls", "Pass Rate"],
+                tablefmt="simple",
+            ))
+            lines.append("")
 
     # Cost totals
     cost_row = conn.execute("""

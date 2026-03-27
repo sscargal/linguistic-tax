@@ -104,7 +104,6 @@ Recent decisions affecting current work:
 
 - Investigate fine-tuned small LM as pre-processor (general)
 - Experiment with provider prompt best practices as preprocessing (general)
-- Results management: per-session tracking, list, delete, compare (general)
 - Add benchmark breakdown to propt report (general)
 - Support multiple target models per provider in setup wizard (general)
 - Investigate pre-processor performance anomaly — slow TTFT, high output (general)
@@ -139,10 +138,11 @@ Recent decisions affecting current work:
 | 260327-4az | Add propt clean + results management todo | 2026-03-27 | 2e0e376 | [260327-4az-add-propt-clean-command-and-results-mana](./quick/260327-4az-add-propt-clean-command-and-results-mana/) |
 | 260327-qun | Add benchmark breakdown to propt report | 2026-03-27 | 7e3b1c5 | [260327-qun-add-benchmark-breakdown-to-report](./quick/260327-qun-add-benchmark-breakdown-to-report/) |
 | 260327-r3e | Inspect preproc output and fix chatty responses | 2026-03-27 | 0f09d36 | [260327-r3e-inspect-pre-processor-output-and-fix-cha](./quick/260327-r3e-inspect-pre-processor-output-and-fix-cha/) |
+| 260327-rhk | Per-session result tracking with list/delete/compare | 2026-03-27 | da29381 | [260327-rhk-results-management-per-session-tracking-](./quick/260327-rhk-results-management-per-session-tracking-/) |
 
 ## Session Continuity
 
-Last activity: 2026-03-27 - Completed quick task 260327-r3e: Inspect preproc output and fix chatty responses
-Last session: 2026-03-26T20:47:04.547Z
-Stopped at: Completed 22-03-PLAN.md
+Last activity: 2026-03-27 - Completed quick task 260327-rhk: Per-session result tracking
+Last session: 2026-03-27T19:54:27Z
+Stopped at: Completed 260327-rhk
 Resume file: None

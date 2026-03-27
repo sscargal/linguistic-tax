@@ -110,6 +110,9 @@ Recent decisions affecting current work:
 - Support multiple target models per provider in setup wizard (general)
 - Investigate grading crash failures in pilot data (general)
 - Investigate pre-processor performance anomaly — slow TTFT, high output (general)
+- Fix MBPP code extraction — example usage before code fence (general)
+- Improve MBPP function aliasing for edge cases (general)
+- Investigate why pre_proc_sanitize hurts accuracy vs raw (general)
 
 ### Roadmap Evolution
 

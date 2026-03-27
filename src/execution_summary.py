@@ -492,25 +492,40 @@ def save_execution_plan(
     logger.debug("Execution plan saved to %s", output_path)
 
 
-def format_post_run_report(conn: Any, benchmark: bool = False) -> str:
+def format_post_run_report(
+    conn: Any,
+    benchmark: bool = False,
+    output_format: str = "text",
+) -> str:
     """Generate a post-run report comparing actual metrics against estimates.
 
     Queries results.db for completed runs and summarizes actual token counts,
     costs, timing, and pass rates. Shows per-model, per-intervention, and
     per-benchmark breakdowns. When benchmark=True, adds cross-tabulation
-    of benchmark x noise type and clean+raw baselines.
+    of benchmark x noise type and clean+raw baselines. When multiple models
+    are present, adds intervention x model and noise x model pivot tables.
 
     Args:
         conn: An open SQLite database connection.
         benchmark: If True, include benchmark x noise cross-tabulation
             and clean+raw baseline sections.
+        output_format: One of "text" (default), "json", "csv", "markdown".
 
     Returns:
-        Multi-line formatted report string.
+        Formatted report string in the requested format.
     """
+    import csv
+    import io
     import sqlite3
 
     conn.row_factory = sqlite3.Row
+
+    # Determine table format for tabulate
+    tablefmt = "github" if output_format == "markdown" else "simple"
+
+    # Collect structured data for JSON/CSV export
+    report_data: dict[str, Any] = {}
+
     lines: list[str] = []
     lines.append("=== Post-Run Report ===")
     lines.append("")
@@ -530,8 +545,15 @@ def format_post_run_report(conn: Any, benchmark: bool = False) -> str:
     failed = row["failed"]
     pending_count = row["pending"]
 
+    report_data["overview"] = {
+        "total": total, "completed": completed,
+        "failed": failed, "pending": pending_count,
+    }
+
     if total == 0:
         lines.append("No runs found in database.")
+        if output_format == "json":
+            return json.dumps(report_data, indent=2)
         return "\n".join(lines)
 
     lines.append(f"Runs: {completed:,} completed, {failed:,} failed, {pending_count:,} pending ({total:,} total)")
@@ -593,11 +615,17 @@ def format_post_run_report(conn: Any, benchmark: bool = False) -> str:
                 "--",
             ])
 
+        report_data["models"] = [
+            {"model": r[0].strip(), "role": r[1], "api_calls": r[2],
+             "tokens": r[3], "cost": r[4], "pass_rate": r[5]}
+            for r in model_table
+        ]
+
         lines.append("Models:")
         lines.append(tabulate(
             model_table,
             headers=["Model", "Role", "API Calls", "Tokens (in/out)", "Cost", "Pass Rate"],
-            tablefmt="simple",
+            tablefmt=tablefmt,
         ))
         lines.append("")
 
@@ -670,11 +698,16 @@ def format_post_run_report(conn: Any, benchmark: bool = False) -> str:
             int_table.append([
                 r["intervention"], f"{r['calls']:,}", f"{pass_rate:.1f}%", f"${r['cost']:.4f}",
             ])
+        report_data["interventions"] = [
+            {"intervention": r[0], "api_calls": r[1], "pass_rate": r[2], "cost": r[3]}
+            for r in int_table
+        ]
+
         lines.append("Interventions:")
         lines.append(tabulate(
             int_table,
             headers=["Intervention", "API Calls", "Pass Rate", "Cost"],
-            tablefmt="simple",
+            tablefmt=tablefmt,
         ))
         lines.append("")
 
@@ -695,13 +728,98 @@ def format_post_run_report(conn: Any, benchmark: bool = False) -> str:
         for r in noise_rows:
             pass_rate = (r["passed"] / r["calls"] * 100) if r["calls"] > 0 else 0
             noise_table.append([r["noise_type"], f"{r['calls']:,}", f"{pass_rate:.1f}%"])
+        report_data["noise"] = [
+            {"noise_type": r[0], "api_calls": r[1], "pass_rate": r[2]}
+            for r in noise_table
+        ]
+
         lines.append("Noise Conditions:")
         lines.append(tabulate(
             noise_table,
             headers=["Noise Type", "API Calls", "Pass Rate"],
-            tablefmt="simple",
+            tablefmt=tablefmt,
         ))
         lines.append("")
+
+    # Multi-model pivot tables (only when 2+ models present)
+    distinct_models = [r["model"] for r in conn.execute(
+        "SELECT DISTINCT model FROM experiment_runs WHERE status='completed' ORDER BY model"
+    ).fetchall()]
+
+    if len(distinct_models) >= 2:
+        # Intervention x Model pivot
+        int_model_rows = conn.execute("""
+            SELECT intervention, model,
+                   COUNT(*) as calls,
+                   SUM(CASE WHEN pass_fail=1 THEN 1 ELSE 0 END) as passed
+            FROM experiment_runs WHERE status='completed'
+            GROUP BY intervention, model
+            ORDER BY intervention, model
+        """).fetchall()
+
+        if int_model_rows:
+            interventions_list: list[str] = sorted({r["intervention"] for r in int_model_rows})
+            int_pivot: dict[str, dict[str, str]] = {}
+            for r in int_model_rows:
+                if r["intervention"] not in int_pivot:
+                    int_pivot[r["intervention"]] = {}
+                rate = (r["passed"] / r["calls"] * 100) if r["calls"] > 0 else 0
+                int_pivot[r["intervention"]][r["model"]] = f"{rate:.1f}%"
+
+            int_pivot_table = []
+            for intv in interventions_list:
+                row_data = [intv] + [int_pivot.get(intv, {}).get(m, "--") for m in distinct_models]
+                int_pivot_table.append(row_data)
+
+            report_data["pivots"] = report_data.get("pivots", {})
+            report_data["pivots"]["intervention_x_model"] = [
+                dict(zip(["intervention"] + distinct_models, r)) for r in int_pivot_table
+            ]
+
+            lines.append("Intervention x Model:")
+            lines.append(tabulate(
+                int_pivot_table,
+                headers=["Intervention"] + distinct_models,
+                tablefmt=tablefmt,
+            ))
+            lines.append("")
+
+        # Noise x Model pivot
+        noise_model_rows = conn.execute("""
+            SELECT noise_type, model,
+                   COUNT(*) as calls,
+                   SUM(CASE WHEN pass_fail=1 THEN 1 ELSE 0 END) as passed
+            FROM experiment_runs WHERE status='completed'
+            GROUP BY noise_type, model
+            ORDER BY noise_type, model
+        """).fetchall()
+
+        if noise_model_rows:
+            noise_types_list: list[str] = sorted({r["noise_type"] for r in noise_model_rows})
+            noise_pivot: dict[str, dict[str, str]] = {}
+            for r in noise_model_rows:
+                if r["noise_type"] not in noise_pivot:
+                    noise_pivot[r["noise_type"]] = {}
+                rate = (r["passed"] / r["calls"] * 100) if r["calls"] > 0 else 0
+                noise_pivot[r["noise_type"]][r["model"]] = f"{rate:.1f}%"
+
+            noise_pivot_table = []
+            for nt in noise_types_list:
+                row_data = [nt] + [noise_pivot.get(nt, {}).get(m, "--") for m in distinct_models]
+                noise_pivot_table.append(row_data)
+
+            report_data["pivots"] = report_data.get("pivots", {})
+            report_data["pivots"]["noise_x_model"] = [
+                dict(zip(["noise_type"] + distinct_models, r)) for r in noise_pivot_table
+            ]
+
+            lines.append("Noise x Model:")
+            lines.append(tabulate(
+                noise_pivot_table,
+                headers=["Noise Type"] + distinct_models,
+                tablefmt=tablefmt,
+            ))
+            lines.append("")
 
     # Per-benchmark breakdown (always shown)
     benchmark_rows = conn.execute("""
@@ -724,11 +842,17 @@ def format_post_run_report(conn: Any, benchmark: bool = False) -> str:
                 f"${r['cost']:.4f}",
                 f"{r['avg_ttlt']:.0f}ms",
             ])
+        report_data["benchmarks"] = [
+            {"benchmark": r[0], "api_calls": r[1], "pass_rate": r[2],
+             "cost": r[3], "avg_ttlt": r[4]}
+            for r in bench_table
+        ]
+
         lines.append("Per-Benchmark:")
         lines.append(tabulate(
             bench_table,
             headers=["Benchmark", "API Calls", "Pass Rate", "Cost", "Avg TTLT"],
-            tablefmt="simple",
+            tablefmt=tablefmt,
         ))
         lines.append("")
 
@@ -764,7 +888,7 @@ def format_post_run_report(conn: Any, benchmark: bool = False) -> str:
             lines.append(tabulate(
                 crosstab_table,
                 headers=["Benchmark"] + noise_types,
-                tablefmt="simple",
+                tablefmt=tablefmt,
             ))
             lines.append("")
 
@@ -790,7 +914,7 @@ def format_post_run_report(conn: Any, benchmark: bool = False) -> str:
             lines.append(tabulate(
                 baseline_table,
                 headers=["Benchmark", "API Calls", "Pass Rate"],
-                tablefmt="simple",
+                tablefmt=tablefmt,
             ))
             lines.append("")
 
@@ -808,6 +932,16 @@ def format_post_run_report(conn: Any, benchmark: bool = False) -> str:
         WHERE status='completed'
     """).fetchone()
 
+    report_data["costs"] = {
+        "target_input_tokens": cost_row["total_input_tokens"],
+        "target_output_tokens": cost_row["total_output_tokens"],
+        "preproc_input_tokens": cost_row["preproc_input_tokens"],
+        "preproc_output_tokens": cost_row["preproc_output_tokens"],
+        "target_cost": float(cost_row["target_cost"]),
+        "preproc_cost": float(cost_row["preproc_cost"]),
+        "total_cost": float(cost_row["total_cost"]),
+    }
+
     lines.append("Actual Totals:")
     lines.append(f"  Target tokens:     {cost_row['total_input_tokens']:,} in / {cost_row['total_output_tokens']:,} out")
     lines.append(f"  Pre-proc tokens:   {cost_row['preproc_input_tokens']:,} in / {cost_row['preproc_output_tokens']:,} out")
@@ -815,4 +949,34 @@ def format_post_run_report(conn: Any, benchmark: bool = False) -> str:
     lines.append(f"  Pre-proc cost:     ${cost_row['preproc_cost']:.4f}")
     lines.append(f"  Total cost:        ${cost_row['total_cost']:.4f}")
 
+    # Format output
+    if output_format == "json":
+        return json.dumps(report_data, indent=2)
+
+    if output_format == "csv":
+        buf = io.StringIO()
+        writer = csv.writer(buf)
+        for section_key, section_data in report_data.items():
+            if isinstance(section_data, list) and section_data:
+                buf.write(f"# {section_key}\n")
+                writer.writerow(section_data[0].keys())
+                for item in section_data:
+                    writer.writerow(item.values())
+                buf.write("\n")
+            elif isinstance(section_data, dict) and section_key != "pivots":
+                buf.write(f"# {section_key}\n")
+                writer.writerow(section_data.keys())
+                writer.writerow(section_data.values())
+                buf.write("\n")
+            elif section_key == "pivots" and isinstance(section_data, dict):
+                for pivot_name, pivot_rows in section_data.items():
+                    if pivot_rows:
+                        buf.write(f"# {pivot_name}\n")
+                        writer.writerow(pivot_rows[0].keys())
+                        for item in pivot_rows:
+                            writer.writerow(item.values())
+                        buf.write("\n")
+        return buf.getvalue()
+
+    # "text" and "markdown" both use lines (markdown just has different tablefmt)
     return "\n".join(lines)

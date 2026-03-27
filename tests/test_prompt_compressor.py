@@ -20,6 +20,7 @@ from src.prompt_compressor import (
     _SANITIZE_INSTRUCTION,
     _SANITIZE_SYSTEM,
     _get_preproc_model,
+    _process_response,
     build_self_correct_prompt,
     sanitize,
     sanitize_and_compress,
@@ -133,7 +134,7 @@ class TestSanitize:
     def test_calls_with_correct_system_prompt(self) -> None:
         call_fn, log = make_mock_call_fn(response_text="Fixed text")
         sanitize("noisy text", "claude-sonnet-4-20250514", call_fn)
-        assert log[0]["system"] == "You are a text corrector."
+        assert log[0]["system"] == _SANITIZE_SYSTEM
 
     def test_calls_with_correct_user_message(self) -> None:
         call_fn, log = make_mock_call_fn(response_text="Fixed text")
@@ -228,7 +229,7 @@ class TestSanitizeAndCompress:
     def test_calls_with_correct_system_prompt(self) -> None:
         call_fn, log = make_mock_call_fn(response_text="Compressed text")
         sanitize_and_compress("verbose noisy text", "claude-sonnet-4-20250514", call_fn)
-        assert log[0]["system"] == "You are a prompt optimizer."
+        assert log[0]["system"] == _COMPRESS_SYSTEM
 
     def test_calls_with_correct_user_message(self) -> None:
         call_fn, log = make_mock_call_fn(response_text="Compressed text")
@@ -289,3 +290,86 @@ class TestSanitizeAndCompress:
         text = "y" * 400
         sanitize_and_compress(text, "claude-sonnet-4-20250514", call_fn)
         assert log[0]["max_tokens"] == max(256, int(len(text) * 1.3))
+
+
+# ---------------------------------------------------------------------------
+# Anti-reasoning system prompt tests
+# ---------------------------------------------------------------------------
+class TestAntiReasoningPrompts:
+    """Tests for anti-reasoning directives in system prompts."""
+
+    def test_sanitize_system_has_anti_reasoning(self) -> None:
+        assert "Do not think step by step" in _SANITIZE_SYSTEM
+        assert "Do not reason" in _SANITIZE_SYSTEM
+
+    def test_compress_system_has_anti_reasoning(self) -> None:
+        assert "Do not think step by step" in _COMPRESS_SYSTEM
+        assert "Do not reason" in _COMPRESS_SYSTEM
+
+    def test_sanitize_system_has_verbatim_directive(self) -> None:
+        assert "Just output the corrected text verbatim." in _SANITIZE_SYSTEM
+
+    def test_compress_system_has_verbatim_directive(self) -> None:
+        assert "Just output the optimized text verbatim." in _COMPRESS_SYSTEM
+
+
+# ---------------------------------------------------------------------------
+# Token ratio warning tests
+# ---------------------------------------------------------------------------
+class TestTokenRatioWarning:
+    """Tests for token-ratio warning in _process_response."""
+
+    def test_token_ratio_warning_logged_on_bloat(self, caplog: pytest.LogCaptureFixture) -> None:
+        """When output_tokens > input_tokens * 3, a WARNING is emitted."""
+        import logging
+        response = MockAPIResponse(
+            text="Fixed text",
+            input_tokens=50,
+            output_tokens=200,  # 4x ratio
+            ttft_ms=100.0,
+            ttlt_ms=300.0,
+            model="claude-haiku-4-5-20250514",
+        )
+        with caplog.at_level(logging.WARNING, logger="src.prompt_compressor"):
+            _process_response(response, "original text", "claude-haiku-4-5-20250514")
+        warning_msgs = [r.message for r in caplog.records if r.levelno == logging.WARNING]
+        assert any("token bloat" in m for m in warning_msgs)
+        assert any("non-reasoning model" in m for m in warning_msgs)
+
+    def test_token_ratio_no_warning_under_threshold(self, caplog: pytest.LogCaptureFixture) -> None:
+        """When output_tokens <= input_tokens * 3, no warning is emitted."""
+        import logging
+        response = MockAPIResponse(
+            text="Fixed text",
+            input_tokens=50,
+            output_tokens=100,  # 2x ratio
+            ttft_ms=100.0,
+            ttlt_ms=300.0,
+            model="claude-haiku-4-5-20250514",
+        )
+        with caplog.at_level(logging.WARNING, logger="src.prompt_compressor"):
+            _process_response(response, "original text", "claude-haiku-4-5-20250514")
+        warning_msgs = [r.message for r in caplog.records if r.levelno == logging.WARNING]
+        assert not any("token bloat" in m for m in warning_msgs)
+
+    def test_fallback_still_works_with_token_warning(self, caplog: pytest.LogCaptureFixture) -> None:
+        """Both token warning AND preproc_failed trigger when applicable."""
+        import logging
+        original = "short"  # 5 chars
+        bloated = "x" * 20  # 20 chars > 5 * 1.5 = 7.5, triggers fallback
+        response = MockAPIResponse(
+            text=bloated,
+            input_tokens=10,
+            output_tokens=200,  # 20x ratio, triggers warning
+            ttft_ms=100.0,
+            ttlt_ms=300.0,
+            model="claude-haiku-4-5-20250514",
+        )
+        with caplog.at_level(logging.WARNING, logger="src.prompt_compressor"):
+            result_text, metadata = _process_response(response, original, "claude-haiku-4-5-20250514")
+        # Warning was logged
+        warning_msgs = [r.message for r in caplog.records if r.levelno == logging.WARNING]
+        assert any("token bloat" in m for m in warning_msgs)
+        # Fallback triggered
+        assert result_text == original
+        assert metadata["preproc_failed"] is True

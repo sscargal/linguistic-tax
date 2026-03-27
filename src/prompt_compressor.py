@@ -28,14 +28,22 @@ SELF_CORRECT_PREFIX: str = (
     "version of my request."
 )
 
-_SANITIZE_SYSTEM: str = "You are a text corrector."
+_SANITIZE_SYSTEM: str = (
+    "You are a text corrector. "
+    "Do not think step by step. Do not reason. "
+    "Just output the corrected text verbatim."
+)
 _SANITIZE_INSTRUCTION: str = (
     "Fix all spelling and grammar errors in the following text. "
     "Do not explain. Do not add commentary. "
     "Output ONLY the corrected text, nothing else.\n---\n"
 )
 
-_COMPRESS_SYSTEM: str = "You are a prompt optimizer."
+_COMPRESS_SYSTEM: str = (
+    "You are a prompt optimizer. "
+    "Do not think step by step. Do not reason. "
+    "Just output the optimized text verbatim."
+)
 _COMPRESS_INSTRUCTION: str = (
     "Fix all spelling and grammar errors in the following text, then "
     "remove redundancy and condense to minimal phrasing. Preserve all "
@@ -183,6 +191,18 @@ def _process_response(
         "preproc_ttlt_ms": response.ttlt_ms,
         "preproc_raw_output": result,
     }
+
+    # Token ratio warning (informational only -- does NOT trigger fallback)
+    if response.output_tokens > response.input_tokens * 3:
+        logger.warning(
+            "Pre-processor token bloat: %s produced %d output tokens from %d input "
+            "tokens (%.1fx ratio). Consider switching to a non-reasoning model "
+            "(gpt-4o-mini, claude-haiku, gemini-2.0-flash).",
+            preproc_model,
+            response.output_tokens,
+            response.input_tokens,
+            response.output_tokens / max(response.input_tokens, 1),
+        )
 
     # Fallback: empty or bloated output
     if not result or len(result) > len(original_text) * 1.5:

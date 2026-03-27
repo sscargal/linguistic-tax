@@ -62,6 +62,36 @@ def _validate_api_keys(model: str) -> None:
             raise EnvironmentError("OPENROUTER_API_KEY not set")
 
 
+_QUOTA_KEYWORDS = (
+    "per-day", "per-month", "per-week", "daily", "monthly", "weekly",
+    "quota", "credits", "limit exceeded",
+)
+
+
+class QuotaExceededError(Exception):
+    """Raised when a provider's usage quota is exhausted (not a transient rate limit)."""
+
+    def __init__(self, model: str, message: str):
+        self.model = model
+        super().__init__(f"Quota exceeded for {model}: {message}")
+
+
+def _is_quota_error(error: Exception) -> bool:
+    """Check if a rate limit error is actually a quota/daily limit exhaustion.
+
+    Quota errors are not transient — retrying won't help until the quota
+    resets (typically next day/month).
+
+    Args:
+        error: The rate limit exception to inspect.
+
+    Returns:
+        True if this is a quota exhaustion, not a transient rate limit.
+    """
+    msg = str(error).lower()
+    return any(kw in msg for kw in _QUOTA_KEYWORDS)
+
+
 def _apply_rate_limit(model: str) -> None:
     """Sleep for the configured rate limit delay for this model.
 
@@ -370,6 +400,8 @@ def call_model(
             else:
                 raise ValueError(f"Unknown model: {model}")
         except anthropic.RateLimitError as e:
+            if _is_quota_error(e):
+                raise
             last_error = e
             _rate_delays[model] = _rate_delays.get(model, 0.2) * 2
             logger.warning(
@@ -381,6 +413,8 @@ def call_model(
             if attempt < 3:
                 time.sleep(retry_delays[attempt])
         except openai.RateLimitError as e:
+            if _is_quota_error(e):
+                raise
             last_error = e
             _rate_delays[model] = _rate_delays.get(model, 0.2) * 2
             logger.warning(
@@ -393,6 +427,8 @@ def call_model(
                 time.sleep(retry_delays[attempt])
         except genai_errors.ClientError as e:
             if e.code == 429:
+                if _is_quota_error(e):
+                    raise
                 last_error = e
                 _rate_delays[model] = _rate_delays.get(model, 0.2) * 2
                 logger.warning(

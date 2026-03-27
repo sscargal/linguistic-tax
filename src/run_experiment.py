@@ -373,6 +373,10 @@ def _process_item(
         )
 
     except Exception as e:
+        # Let quota errors propagate — retrying won't help
+        from src.api_client import _is_quota_error
+        if _is_quota_error(e):
+            raise
         logger.error(
             "[%d/%d] %s | %s | %s | FAILED: %s",
             index + 1, total, item["prompt_id"], item["noise_type"],
@@ -604,6 +608,15 @@ def run_engine(args: argparse.Namespace, config: ExperimentConfig | None = None)
         conn.close()
         print(f"Completed {i} of {total} items.")
         sys.exit(130)
+    except Exception as e:
+        from src.api_client import _is_quota_error
+        if _is_quota_error(e):
+            print(f"\nQuota exceeded — stopping. {completed_count_run} of {total} items completed.")
+            print(f"  {e}")
+            print(f"\nRe-run with `propt run --retry-failed` after the quota resets.")
+            conn.close()
+            sys.exit(1)
+        raise
 
     logger.info("Engine complete: %d items processed", total)
     conn.close()

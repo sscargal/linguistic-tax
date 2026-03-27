@@ -164,8 +164,10 @@ def estimate_cost(
     """
     prompt_tokens = _compute_prompt_tokens(prompts_path)
 
-    target_cost = 0.0
-    preproc_cost = 0.0
+    target_input_cost = 0.0
+    target_output_cost = 0.0
+    preproc_input_cost = 0.0
+    preproc_output_cost = 0.0
     target_input_tokens = 0
     target_output_tokens = 0
     preproc_input_tokens = 0
@@ -178,8 +180,10 @@ def estimate_cost(
         output_ratio = _OUTPUT_RATIO.get(benchmark, 1.5)
         output_toks = int(input_toks * output_ratio)
 
-        # Target model cost
-        target_cost += registry.compute_cost(item["model"], input_toks, output_toks)
+        # Target model cost (split by input/output)
+        inp_price, out_price = registry.get_price(item["model"])
+        target_input_cost += input_toks * inp_price / 1_000_000
+        target_output_cost += output_toks * out_price / 1_000_000
         target_input_tokens += input_toks
         target_output_tokens += output_toks
 
@@ -187,14 +191,23 @@ def estimate_cost(
         if item["intervention"] in PREPROC_INTERVENTIONS:
             preproc_model = registry.get_preproc(item["model"]) or item["model"]
             preproc_output = int(input_toks * 0.8)
-            preproc_cost += registry.compute_cost(preproc_model, input_toks, preproc_output)
+            p_inp_price, p_out_price = registry.get_price(preproc_model)
+            preproc_input_cost += input_toks * p_inp_price / 1_000_000
+            preproc_output_cost += preproc_output * p_out_price / 1_000_000
             preproc_input_tokens += input_toks
             preproc_output_tokens += preproc_output
+
+    target_cost = target_input_cost + target_output_cost
+    preproc_cost = preproc_input_cost + preproc_output_cost
 
     return {
         "target_cost": target_cost,
         "preproc_cost": preproc_cost,
         "total_cost": target_cost + preproc_cost,
+        "target_input_cost": target_input_cost,
+        "target_output_cost": target_output_cost,
+        "preproc_input_cost": preproc_input_cost,
+        "preproc_output_cost": preproc_output_cost,
         "target_input_tokens": target_input_tokens,
         "target_output_tokens": target_output_tokens,
         "preproc_input_tokens": preproc_input_tokens,
@@ -290,28 +303,26 @@ def format_summary(
         )
         lines.append("")
 
-    # Models section — show pricing rates, not totals
+    # Models section — show separate input/output pricing rates
     model_counts: Counter[str] = Counter(item["model"] for item in items)
     model_table = []
+
+    def _fmt_price(price: float) -> str:
+        if price == 0.0:
+            return "free"
+        return f"${price:.2f}"
+
     for model in sorted(model_counts):
         inp_price, out_price = registry.get_price(model)
-        if inp_price == 0.0 and out_price == 0.0:
-            pricing = "free"
-        else:
-            pricing = f"${inp_price:.2f} / ${out_price:.2f}"
-        model_table.append([model, "target", pricing])
+        model_table.append([model, "target", _fmt_price(inp_price), _fmt_price(out_price)])
 
         preproc_model = registry.get_preproc(model)
         if preproc_model and preproc_model != model:
             p_inp, p_out = registry.get_price(preproc_model)
-            if p_inp == 0.0 and p_out == 0.0:
-                p_pricing = "free"
-            else:
-                p_pricing = f"${p_inp:.2f} / ${p_out:.2f}"
-            model_table.append([f"  {preproc_model}", "preproc", p_pricing])
+            model_table.append([f"  {preproc_model}", "preproc", _fmt_price(p_inp), _fmt_price(p_out)])
 
     lines.append("Models:")
-    lines.append(tabulate(model_table, headers=["Model", "Role", "Pricing (per 1M tokens)"], tablefmt="simple"))
+    lines.append(tabulate(model_table, headers=["Model", "Role", "Input (per 1M)", "Output (per 1M)"], tablefmt="simple"))
     lines.append("")
 
     # Experiment design breakdown
@@ -340,13 +351,18 @@ def format_summary(
     preproc_in = cost_estimate.get("preproc_input_tokens", 0)
     preproc_out = cost_estimate.get("preproc_output_tokens", 0)
 
+    t_in_cost = cost_estimate.get("target_input_cost", 0.0)
+    t_out_cost = cost_estimate.get("target_output_cost", 0.0)
+    p_in_cost = cost_estimate.get("preproc_input_cost", 0.0)
+    p_out_cost = cost_estimate.get("preproc_output_cost", 0.0)
+
     lines.append("Estimates:")
-    lines.append(f"                     {'API Calls':>12}  {'Tokens (in / out)':>24}  {'Cost':>10}")
-    lines.append(f"                     {'─' * 12}  {'─' * 24}  {'─' * 10}")
-    lines.append(f"  Target model:      {total_target_calls:>12,}  {target_in:>10,} / {target_out:<12,}  ${cost_estimate['target_cost']:>9.2f}")
-    lines.append(f"  Pre-processor:     {total_preproc_calls:>12,}  {preproc_in:>10,} / {preproc_out:<12,}  ${cost_estimate['preproc_cost']:>9.2f}")
-    lines.append(f"                     {'─' * 12}  {'─' * 24}  {'─' * 10}")
-    lines.append(f"  Total:             {total_target_calls + total_preproc_calls:>12,}  {target_in + preproc_in:>10,} / {target_out + preproc_out:<12,}  ${cost_estimate['total_cost']:>9.2f}")
+    lines.append(f"                     {'API Calls':>12}  {'Tokens (in / out)':>24}  {'Cost (in + out)':>20}")
+    lines.append(f"                     {'─' * 12}  {'─' * 24}  {'─' * 20}")
+    lines.append(f"  Target model:      {total_target_calls:>12,}  {target_in:>10,} / {target_out:<12,}  ${t_in_cost:.2f} + ${t_out_cost:.2f} = ${cost_estimate['target_cost']:.2f}")
+    lines.append(f"  Pre-processor:     {total_preproc_calls:>12,}  {preproc_in:>10,} / {preproc_out:<12,}  ${p_in_cost:.2f} + ${p_out_cost:.2f} = ${cost_estimate['preproc_cost']:.2f}")
+    lines.append(f"                     {'─' * 12}  {'─' * 24}  {'─' * 20}")
+    lines.append(f"  Total:             {total_target_calls + total_preproc_calls:>12,}  {target_in + preproc_in:>10,} / {target_out + preproc_out:<12,}  ${cost_estimate['total_cost']:.2f}")
     lines.append("")
     lines.append(f"  Estimated runtime: {_format_duration(runtime_seconds)}")
 

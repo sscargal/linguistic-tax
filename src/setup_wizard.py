@@ -682,16 +682,19 @@ def validate_api_key(
             try:
                 client.chat.completions.create(
                     model=openai_model,
-                    max_completion_tokens=1,
+                    max_completion_tokens=10,
                     messages=[{"role": "user", "content": "Hi"}],
                 )
-            except openai.BadRequestError:
-                # Older models use max_tokens instead of max_completion_tokens
-                client.chat.completions.create(
-                    model=openai_model,
-                    max_tokens=1,
-                    messages=[{"role": "user", "content": "Hi"}],
-                )
+            except openai.BadRequestError as e:
+                if "max_completion_tokens" in str(e):
+                    # Older model doesn't support max_completion_tokens
+                    client.chat.completions.create(
+                        model=openai_model,
+                        max_tokens=10,
+                        messages=[{"role": "user", "content": "Hi"}],
+                    )
+                else:
+                    raise
         elif provider == "openrouter":
             # Strip openrouter/ prefix — internal convention, not used by the API
             api_model = (model_id or "nvidia/nemotron-3-nano-30b-a3b:free")

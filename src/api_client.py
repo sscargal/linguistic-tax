@@ -250,16 +250,19 @@ def _call_openai(
             stream=True,
             stream_options={"include_usage": True},
         )
-    except openai.BadRequestError:
-        # Older models use max_tokens instead of max_completion_tokens
-        stream = client.chat.completions.create(
-            model=model,
-            messages=messages,
-            max_tokens=max_tokens,
-            temperature=temperature,
-            stream=True,
-            stream_options={"include_usage": True},
-        )
+    except openai.BadRequestError as e:
+        if "max_completion_tokens" in str(e):
+            # Older model doesn't support max_completion_tokens
+            stream = client.chat.completions.create(
+                model=model,
+                messages=messages,
+                max_tokens=max_tokens,
+                temperature=temperature,
+                stream=True,
+                stream_options={"include_usage": True},
+            )
+        else:
+            raise
 
     usage = None
     for chunk in stream:
@@ -333,15 +336,18 @@ def _call_openrouter(
             stream=True,
             stream_options={"include_usage": True},
         )
-    except openai.BadRequestError:
-        stream = client.chat.completions.create(
-            model=api_model,
-            messages=messages,
-            max_tokens=max_tokens,
-            temperature=temperature,
-            stream=True,
-            stream_options={"include_usage": True},
-        )
+    except openai.BadRequestError as e:
+        if "max_completion_tokens" in str(e):
+            stream = client.chat.completions.create(
+                model=api_model,
+                messages=messages,
+                max_tokens=max_tokens,
+                temperature=temperature,
+                stream=True,
+                stream_options={"include_usage": True},
+            )
+        else:
+            raise
 
     usage = None
     for chunk in stream:

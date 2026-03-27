@@ -290,75 +290,64 @@ def format_summary(
         )
         lines.append("")
 
-    # Models section — show target models and their pre-processors
-    prompt_tokens = _compute_prompt_tokens()
+    # Models section — show pricing rates, not totals
     model_counts: Counter[str] = Counter(item["model"] for item in items)
     model_table = []
-    for model, count in sorted(model_counts.items()):
-        per_model_cost = 0.0
-        for item in items:
-            if item["model"] == model:
-                benchmark = _get_benchmark(item["prompt_id"])
-                fallback = AVG_TOKENS.get(benchmark, AVG_TOKENS["humaneval"])
-                input_toks = prompt_tokens.get(item["prompt_id"], fallback["input"])
-                output_toks = int(input_toks * _OUTPUT_RATIO.get(benchmark, 1.5))
-                per_model_cost += registry.compute_cost(model, input_toks, output_toks)
-        model_table.append([model, "target", count, f"${per_model_cost:.2f}"])
+    for model in sorted(model_counts):
+        inp_price, out_price = registry.get_price(model)
+        if inp_price == 0.0 and out_price == 0.0:
+            pricing = "free"
+        else:
+            pricing = f"${inp_price:.2f} / ${out_price:.2f}"
+        model_table.append([model, "target", pricing])
 
-        # Show the pre-processor model for this target
         preproc_model = registry.get_preproc(model)
         if preproc_model and preproc_model != model:
-            preproc_calls = sum(1 for item in items
-                                if item["model"] == model
-                                and item["intervention"] in PREPROC_INTERVENTIONS)
-            preproc_per_model = 0.0
-            for item in items:
-                if item["model"] == model and item["intervention"] in PREPROC_INTERVENTIONS:
-                    benchmark = _get_benchmark(item["prompt_id"])
-                    fallback = AVG_TOKENS.get(benchmark, AVG_TOKENS["humaneval"])
-                    input_toks = prompt_tokens.get(item["prompt_id"], fallback["input"])
-                    preproc_output = int(input_toks * 0.8)
-                    preproc_per_model += registry.compute_cost(preproc_model, input_toks, preproc_output)
-            model_table.append([f"  {preproc_model}", "preproc", preproc_calls, f"${preproc_per_model:.2f}"])
+            p_inp, p_out = registry.get_price(preproc_model)
+            if p_inp == 0.0 and p_out == 0.0:
+                p_pricing = "free"
+            else:
+                p_pricing = f"${p_inp:.2f} / ${p_out:.2f}"
+            model_table.append([f"  {preproc_model}", "preproc", p_pricing])
 
     lines.append("Models:")
-    lines.append(tabulate(model_table, headers=["Model", "Role", "API Calls", "Est. Cost"], tablefmt="simple"))
+    lines.append(tabulate(model_table, headers=["Model", "Role", "Pricing (per 1M tokens)"], tablefmt="simple"))
     lines.append("")
 
-    # Interventions section
+    # Experiment design breakdown
+    lines.append("Experiment Design:")
+
+    # Interventions
     intervention_counts: Counter[str] = Counter(item["intervention"] for item in items)
     intervention_table = [[intervention, count] for intervention, count in sorted(intervention_counts.items())]
-    lines.append("Interventions:")
-    lines.append(tabulate(intervention_table, headers=["Intervention", "API Calls"], tablefmt="simple"))
+    lines.append(tabulate(intervention_table, headers=["  Intervention", "API Calls"], tablefmt="simple"))
     lines.append("")
 
-    # Noise Conditions section
+    # Noise Conditions
     noise_counts: Counter[str] = Counter(item["noise_type"] for item in items)
     noise_table = [[noise_type, count] for noise_type, count in sorted(noise_counts.items())]
-    lines.append("Noise Conditions:")
-    lines.append(tabulate(noise_table, headers=["Noise Type", "API Calls"], tablefmt="simple"))
+    lines.append(tabulate(noise_table, headers=["  Noise Type", "API Calls"], tablefmt="simple"))
     lines.append("")
 
-    # Token and cost section
+    # Totals section — API calls, tokens, cost, runtime together
+    total_target_calls = sum(model_counts.values())
+    total_preproc_calls = sum(
+        1 for item in items if item["intervention"] in PREPROC_INTERVENTIONS
+    )
+
     target_in = cost_estimate.get("target_input_tokens", 0)
     target_out = cost_estimate.get("target_output_tokens", 0)
     preproc_in = cost_estimate.get("preproc_input_tokens", 0)
     preproc_out = cost_estimate.get("preproc_output_tokens", 0)
 
-    lines.append("Estimated Tokens:")
-    lines.append(f"  Target model:      {target_in:,} in / {target_out:,} out")
-    lines.append(f"  Pre-processor:     {preproc_in:,} in / {preproc_out:,} out")
-    lines.append(f"  Total:             {target_in + preproc_in:,} in / {target_out + preproc_out:,} out")
+    lines.append("Estimates:")
+    lines.append(f"                     {'API Calls':>12}  {'Tokens (in / out)':>24}  {'Cost':>10}")
+    lines.append(f"                     {'─' * 12}  {'─' * 24}  {'─' * 10}")
+    lines.append(f"  Target model:      {total_target_calls:>12,}  {target_in:>10,} / {target_out:<12,}  ${cost_estimate['target_cost']:>9.2f}")
+    lines.append(f"  Pre-processor:     {total_preproc_calls:>12,}  {preproc_in:>10,} / {preproc_out:<12,}  ${cost_estimate['preproc_cost']:>9.2f}")
+    lines.append(f"                     {'─' * 12}  {'─' * 24}  {'─' * 10}")
+    lines.append(f"  Total:             {total_target_calls + total_preproc_calls:>12,}  {target_in + preproc_in:>10,} / {target_out + preproc_out:<12,}  ${cost_estimate['total_cost']:>9.2f}")
     lines.append("")
-
-    lines.append("Estimated Cost:")
-    lines.append(f"  Target model:      ${cost_estimate['target_cost']:.2f}")
-    lines.append(f"  Pre-processor:     ${cost_estimate['preproc_cost']:.2f}")
-    lines.append(f"  Total:             ${cost_estimate['total_cost']:.2f}")
-    lines.append("")
-
-    # Runtime section
-    lines.append("Runtime:")
     lines.append(f"  Estimated runtime: {_format_duration(runtime_seconds)}")
 
     return "\n".join(lines)

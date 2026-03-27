@@ -193,8 +193,8 @@ class TestFormatSummary:
         assert "Model" in output
         assert "Intervention" in output
         assert "Noise" in output
-        assert "Cost" in output
-        assert "Runtime" in output
+        assert "Estimates:" in output
+        assert "Estimated runtime" in output
 
     def test_format_summary_shows_resume_info(self):
         """With completed_count > 0, summary shows resume information."""

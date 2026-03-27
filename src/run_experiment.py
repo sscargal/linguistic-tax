@@ -424,9 +424,12 @@ def run_engine(args: argparse.Namespace, config: ExperimentConfig | None = None)
     with open(config.matrix_path) as f:
         matrix = json.load(f)
 
-    # Validate and filter by model
+    # Filter matrix to configured models
+    target_ids = set(registry.target_models())
+    matrix = [item for item in matrix if item["model"] in target_ids]
+
+    # Further filter by --model arg if specified
     if args.model != "all":
-        target_ids = set(registry.target_models())
         if args.model in target_ids:
             # Exact model_id match
             matrix = [item for item in matrix if item["model"] == args.model]

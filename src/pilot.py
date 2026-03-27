@@ -109,12 +109,14 @@ def select_pilot_prompts(
 def filter_pilot_matrix(
     matrix_path: str = "data/experiment_matrix.json",
     pilot_prompt_ids: list[str] | None = None,
+    configured_models: set[str] | None = None,
 ) -> list[dict[str, Any]]:
-    """Filter experiment matrix to pilot prompt IDs only.
+    """Filter experiment matrix to pilot prompt IDs and configured models.
 
     Args:
         matrix_path: Path to the full experiment matrix JSON.
-        pilot_prompt_ids: List of prompt IDs to include. If None, returns all.
+        pilot_prompt_ids: List of prompt IDs to include. If None, no prompt filter.
+        configured_models: Set of model IDs to include. If None, no model filter.
 
     Returns:
         Filtered list of matrix items.
@@ -122,13 +124,16 @@ def filter_pilot_matrix(
     with open(matrix_path) as f:
         matrix = json.load(f)
 
-    if pilot_prompt_ids is None:
-        return matrix
+    if pilot_prompt_ids is not None:
+        id_set = set(pilot_prompt_ids)
+        matrix = [item for item in matrix if item["prompt_id"] in id_set]
 
-    id_set = set(pilot_prompt_ids)
-    filtered = [item for item in matrix if item["prompt_id"] in id_set]
-    logger.info("Filtered matrix: %d items for %d pilot prompts", len(filtered), len(pilot_prompt_ids))
-    return filtered
+    if configured_models is not None:
+        matrix = [item for item in matrix if item["model"] in configured_models]
+
+    logger.info("Filtered matrix: %d items for %d pilot prompts",
+                len(matrix), len(pilot_prompt_ids) if pilot_prompt_ids else 0)
+    return matrix
 
 
 # ---------------------------------------------------------------------------
@@ -179,10 +184,12 @@ def run_pilot(
             "status": "selected",
         }
 
-    # Filter matrix
+    # Filter matrix to pilot prompts and configured models only
+    configured_models = set(registry.target_models())
     filtered = filter_pilot_matrix(
         matrix_path=config.matrix_path,
         pilot_prompt_ids=pilot_ids,
+        configured_models=configured_models,
     )
 
     # Confirmation gate for pilot

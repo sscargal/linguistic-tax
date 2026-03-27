@@ -217,7 +217,20 @@ def build_cli() -> argparse.ArgumentParser:
         "--benchmark", action="store_true",
         help="Show per-benchmark cross-tabulation with noise types and baselines"
     )
-    report_parser.set_defaults(func=handle_report)
+    fmt_group = report_parser.add_mutually_exclusive_group()
+    fmt_group.add_argument(
+        "--json", action="store_const", const="json", dest="output_format",
+        help="Output as structured JSON"
+    )
+    fmt_group.add_argument(
+        "--csv", action="store_const", const="csv", dest="output_format",
+        help="Output as CSV tables"
+    )
+    fmt_group.add_argument(
+        "--markdown", action="store_const", const="markdown", dest="output_format",
+        help="Output as GitHub-flavored markdown"
+    )
+    report_parser.set_defaults(func=handle_report, output_format="text")
 
     # --- clean ---
     clean_parser = subparsers.add_parser(
@@ -359,7 +372,7 @@ def handle_report(args: argparse.Namespace) -> None:
 
     db_path = _resolve_db_path(args)
     conn = init_database(db_path)
-    print(format_post_run_report(conn, benchmark=args.benchmark))
+    print(format_post_run_report(conn, benchmark=args.benchmark, output_format=args.output_format))
     conn.close()
 
 

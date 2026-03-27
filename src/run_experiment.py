@@ -142,26 +142,31 @@ def apply_intervention(
 # ---------------------------------------------------------------------------
 
 def _order_by_model(items: list[dict[str, Any]], seed: int) -> list[dict[str, Any]]:
-    """Order items by model provider with deterministic shuffle within groups.
+    """Order items by model with deterministic shuffle within groups.
 
-    Groups Claude items first and Gemini items second. Each group is
-    shuffled independently using a seeded RNG for reproducibility.
+    Groups items by model ID, shuffles each group independently using
+    a seeded RNG for reproducibility, then concatenates all groups
+    in sorted model order.
 
     Args:
         items: List of experiment matrix items.
         seed: Random seed for deterministic shuffling.
 
     Returns:
-        Reordered list with Claude items first, Gemini items second.
+        Reordered list grouped by model, shuffled within each group.
     """
-    claude_items = [x for x in items if x["model"].startswith("claude")]
-    gemini_items = [x for x in items if x["model"].startswith("gemini")]
+    groups: dict[str, list[dict[str, Any]]] = {}
+    for item in items:
+        groups.setdefault(item["model"], []).append(item)
 
     rng = random.Random(seed)
-    rng.shuffle(claude_items)
-    rng.shuffle(gemini_items)
+    result: list[dict[str, Any]] = []
+    for model in sorted(groups):
+        group = groups[model]
+        rng.shuffle(group)
+        result.extend(group)
 
-    return claude_items + gemini_items
+    return result
 
 
 # ---------------------------------------------------------------------------

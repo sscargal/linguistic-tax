@@ -237,7 +237,7 @@ def format_summary(
         )
         lines.append("")
 
-    # Models section
+    # Models section — show target models and their pre-processors
     model_counts: Counter[str] = Counter(item["model"] for item in items)
     model_table = []
     for model, count in sorted(model_counts.items()):
@@ -246,9 +246,24 @@ def format_summary(
                          AVG_TOKENS.get(_get_benchmark(item["prompt_id"]), AVG_TOKENS["humaneval"])["output"])
             for item in items if item["model"] == model
         )
-        model_table.append([model, count, f"${per_model_cost:.2f}"])
+        model_table.append([model, "target", count, f"${per_model_cost:.2f}"])
+
+        # Show the pre-processor model for this target
+        preproc_model = registry.get_preproc(model)
+        if preproc_model and preproc_model != model:
+            preproc_items = sum(1 for item in items
+                                if item["model"] == model
+                                and item["intervention"] in PREPROC_INTERVENTIONS)
+            preproc_per_model = 0.0
+            for item in items:
+                if item["model"] == model and item["intervention"] in PREPROC_INTERVENTIONS:
+                    tokens = AVG_TOKENS.get(_get_benchmark(item["prompt_id"]), AVG_TOKENS["humaneval"])
+                    preproc_output = int(tokens["input"] * 0.8)
+                    preproc_per_model += registry.compute_cost(preproc_model, tokens["input"], preproc_output)
+            model_table.append([f"  {preproc_model}", "preproc", preproc_items, f"${preproc_per_model:.2f}"])
+
     lines.append("Models:")
-    lines.append(tabulate(model_table, headers=["Model", "Items", "Est. Cost"], tablefmt="simple"))
+    lines.append(tabulate(model_table, headers=["Model", "Role", "Items", "Est. Cost"], tablefmt="simple"))
     lines.append("")
 
     # Interventions section

@@ -114,7 +114,7 @@ Recent decisions affecting current work:
 - Support multiple target models per provider in setup wizard (general)
 - Investigate pre-processor performance anomaly — slow TTFT, high output (general)
 - Investigate why pre_proc_sanitize hurts accuracy vs raw (general)
-- Report output formats and multi-model comparison layout (general)
+
 
 ### Roadmap Evolution
 
@@ -145,6 +145,7 @@ Recent decisions affecting current work:
 | 260327-qun | Add benchmark breakdown to propt report | 2026-03-27 | 7e3b1c5 | [260327-qun-add-benchmark-breakdown-to-report](./quick/260327-qun-add-benchmark-breakdown-to-report/) |
 | 260327-r3e | Inspect preproc output and fix chatty responses | 2026-03-27 | 0f09d36 | [260327-r3e-inspect-pre-processor-output-and-fix-cha](./quick/260327-r3e-inspect-pre-processor-output-and-fix-cha/) |
 | 260327-rhk | Per-session result tracking with list/delete/compare | 2026-03-27 | da29381 | [260327-rhk-results-management-per-session-tracking-](./quick/260327-rhk-results-management-per-session-tracking-/) |
+| 260327-ub0 | Report output formats and multi-model comparison | 2026-03-27 | c1e304d | [260327-ub0-report-output-formats-and-multi-model-co](./quick/260327-ub0-report-output-formats-and-multi-model-co/) |
 
 ## Session Continuity
 

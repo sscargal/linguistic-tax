@@ -28,6 +28,7 @@ from src.setup_wizard import (
     check_environment,
     run_setup_wizard,
     validate_api_key,
+    MAX_TARGETS_PER_PROVIDER,
     PROVIDER_NAMES,
     PROVIDER_ORDER,
     PROVIDER_ENV_VARS,
@@ -201,7 +202,7 @@ class TestSelectModels:
 
     def test_select_models_accepts_default(self):
         """Empty input accepts default target and preproc models."""
-        inputs = ["", ""]  # accept target default, accept preproc default
+        inputs = ["", "", "d"]  # accept target, accept preproc, done with provider
         input_fn = lambda prompt="": inputs.pop(0)
 
         with patch("src.setup_wizard.registry") as mock_reg:
@@ -214,7 +215,7 @@ class TestSelectModels:
 
     def test_select_models_free_text_entry(self):
         """Free text entry validates and accepts model (DSC-03)."""
-        inputs = ["my-custom-model-v2", "y", ""]  # custom target, keep anyway, accept preproc
+        inputs = ["my-custom-model-v2", "y", "", "d"]  # custom target, keep anyway, accept preproc, done
         input_fn = lambda prompt="": inputs.pop(0)
 
         with patch("src.setup_wizard.registry") as mock_reg:
@@ -228,16 +229,16 @@ class TestSelectModels:
 
     def test_select_models_list_triggers_browser(self):
         """Typing 'list' triggers _browse_models call."""
-        inputs = ["list", ""]  # list then accept default after browse returns None, then preproc
+        # list -> browse returns None -> accept default target -> accept preproc -> done
+        inputs = ["list", "", "", "d"]
         input_idx = [0]
 
         def input_fn(prompt=""):
             idx = input_idx[0]
             input_idx[0] += 1
-            if idx == 0:
-                return "list"
-            else:
-                return ""
+            if idx < len(inputs):
+                return inputs[idx]
+            return ""
 
         with patch("src.setup_wizard._browse_models", return_value=None) as mock_browse:
             with patch("src.setup_wizard.registry") as mock_reg:
@@ -246,6 +247,131 @@ class TestSelectModels:
                     result = _select_models(["anthropic"], "per-provider", input_fn)
 
         mock_browse.assert_called_once()
+
+
+# ---------------------------------------------------------------------------
+# Section 5b: Multi-target selection tests
+# ---------------------------------------------------------------------------
+
+
+class TestMultiTargetSelection:
+    """Tests for multi-model selection per provider."""
+
+    def _make_input_fn(self, inputs: list[str]):
+        """Create an input_fn from a list of responses."""
+        idx = [0]
+        def input_fn(prompt=""):
+            i = idx[0]
+            idx[0] += 1
+            if i < len(inputs):
+                return inputs[i]
+            return ""
+        return input_fn
+
+    def test_multi_target_add_two_models(self):
+        """Adding a second model results in 2 entries for the same provider."""
+        inputs = [
+            "",    # accept default target 1
+            "",    # accept default preproc 1
+            "a",   # add another model
+            "",    # accept default target 2
+            "",    # accept default preproc 2
+            "d",   # done with provider
+        ]
+        input_fn = self._make_input_fn(inputs)
+
+        with patch("src.setup_wizard.registry") as mock_reg:
+            mock_reg.get_preproc.return_value = "claude-haiku-4-5-20250514"
+            with patch("src.setup_wizard.DEFAULT_TARGET_MODELS", {"anthropic": "claude-sonnet-4-20250514"}):
+                result = _select_models(["anthropic"], "per-provider", input_fn)
+
+        assert len(result) == 2
+        assert all(r["provider"] == "anthropic" for r in result)
+
+    def test_multi_target_remove_model(self):
+        """Removing model 1 of 2 leaves only the second."""
+        # _get_provider_models returns [] so _validate_model_name returns model_id
+        # directly (can't validate without model list), no extra prompts consumed.
+        inputs = [
+            "model-a",  # target 1
+            "",         # preproc 1 (accept auto)
+            "a",        # add another
+            "model-b",  # target 2
+            "",         # preproc 2 (accept auto)
+            "r1",       # remove model 1 (model-a)
+            "d",        # done
+        ]
+        input_fn = self._make_input_fn(inputs)
+
+        with patch("src.setup_wizard.registry") as mock_reg:
+            mock_reg.get_preproc.return_value = "claude-haiku-4-5-20250514"
+            mock_reg._models = {}
+            with patch("src.setup_wizard.DEFAULT_TARGET_MODELS", {"anthropic": "claude-sonnet-4-20250514"}):
+                with patch("src.setup_wizard._get_provider_models", return_value=[]):
+                    result = _select_models(["anthropic"], "per-provider", input_fn)
+
+        assert len(result) == 1
+        assert result[0]["target_model"] == "model-b"
+
+    def test_multi_target_max_limit(self):
+        """At MAX_TARGETS_PER_PROVIDER, adding shows maximum reached message."""
+        # Add MAX_TARGETS_PER_PROVIDER models, then try 'a' which should print "maximum reached"
+        inputs = []
+        for _ in range(MAX_TARGETS_PER_PROVIDER):
+            inputs.extend(["", ""])  # accept default target + preproc
+            inputs.append("a")  # try to add after each
+        # Last 'a' should hit the limit, then 'd' to finish
+        inputs.append("d")
+
+        input_fn = self._make_input_fn(inputs)
+
+        with patch("src.setup_wizard.registry") as mock_reg:
+            mock_reg.get_preproc.return_value = "claude-haiku-4-5-20250514"
+            with patch("src.setup_wizard.DEFAULT_TARGET_MODELS", {"anthropic": "claude-sonnet-4-20250514"}):
+                result = _select_models(["anthropic"], "per-provider", input_fn)
+
+        assert len(result) == MAX_TARGETS_PER_PROVIDER
+
+    def test_multi_target_modify_model(self):
+        """Modifying model 1 changes its target_model."""
+        inputs = [
+            "",         # accept default target 1
+            "",         # accept default preproc 1
+            "m1",       # modify model 1
+            "new-model", # new target
+            "y",        # keep anyway
+            "",         # new preproc
+            "d",        # done
+        ]
+        input_fn = self._make_input_fn(inputs)
+
+        with patch("src.setup_wizard.registry") as mock_reg:
+            mock_reg.get_preproc.return_value = "claude-haiku-4-5-20250514"
+            mock_reg._models = {}
+            with patch("src.setup_wizard.DEFAULT_TARGET_MODELS", {"anthropic": "claude-sonnet-4-20250514"}):
+                with patch("src.setup_wizard._get_provider_models", return_value=[]):
+                    result = _select_models(["anthropic"], "per-provider", input_fn)
+
+        assert len(result) == 1
+        assert result[0]["target_model"] == "new-model"
+
+    def test_multi_target_done_immediately(self):
+        """Selecting one target then 'd' returns single entry (backward compatible)."""
+        inputs = [
+            "",   # accept default target
+            "",   # accept default preproc
+            "d",  # done immediately
+        ]
+        input_fn = self._make_input_fn(inputs)
+
+        with patch("src.setup_wizard.registry") as mock_reg:
+            mock_reg.get_preproc.return_value = "claude-haiku-4-5-20250514"
+            with patch("src.setup_wizard.DEFAULT_TARGET_MODELS", {"anthropic": "claude-sonnet-4-20250514"}):
+                result = _select_models(["anthropic"], "per-provider", input_fn)
+
+        assert len(result) == 1
+        assert result[0]["target_model"] == "claude-sonnet-4-20250514"
+        assert result[0]["preproc_model"] == "claude-haiku-4-5-20250514"
 
 
 # ---------------------------------------------------------------------------
@@ -406,7 +532,7 @@ class TestWizardFlow:
 
         # Flow: select providers 1,2 -> key for anthropic -> key for google ->
         # explain roles (per-provider) -> target anthropic -> preproc anthropic ->
-        # target google -> preproc google -> confirm
+        # done anthropic -> target google -> preproc google -> done google -> confirm
         inputs = [
             "1,2",           # provider selection
             "test-ant-key",  # anthropic key (no existing)
@@ -414,8 +540,10 @@ class TestWizardFlow:
             "1",             # per-provider preproc
             "",              # accept default anthropic target
             "",              # accept default anthropic preproc
+            "d",             # done with anthropic
             "",              # accept default google target
             "",              # accept default google preproc
+            "d",             # done with google
             "",              # keep validated model (anthropic)
             "",              # keep validated model (google)
             "y",             # confirm save
@@ -481,7 +609,7 @@ class TestExistingConfig:
         """Choosing '2' returns 'reconfigure'."""
         existing = {
             "providers": ["anthropic"],
-            "models": {"anthropic": {"target": "claude-sonnet-4-20250514", "preproc": "haiku"}},
+            "models": {"anthropic": {"targets": [{"target": "claude-sonnet-4-20250514", "preproc": "haiku"}]}},
         }
         input_fn = lambda prompt="": "2"
         result = _handle_existing_config(existing, input_fn)
@@ -491,7 +619,7 @@ class TestExistingConfig:
         """Empty input defaults to 'reconfigure'."""
         existing = {
             "providers": ["anthropic"],
-            "models": {"anthropic": {"target": "claude-sonnet-4-20250514", "preproc": "haiku"}},
+            "models": {"anthropic": {"targets": [{"target": "claude-sonnet-4-20250514", "preproc": "haiku"}]}},
         }
         input_fn = lambda prompt="": ""
         result = _handle_existing_config(existing, input_fn)
@@ -501,11 +629,27 @@ class TestExistingConfig:
         """Choosing '1' returns 'add'."""
         existing = {
             "providers": ["anthropic"],
-            "models": {"anthropic": {"target": "claude-sonnet-4-20250514", "preproc": "haiku"}},
+            "models": {"anthropic": {"targets": [{"target": "claude-sonnet-4-20250514", "preproc": "haiku"}]}},
         }
         input_fn = lambda prompt="": "1"
         result = _handle_existing_config(existing, input_fn)
         assert result == "add"
+
+    def test_handle_existing_config_shows_multiple_targets(self, capsys):
+        """Multiple targets per provider are displayed in the summary."""
+        existing = {
+            "providers": ["anthropic"],
+            "models": {"anthropic": {"targets": [
+                {"target": "claude-sonnet-4-20250514", "preproc": "haiku"},
+                {"target": "claude-opus-4-20250514", "preproc": "haiku"},
+            ]}},
+        }
+        input_fn = lambda prompt="": "2"
+        _handle_existing_config(existing, input_fn)
+        captured = capsys.readouterr()
+        assert "2 targets" in captured.out
+        assert "claude-sonnet-4-20250514" in captured.out
+        assert "claude-opus-4-20250514" in captured.out
 
 
 # ---------------------------------------------------------------------------
@@ -539,6 +683,33 @@ class TestBuildConfigDict:
         preproc_entries = [m for m in result["models"] if m["role"] == "preproc"]
         assert len(target_entries) == 2
         assert len(preproc_entries) >= 1
+
+    def test_build_config_dict_multi_target_per_provider(self):
+        """Multiple targets from same provider produce multiple target entries."""
+        models = [
+            {"provider": "anthropic", "target_model": "claude-sonnet-4-20250514", "preproc_model": "claude-haiku-4-5-20250514"},
+            {"provider": "anthropic", "target_model": "claude-opus-4-20250514", "preproc_model": "claude-haiku-4-5-20250514"},
+        ]
+
+        with patch("src.setup_wizard.get_full_config_dict", return_value={"temperature": 0.0}):
+            with patch("src.setup_wizard.registry") as mock_reg:
+                mock_reg.get_price.return_value = (3.0, 15.0)
+                mock_reg._models = {
+                    "claude-sonnet-4-20250514": MagicMock(),
+                    "claude-opus-4-20250514": MagicMock(),
+                    "claude-haiku-4-5-20250514": MagicMock(),
+                }
+                result = _build_config_dict(models)
+
+        target_entries = [m for m in result["models"] if m["role"] == "target"]
+        preproc_entries = [m for m in result["models"] if m["role"] == "preproc"]
+        assert len(target_entries) == 2
+        target_ids = {m["model_id"] for m in target_entries}
+        assert "claude-sonnet-4-20250514" in target_ids
+        assert "claude-opus-4-20250514" in target_ids
+        # Shared preproc should be deduplicated
+        assert len(preproc_entries) == 1
+        assert preproc_entries[0]["model_id"] == "claude-haiku-4-5-20250514"
 
     def test_build_config_dict_deduplicates_preproc(self):
         """Shared preproc model appears only once in models list."""

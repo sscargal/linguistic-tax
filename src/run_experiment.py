@@ -90,6 +90,7 @@ def apply_intervention(
     model: str,
     call_fn: Callable[..., Any],
     prompt_id: str = "",
+    noise_type: str = "",
 ) -> tuple[str, dict[str, Any]]:
     """Apply the specified intervention strategy to a prompt.
 
@@ -102,6 +103,9 @@ def apply_intervention(
         model: The main model identifier (used for pre-processor lookup).
         call_fn: Callable for making API calls (passed to pre-processor interventions).
         prompt_id: Prompt identifier (used for emphasis cache lookups).
+        noise_type: Noise type string (e.g., "clean", "type_a_5pct", "type_b_esl").
+            When provided and not starting with "type_a_", preproc interventions
+            are skipped.
 
     Returns:
         A tuple of (processed_text, metadata_dict).
@@ -109,6 +113,14 @@ def apply_intervention(
     Raises:
         ValueError: If intervention is not a known strategy.
     """
+    # Skip preproc for non-type_a noise (clean and ESL handled natively by target models)
+    if intervention in ("pre_proc_sanitize", "pre_proc_sanitize_compress", "compress_only"):
+        if noise_type and not noise_type.startswith("type_a_"):
+            return (prompt_text, {
+                "preproc_skipped": True,
+                "preproc_skip_reason": f"noise_type={noise_type}",
+            })
+
     match intervention:
         case "raw":
             return (prompt_text, {})
@@ -298,6 +310,7 @@ def _process_item(
         processed_text, preproc_meta = apply_intervention(
             prompt_text, item["intervention"], item["model"], call_model,
             prompt_id=item["prompt_id"],
+            noise_type=item["noise_type"],
         )
 
         # Determine max tokens

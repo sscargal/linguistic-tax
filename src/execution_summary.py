@@ -601,6 +601,33 @@ def format_post_run_report(conn: Any, benchmark: bool = False) -> str:
         ))
         lines.append("")
 
+    # Pre-processor fallback rate
+    fallback_row = conn.execute("""
+        SELECT
+            COUNT(*) as preproc_total,
+            SUM(CASE WHEN preproc_raw_output IS NOT NULL THEN 1 ELSE 0 END) as has_raw,
+            SUM(CASE WHEN preproc_raw_output IS NOT NULL
+                AND LENGTH(preproc_raw_output) > LENGTH(prompt_text) * 1.5
+                THEN 1 ELSE 0 END) as bloat_fallbacks,
+            SUM(CASE WHEN preproc_raw_output IS NOT NULL
+                AND LENGTH(preproc_raw_output) = 0
+                THEN 1 ELSE 0 END) as empty_fallbacks
+        FROM experiment_runs
+        WHERE status='completed' AND preproc_model IS NOT NULL
+    """).fetchone()
+
+    if fallback_row and fallback_row["preproc_total"] > 0 and fallback_row["has_raw"] > 0:
+        fb_total = fallback_row["preproc_total"]
+        bloat = fallback_row["bloat_fallbacks"] or 0
+        empty = fallback_row["empty_fallbacks"] or 0
+        fb_count = bloat + empty
+        pct = fb_count / fb_total * 100 if fb_total > 0 else 0
+        lines.append(
+            f"Pre-processor fallback rate: {fb_count}/{fb_total} "
+            f"({pct:.1f}%) -- {bloat} bloated, {empty} empty"
+        )
+        lines.append("")
+
     # Timing summary
     timing_row = conn.execute("""
         SELECT

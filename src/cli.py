@@ -237,6 +237,18 @@ def build_cli() -> argparse.ArgumentParser:
     )
     regrade_parser.set_defaults(func=handle_regrade)
 
+    # --- inspect ---
+    inspect_parser = subparsers.add_parser(
+        "inspect", help="Show full details for a specific run"
+    )
+    inspect_parser.add_argument(
+        "run_id", help="The run_id to inspect"
+    )
+    inspect_parser.add_argument(
+        "--db", type=str, default=None, help="Override database path"
+    )
+    inspect_parser.set_defaults(func=handle_inspect)
+
     # --- argcomplete ---
     try:
         import argcomplete
@@ -258,6 +270,127 @@ def handle_report(args: argparse.Namespace) -> None:
     db_path = args.db if args.db else config.results_db_path
     conn = init_database(db_path)
     print(format_post_run_report(conn, benchmark=args.benchmark))
+    conn.close()
+
+
+def handle_inspect(args: argparse.Namespace) -> None:
+    """Show full details for a specific experiment run."""
+    import sqlite3
+    from src.config_manager import load_config
+    from src.db import init_database
+
+    config = load_config()
+    db_path = args.db if args.db else config.results_db_path
+    conn = init_database(db_path)
+    conn.row_factory = sqlite3.Row
+
+    # Query experiment run with LEFT JOIN on grading_details
+    row = conn.execute(
+        """SELECT e.*, g.fail_reason, g.extraction_method
+           FROM experiment_runs e
+           LEFT JOIN grading_details g ON e.run_id = g.run_id
+           WHERE e.run_id = ?""",
+        (args.run_id,),
+    ).fetchone()
+
+    if row is None:
+        print(f"Run not found: {args.run_id}")
+        conn.close()
+        return
+
+    r = dict(row)
+
+    # --- Run Info ---
+    print("--- Run Info ---")
+    print(f"  run_id:       {r['run_id']}")
+    print(f"  prompt_id:    {r['prompt_id']}")
+    print(f"  benchmark:    {r['benchmark']}")
+    print(f"  model:        {r['model']}")
+    print(f"  intervention: {r['intervention']}")
+    print(f"  noise_type:   {r['noise_type']}")
+    print(f"  noise_level:  {r.get('noise_level', '--')}")
+    print(f"  repetition:   {r['repetition']}")
+    print(f"  timestamp:    {r.get('timestamp', '--')}")
+    print(f"  status:       {r['status']}")
+    print()
+
+    # --- Prompt ---
+    print("--- Prompt ---")
+    prompt = r.get("prompt_text") or "--"
+    if len(prompt) > 2000:
+        print(f"  {prompt[:2000]}")
+        print("  [truncated]")
+    else:
+        print(f"  {prompt}")
+    print()
+
+    # --- Pre-processor ---
+    if r.get("preproc_model"):
+        print("--- Pre-processor ---")
+        print(f"  model:          {r['preproc_model']}")
+        print(f"  input_tokens:   {r.get('preproc_input_tokens', '--')}")
+        print(f"  output_tokens:  {r.get('preproc_output_tokens', '--')}")
+        in_tok = r.get("preproc_input_tokens") or 0
+        out_tok = r.get("preproc_output_tokens") or 0
+        if in_tok > 0:
+            print(f"  token ratio:    {out_tok / in_tok:.2f}x (out/in)")
+        print(f"  ttft_ms:        {r.get('preproc_ttft_ms', '--')}")
+        print(f"  ttlt_ms:        {r.get('preproc_ttlt_ms', '--')}")
+        print(f"  cost:           ${r.get('preproc_cost_usd', 0):.6f}")
+
+        raw_output = r.get("preproc_raw_output")
+        if raw_output is not None:
+            # Check if fallback was triggered
+            prompt_text = r.get("prompt_text") or ""
+            is_preproc = r.get("intervention", "") in (
+                "pre_proc_sanitize", "pre_proc_sanitize_compress", "compress_only"
+            )
+            if is_preproc and raw_output != prompt_text:
+                if len(raw_output) > len(prompt_text) * 1.5 or len(raw_output) == 0:
+                    print("  fallback:       YES (raw preproc output shown below, original prompt was used instead)")
+                else:
+                    print("  fallback:       NO")
+            print()
+            print("--- Pre-processor Output ---")
+            if len(raw_output) > 2000:
+                print(f"  {raw_output[:2000]}")
+                print("  [truncated]")
+            else:
+                print(f"  {raw_output}")
+        print()
+
+    # --- Model Response ---
+    print("--- Model Response ---")
+    output = r.get("raw_output") or "--"
+    if len(output) > 2000:
+        print(f"  {output[:2000]}")
+        print("  [truncated]")
+    else:
+        print(f"  {output}")
+    print()
+
+    # --- Grading ---
+    print("--- Grading ---")
+    pf = r.get("pass_fail")
+    print(f"  pass_fail:          {'PASS' if pf == 1 else 'FAIL' if pf == 0 else '--'}")
+    print(f"  fail_reason:        {r.get('fail_reason') or '--'}")
+    print(f"  extraction_method:  {r.get('extraction_method') or '--'}")
+    print()
+
+    # --- Timing ---
+    print("--- Timing ---")
+    print(f"  ttft_ms:       {r.get('ttft_ms', '--')}")
+    print(f"  ttlt_ms:       {r.get('ttlt_ms', '--')}")
+    print(f"  generation_ms: {r.get('generation_ms', '--')}")
+    print()
+
+    # --- Cost ---
+    print("--- Cost ---")
+    print(f"  main input:    ${r.get('main_model_input_cost_usd', 0):.6f}")
+    print(f"  main output:   ${r.get('main_model_output_cost_usd', 0):.6f}")
+    print(f"  preproc:       ${r.get('preproc_cost_usd', 0):.6f}")
+    print(f"  total:         ${r.get('total_cost_usd', 0):.6f}")
+
     conn.close()
 
 

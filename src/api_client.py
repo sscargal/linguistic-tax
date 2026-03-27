@@ -241,14 +241,25 @@ def _call_openai(
         messages.append({"role": "system", "content": system})
     messages.append({"role": "user", "content": user_message})
 
-    stream = client.chat.completions.create(
-        model=model,
-        messages=messages,
-        max_tokens=max_tokens,
-        temperature=temperature,
-        stream=True,
-        stream_options={"include_usage": True},
-    )
+    try:
+        stream = client.chat.completions.create(
+            model=model,
+            messages=messages,
+            max_completion_tokens=max_tokens,
+            temperature=temperature,
+            stream=True,
+            stream_options={"include_usage": True},
+        )
+    except openai.BadRequestError:
+        # Older models use max_tokens instead of max_completion_tokens
+        stream = client.chat.completions.create(
+            model=model,
+            messages=messages,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            stream=True,
+            stream_options={"include_usage": True},
+        )
 
     usage = None
     for chunk in stream:
@@ -313,14 +324,24 @@ def _call_openrouter(
         messages.append({"role": "system", "content": system})
     messages.append({"role": "user", "content": user_message})
 
-    stream = client.chat.completions.create(
-        model=api_model,
-        messages=messages,
-        max_tokens=max_tokens,
-        temperature=temperature,
-        stream=True,
-        stream_options={"include_usage": True},
-    )
+    try:
+        stream = client.chat.completions.create(
+            model=api_model,
+            messages=messages,
+            max_completion_tokens=max_tokens,
+            temperature=temperature,
+            stream=True,
+            stream_options={"include_usage": True},
+        )
+    except openai.BadRequestError:
+        stream = client.chat.completions.create(
+            model=api_model,
+            messages=messages,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            stream=True,
+            stream_options={"include_usage": True},
+        )
 
     usage = None
     for chunk in stream:

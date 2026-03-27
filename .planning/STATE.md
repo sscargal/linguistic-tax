@@ -128,10 +128,11 @@ Recent decisions affecting current work:
 | 260326-n2y | Git status triage — commit untracked files | 2026-03-26 | 8b08e67 | [260326-n2y-run-git-status-and-decide-what-needs-to-](./quick/260326-n2y-run-git-status-and-decide-what-needs-to-/) |
 | 260326-vzd | Fix slicer references and QA script failures | 2026-03-26 | 1dcef07 | [260326-vzd-fix-slicer-references-and-qa-script-fail](./quick/260326-vzd-fix-slicer-references-and-qa-script-fail/) |
 | 260326-w5r | Fix pytest warnings and test failures | 2026-03-26 | 3732002 | [260326-w5r-fix-pytest-failures](./quick/260326-w5r-fix-pytest-failures/) |
+| 260327-19a | Add post-run report command | 2026-03-27 | c267936 | [260327-19a-add-post-run-report-comparing-projected-](./quick/260327-19a-add-post-run-report-comparing-projected-/) |
 
 ## Session Continuity
 
-Last activity: 2026-03-26 - Completed quick task 260326-w5r: Fix pytest warnings and test failures
+Last activity: 2026-03-27 - Completed quick task 260327-19a: Add post-run report command
 Last session: 2026-03-26T20:47:04.547Z
 Stopped at: Completed 22-03-PLAN.md
 Resume file: None

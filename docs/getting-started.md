@@ -121,6 +121,53 @@ propt validate
 
 For model configuration, use `propt setup` -- the `models` field in the config is a structured list managed by the wizard.
 
+## How the Experiment Works
+
+This toolkit measures how **prompt noise** degrades LLM reasoning accuracy, and whether automated **prompt optimization** can recover it.
+
+### Noise Types
+
+Each clean benchmark prompt is corrupted with controlled noise before being sent to the target model. There are two categories:
+
+**Type A -- Character-level noise (typos).** Random character mutations at 3 error rates:
+
+| Noise Level | What it does | Example |
+|-------------|-------------|---------|
+| `type_a_5pct` | 5% of characters mutated | "Write a function" → "Wriet a functon" |
+| `type_a_10pct` | 10% of characters mutated | "Write a function" → "Wrtie a fucntion" |
+| `type_a_20pct` | 20% of characters mutated | "Write a function" → "Wrtei a fncuiotn" |
+
+Mutations include adjacent-key swaps, character omission, doubling, and transposition. Technical tokens (function names, keywords) are protected from mutation.
+
+**Type B -- ESL syntactic noise (L1 transfer errors).** These simulate how a **non-native English speaker writes English**, applying grammar mistakes characteristic of their first language (L1). All prompts remain in English -- the noise reflects L1 interference patterns documented in second-language acquisition research:
+
+| Noise Variant | L1 Source | What it does to English | Example |
+|---------------|-----------|------------------------|---------|
+| `type_b_mandarin` | Mandarin Chinese | Drops articles, removes tense markers, omits copula, simplifies prepositions | "Return the sorted list" → "Return sorted list" |
+| `type_b_japanese` | Japanese | Drops articles, adds topic markers ("As for X"), drops subject pronouns | "You should find the values" → "As for should, find value" |
+| `type_b_spanish` | Spanish | Confuses prepositions, double negatives, adjective-after-noun order | "the large empty list" → "list large empty" |
+| `type_b_mixed` | All three | Applies all 16 patterns from all languages | Heaviest transformation |
+
+These are **not** prompts in other languages. They are English prompts with the kinds of grammatical errors that native Mandarin/Japanese/Spanish speakers commonly make when writing English (e.g., article omission in Mandarin because Mandarin has no article system).
+
+### Intervention Strategies
+
+Each noisy prompt is processed through one of 5 strategies before reaching the target model:
+
+| Intervention | What it does |
+|-------------|-------------|
+| `raw` | Send the noisy prompt as-is (baseline) |
+| `self_correct` | Prepend "my prompt may contain errors, correct them first" |
+| `pre_proc_sanitize` | Fix spelling/grammar via a cheap pre-processor model |
+| `pre_proc_sanitize_compress` | Fix errors AND compress/deduplicate via pre-processor |
+| `prompt_repetition` | Repeat the prompt twice (Leviathan et al. technique) |
+
+> **Note:** Pre-processing is automatically skipped for clean prompts and ESL (type_b) noise, where pilot data showed it provides no benefit or actively hurts accuracy. It only runs for type_a (typo) noise.
+
+### Benchmarks
+
+Prompts come from 3 standard benchmarks: **HumanEval** (Python code generation), **MBPP** (Python code generation), and **GSM8K** (grade-school math). Each is graded automatically -- code benchmarks via sandboxed execution, math via regex number extraction.
+
 ## Full Experiment Run Flow
 
 ```mermaid

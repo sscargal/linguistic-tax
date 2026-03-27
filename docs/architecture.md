@@ -28,7 +28,7 @@ flowchart LR
 
 > **Note:** The 4 providers shown above are the defaults shipped with `data/default_models.json`. Providers are configurable -- add or remove models via `propt setup` or by editing `data/default_models.json`.
 
-Prompts are loaded from `data/prompts.json` (200 clean benchmarks from HumanEval, MBPP, and GSM8K). The noise generator applies Type A character-level mutations or Type B ESL syntactic patterns. The intervention router selects one of five strategies. The API client sends the processed prompt to the target model, measures TTFT and TTLT, and streams the response. The grader evaluates correctness (code execution sandbox for HumanEval/MBPP, regex number extraction for GSM8K) and writes everything to SQLite.
+Prompts are loaded from `data/prompts.json` (200 clean benchmarks from HumanEval, MBPP, and GSM8K). The noise generator applies Type A character-level mutations (random typos at 5/10/20% error rates) or Type B ESL syntactic patterns (L1 transfer errors that simulate how non-native English speakers from Mandarin, Japanese, or Spanish backgrounds write English -- e.g., dropping articles, confusing prepositions, reordering adjectives). See [Getting Started: Noise Types](getting-started.md#noise-types) for detailed examples. The intervention router selects one of five strategies. The API client sends the processed prompt to the target model, measures TTFT and TTLT, and streams the response. The grader evaluates correctness (code execution sandbox for HumanEval/MBPP, regex number extraction for GSM8K) and writes everything to SQLite.
 
 ## Data Flow
 

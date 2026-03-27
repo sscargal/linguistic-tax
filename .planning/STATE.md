@@ -131,10 +131,11 @@ Recent decisions affecting current work:
 | 260326-w5r | Fix pytest warnings and test failures | 2026-03-26 | 3732002 | [260326-w5r-fix-pytest-failures](./quick/260326-w5r-fix-pytest-failures/) |
 | 260327-19a | Add post-run report command | 2026-03-27 | c267936 | [260327-19a-add-post-run-report-comparing-projected-](./quick/260327-19a-add-post-run-report-comparing-projected-/) |
 | 260327-3tc | Add OpenRouter rate limit check | 2026-03-27 | 99f5d24 | [260327-3tc-add-openrouter-rate-limit-check-to-pre-e](./quick/260327-3tc-add-openrouter-rate-limit-check-to-pre-e/) |
+| 260327-4az | Add propt clean + results management todo | 2026-03-27 | 2e0e376 | [260327-4az-add-propt-clean-command-and-results-mana](./quick/260327-4az-add-propt-clean-command-and-results-mana/) |
 
 ## Session Continuity
 
-Last activity: 2026-03-27 - Completed quick task 260327-3tc: Add OpenRouter rate limit check
+Last activity: 2026-03-27 - Completed quick task 260327-4az: Add propt clean + results management todo
 Last session: 2026-03-26T20:47:04.547Z
 Stopped at: Completed 22-03-PLAN.md
 Resume file: None

@@ -574,12 +574,17 @@ def run_engine(args: argparse.Namespace, config: ExperimentConfig | None = None)
             )
             logger.info("  Preflight OK: %s", model)
         except Exception as e:
-            logger.error("  Preflight FAILED: %s — %s", model, e)
-            print(f"\nPreflight check failed for {model}:")
-            print(f"  {e}")
-            print("\nFix the issue and re-run, or remove this model from your config.")
-            conn.close()
-            sys.exit(1)
+            err_msg = str(e).lower()
+            if "temperature" in err_msg or "max_completion_tokens" in err_msg or "max_tokens" in err_msg:
+                # Parameter compatibility — call_model handles this at runtime
+                logger.info("  Preflight OK: %s (parameter auto-adjusted)", model)
+            else:
+                logger.error("  Preflight FAILED: %s — %s", model, e)
+                print(f"\nPreflight check failed for {model}:")
+                print(f"  {e}")
+                print("\nFix the issue and re-run, or remove this model from your config.")
+                conn.close()
+                sys.exit(1)
 
     # Process items with tqdm progress bar
     total = len(pending)

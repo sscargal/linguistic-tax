@@ -138,10 +138,11 @@ Recent decisions affecting current work:
 | 260327-19a | Add post-run report command | 2026-03-27 | c267936 | [260327-19a-add-post-run-report-comparing-projected-](./quick/260327-19a-add-post-run-report-comparing-projected-/) |
 | 260327-3tc | Add OpenRouter rate limit check | 2026-03-27 | 99f5d24 | [260327-3tc-add-openrouter-rate-limit-check-to-pre-e](./quick/260327-3tc-add-openrouter-rate-limit-check-to-pre-e/) |
 | 260327-4az | Add propt clean + results management todo | 2026-03-27 | 2e0e376 | [260327-4az-add-propt-clean-command-and-results-mana](./quick/260327-4az-add-propt-clean-command-and-results-mana/) |
+| 260327-qun | Add benchmark breakdown to propt report | 2026-03-27 | 7e3b1c5 | [260327-qun-add-benchmark-breakdown-to-report](./quick/260327-qun-add-benchmark-breakdown-to-report/) |
 
 ## Session Continuity
 
-Last activity: 2026-03-27 - Completed quick task 260327-4az: Add propt clean + results management todo
+Last activity: 2026-03-27 - Completed quick task 260327-qun: Add benchmark breakdown to propt report
 Last session: 2026-03-26T20:47:04.547Z
 Stopped at: Completed 22-03-PLAN.md
 Resume file: None

@@ -550,18 +550,54 @@ def run_engine(args: argparse.Namespace, config: ExperimentConfig | None = None)
     # Process items with tqdm progress bar
     total = len(pending)
     cost_so_far = 0.0
+    tokens_in = 0
+    tokens_out = 0
+    pass_count = 0
+    completed_count_run = 0
+
+    def _fmt_tokens(n: int) -> str:
+        if n >= 1_000_000:
+            return f"{n / 1_000_000:.1f}M"
+        if n >= 1_000:
+            return f"{n / 1_000:.1f}K"
+        return str(n)
+
     try:
         with tqdm(total=total, desc="Experiments", unit="item") as pbar:
             for i, item in enumerate(pending):
                 _process_item(item, conn, prompts_by_id, config, i, total)
-                # Query cost from last inserted row
+                # Query metrics from last inserted row
                 row = conn.execute(
-                    "SELECT total_cost_usd FROM experiment_runs WHERE run_id = ?",
+                    "SELECT total_cost_usd, pass_fail, prompt_tokens, "
+                    "completion_tokens, ttlt_ms, status "
+                    "FROM experiment_runs WHERE run_id = ?",
                     (make_run_id(item),),
                 ).fetchone()
-                if row and row[0]:
-                    cost_so_far += row[0]
-                pbar.set_postfix(cost=f"${cost_so_far:.2f}")
+                last_result = "?"
+                last_ms = 0.0
+                if row:
+                    if row[0]:
+                        cost_so_far += row[0]
+                    if row[2]:
+                        tokens_in += row[2]
+                    if row[3]:
+                        tokens_out += row[3]
+                    if row[5] == "completed":
+                        completed_count_run += 1
+                        if row[1] is not None:
+                            if row[1]:
+                                pass_count += 1
+                            last_result = "PASS" if row[1] else "FAIL"
+                    else:
+                        last_result = "ERR"
+                    last_ms = row[4] or 0.0
+
+                pass_rate = (pass_count / completed_count_run * 100) if completed_count_run > 0 else 0
+                pbar.set_postfix_str(
+                    f"pass={pass_rate:.1f}% | cost=${cost_so_far:.2f} | "
+                    f"last={last_result} {last_ms:.0f}ms | "
+                    f"tokens={_fmt_tokens(tokens_in)}/{_fmt_tokens(tokens_out)}"
+                )
                 pbar.update(1)
     except KeyboardInterrupt:
         print("\nInterrupted. Saving progress...")

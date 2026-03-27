@@ -308,8 +308,6 @@ def format_summary(
     model_table = []
 
     def _fmt_price(price: float) -> str:
-        if price == 0.0:
-            return "free"
         return f"${price:.2f}"
 
     for model in sorted(model_counts):

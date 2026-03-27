@@ -104,6 +104,7 @@ Recent decisions affecting current work:
 
 - Investigate fine-tuned small LM as pre-processor (general)
 - Experiment with provider prompt best practices as preprocessing (general)
+- Results management: per-session tracking, list, delete, compare (general)
 
 ### Roadmap Evolution
 

@@ -45,6 +45,7 @@ CREATE TABLE IF NOT EXISTS experiment_runs (
     preproc_output_tokens INTEGER,
     preproc_ttft_ms REAL,
     preproc_ttlt_ms REAL,
+    preproc_raw_output TEXT,
 
     -- Cost tracking
     main_model_input_cost_usd REAL,
@@ -98,7 +99,7 @@ _EXPERIMENT_RUNS_COLUMNS = [
     "optimized_tokens", "raw_output", "cot_trace", "completion_tokens",
     "pass_fail", "ttft_ms", "ttlt_ms", "generation_ms", "preproc_model",
     "preproc_input_tokens", "preproc_output_tokens", "preproc_ttft_ms",
-    "preproc_ttlt_ms", "main_model_input_cost_usd", "main_model_output_cost_usd",
+    "preproc_ttlt_ms", "preproc_raw_output", "main_model_input_cost_usd", "main_model_output_cost_usd",
     "preproc_cost_usd", "total_cost_usd", "temperature", "timestamp", "status",
 ]
 
@@ -118,6 +119,15 @@ def init_database(db_path: str) -> sqlite3.Connection:
     pathlib.Path(db_path).parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(db_path)
     conn.executescript(CREATE_SCHEMA)
+
+    # Migration: add preproc_raw_output column to existing databases
+    try:
+        conn.execute(
+            "ALTER TABLE experiment_runs ADD COLUMN preproc_raw_output TEXT"
+        )
+    except sqlite3.OperationalError:
+        pass  # Column already exists
+
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA foreign_keys=ON")
     logger.info("Database initialized at %s", db_path)

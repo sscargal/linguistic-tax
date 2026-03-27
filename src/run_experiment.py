@@ -351,6 +351,7 @@ def _process_item(
             "preproc_output_tokens": preproc_meta.get("preproc_output_tokens"),
             "preproc_ttft_ms": preproc_meta.get("preproc_ttft_ms"),
             "preproc_ttlt_ms": preproc_meta.get("preproc_ttlt_ms"),
+            "preproc_raw_output": preproc_meta.get("preproc_raw_output"),
             "main_model_input_cost_usd": main_input_cost,
             "main_model_output_cost_usd": main_output_cost,
             "preproc_cost_usd": preproc_cost,

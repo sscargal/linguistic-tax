@@ -31,14 +31,16 @@ SELF_CORRECT_PREFIX: str = (
 _SANITIZE_SYSTEM: str = "You are a text corrector."
 _SANITIZE_INSTRUCTION: str = (
     "Fix all spelling and grammar errors in the following text. "
-    "Return only the corrected text, no explanation.\n---\n"
+    "Do not explain. Do not add commentary. "
+    "Output ONLY the corrected text, nothing else.\n---\n"
 )
 
 _COMPRESS_SYSTEM: str = "You are a prompt optimizer."
 _COMPRESS_INSTRUCTION: str = (
     "Fix all spelling and grammar errors in the following text, then "
     "remove redundancy and condense to minimal phrasing. Preserve all "
-    "original intent. Return only the optimized text, no explanation.\n---\n"
+    "original intent. Do not explain. Do not add commentary. "
+    "Output ONLY the optimized text, nothing else.\n---\n"
 )
 
 
@@ -110,7 +112,7 @@ def sanitize(
         model=preproc_model,
         system=_SANITIZE_SYSTEM,
         user_message=user_message,
-        max_tokens=max(512, len(text) * 2),
+        max_tokens=max(256, int(len(text) * 1.3)),
         temperature=0.0,
     )
 
@@ -146,7 +148,7 @@ def sanitize_and_compress(
         model=preproc_model,
         system=_COMPRESS_SYSTEM,
         user_message=user_message,
-        max_tokens=max(512, len(text) * 2),
+        max_tokens=max(256, int(len(text) * 1.3)),
         temperature=0.0,
     )
 
@@ -179,6 +181,7 @@ def _process_response(
         "preproc_output_tokens": response.output_tokens,
         "preproc_ttft_ms": response.ttft_ms,
         "preproc_ttlt_ms": response.ttlt_ms,
+        "preproc_raw_output": result,
     }
 
     # Fallback: empty or bloated output

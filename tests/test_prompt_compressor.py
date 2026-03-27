@@ -163,7 +163,15 @@ class TestSanitize:
         assert metadata["preproc_output_tokens"] == 30
         assert metadata["preproc_ttft_ms"] == 100.0
         assert metadata["preproc_ttlt_ms"] == 300.0
+        assert metadata["preproc_raw_output"] == "Fixed text"
         assert "preproc_failed" not in metadata
+
+    def test_max_tokens_formula(self) -> None:
+        """max_tokens uses max(256, int(len*1.3)) formula."""
+        call_fn, log = make_mock_call_fn(response_text="Fixed text")
+        text = "x" * 500
+        sanitize(text, "claude-sonnet-4-20250514", call_fn)
+        assert log[0]["max_tokens"] == max(256, int(len(text) * 1.3))
 
     def test_fallback_on_empty_response(self) -> None:
         call_fn, _ = make_mock_call_fn(response_text="")
@@ -184,6 +192,16 @@ class TestSanitize:
         call_fn, _ = make_mock_call_fn(response_text=bloated)
         result_text, metadata = sanitize(original, "claude-sonnet-4-20250514", call_fn)
         assert result_text == original
+        assert metadata["preproc_failed"] is True
+
+    def test_preproc_raw_output_captured_on_fallback(self) -> None:
+        """preproc_raw_output is stored even when fallback triggers."""
+        original = "short text"  # 10 chars
+        bloated = "x" * 20  # bloated output triggers fallback
+        call_fn, _ = make_mock_call_fn(response_text=bloated)
+        result_text, metadata = sanitize(original, "claude-sonnet-4-20250514", call_fn)
+        assert result_text == original  # fallback to original
+        assert metadata["preproc_raw_output"] == bloated  # raw output still captured
         assert metadata["preproc_failed"] is True
 
     def test_no_fallback_at_boundary(self) -> None:
@@ -264,3 +282,10 @@ class TestSanitizeAndCompress:
         call_fn, log = make_mock_call_fn(response_text="Compressed")
         sanitize_and_compress("text", "claude-sonnet-4-20250514", call_fn)
         assert log[0]["temperature"] == 0.0
+
+    def test_max_tokens_formula(self) -> None:
+        """max_tokens uses max(256, int(len*1.3)) formula."""
+        call_fn, log = make_mock_call_fn(response_text="Compressed")
+        text = "y" * 400
+        sanitize_and_compress(text, "claude-sonnet-4-20250514", call_fn)
+        assert log[0]["max_tokens"] == max(256, int(len(text) * 1.3))

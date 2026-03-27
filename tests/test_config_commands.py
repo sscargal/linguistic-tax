@@ -7,6 +7,7 @@ validate, diff, list-models, and helper functions.
 """
 
 import json
+import logging
 from dataclasses import fields as dc_fields
 from pathlib import Path
 from types import SimpleNamespace
@@ -339,9 +340,12 @@ class TestDiff:
 class TestListModels:
     """Tests for handle_list_models."""
 
+    @patch("src.config_manager.load_config")
     @patch("src.config_commands.discover_all_models")
-    def test_list_models_all_entries(self, mock_discover, capsys):
+    def test_list_models_all_entries(self, mock_discover, mock_load, capsys):
         """list-models output contains all registry model names."""
+        # Prevent load_config from reloading registry with user's config
+        mock_load.return_value = None
         # Force fallback to registry for all providers so output is deterministic
         mock_discover.return_value = DiscoveryResult(
             models={},
@@ -354,9 +358,11 @@ class TestListModels:
             assert model_id in output, f"Missing model: {model_id}"
         assert len(registry._models) == 8
 
+    @patch("src.config_manager.load_config")
     @patch("src.config_commands.discover_all_models")
-    def test_list_models_free_indicator(self, mock_discover, capsys):
+    def test_list_models_free_indicator(self, mock_discover, mock_load, capsys):
         """Output contains 'free' for openrouter models."""
+        mock_load.return_value = None
         mock_discover.return_value = DiscoveryResult(
             models={},
             errors={p: f"Skipping {p}: key not set" for p in
@@ -449,6 +455,12 @@ def _make_discovery_result(
 
 class TestListModelsEnhanced:
     """Tests for enhanced handle_list_models with live discovery."""
+
+    @pytest.fixture(autouse=True)
+    def _prevent_config_reload(self):
+        """Prevent load_config from reloading registry with user's config."""
+        with patch("src.config_manager.load_config", return_value=None):
+            yield
 
     def _mock_result(self) -> DiscoveryResult:
         """Create a standard mock DiscoveryResult with two providers."""
@@ -573,15 +585,14 @@ class TestListModelsEnhanced:
         mock_fallback.assert_called_once_with("anthropic")
 
     @patch("src.config_commands.discover_all_models")
-    def test_list_models_skipped_provider_warning(self, mock_discover, capsys):
-        """Skipped provider shows warning message."""
+    def test_list_models_skipped_provider_warning(self, mock_discover, caplog):
+        """Skipped provider logs warning message."""
         mock_discover.return_value = _make_discovery_result(
             errors={"google": "Skipping google: GOOGLE_API_KEY not set"}
         )
-        handle_list_models(make_args())
-        output = capsys.readouterr().out
-        assert "Warning:" in output
-        assert "GOOGLE_API_KEY" in output
+        with caplog.at_level(logging.WARNING):
+            handle_list_models(make_args())
+        assert "GOOGLE_API_KEY" in caplog.text
 
     @patch("src.config_commands.discover_all_models")
     def test_list_models_json_output(self, mock_discover, capsys):

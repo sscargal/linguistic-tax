@@ -353,22 +353,35 @@ def _format_context_window(ctx: int | None) -> str:
 def handle_list_models(args: Any) -> None:
     """List all available models with live provider discovery and pricing.
 
-    Queries all configured providers for available models, groups output
-    by provider, and marks configured models. Falls back to registry data
-    when provider queries fail.
+    Loads user config first so the registry reflects configured models.
+    Only queries providers that have models in the registry (i.e., ones
+    the user configured). Falls back to registry data when provider
+    queries fail.
 
     Args:
         args: Parsed argparse namespace with optional json flag.
     """
-    result = discover_all_models(timeout=5.0)
+    from src.config_manager import load_config
+
+    load_config()
+
+    # Determine which providers the user has configured
+    configured_providers = {m.provider for m in registry._models.values()}
     configured_ids = set(registry._models.keys())
-    provider_order = ["anthropic", "google", "openai", "openrouter"]
+    provider_order = [p for p in ["anthropic", "google", "openai", "openrouter"]
+                      if p in configured_providers]
+
+    if not provider_order:
+        print("No models configured. Run `propt setup` to configure providers.")
+        return
+
+    result = discover_all_models(timeout=5.0)
 
     all_provider_data: dict[str, list[tuple[DiscoveredModel, str]]] = {}
 
     for provider in provider_order:
         if provider in result.errors:
-            print(f"Warning: {result.errors[provider]}")
+            logger.warning("%s", result.errors[provider])
             fallback_models = _get_fallback_models(provider)
             if fallback_models:
                 all_provider_data[provider] = [

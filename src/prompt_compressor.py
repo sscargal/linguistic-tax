@@ -183,7 +183,7 @@ def _process_response(
 
     # Fallback: empty or bloated output
     if not result or len(result) > len(original_text) * 1.5:
-        logger.warning(
+        logger.debug(
             "Pre-processor fallback: model=%s, output_len=%d, input_len=%d",
             preproc_model,
             len(result),

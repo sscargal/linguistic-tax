@@ -211,6 +211,9 @@ def build_cli() -> argparse.ArgumentParser:
         "--db", type=str, default=None, help="Override database path"
     )
     report_parser.add_argument(
+        "--session", type=str, default=None, help="Session ID (full or prefix)"
+    )
+    report_parser.add_argument(
         "--benchmark", action="store_true",
         help="Show per-benchmark cross-tabulation with noise types and baselines"
     )
@@ -224,6 +227,9 @@ def build_cli() -> argparse.ArgumentParser:
         "--db", type=str, default=None, help="Override database path"
     )
     clean_parser.add_argument(
+        "--session", type=str, default=None, help="Delete a specific session"
+    )
+    clean_parser.add_argument(
         "--yes", action="store_true", help="Skip confirmation prompt"
     )
     clean_parser.set_defaults(func=handle_clean)
@@ -234,6 +240,9 @@ def build_cli() -> argparse.ArgumentParser:
     )
     regrade_parser.add_argument(
         "--db", type=str, default=None, help="Override database path"
+    )
+    regrade_parser.add_argument(
+        "--session", type=str, default=None, help="Session ID (full or prefix)"
     )
     regrade_parser.set_defaults(func=handle_regrade)
 
@@ -247,7 +256,61 @@ def build_cli() -> argparse.ArgumentParser:
     inspect_parser.add_argument(
         "--db", type=str, default=None, help="Override database path"
     )
+    inspect_parser.add_argument(
+        "--session", type=str, default=None, help="Session ID (full or prefix)"
+    )
     inspect_parser.set_defaults(func=handle_inspect)
+
+    # --- list (sessions) ---
+    list_parser = subparsers.add_parser(
+        "list", help="List all experiment sessions"
+    )
+    list_parser.set_defaults(func=handle_list)
+
+    # --- list-runs ---
+    list_runs_parser = subparsers.add_parser(
+        "list-runs", help="List individual runs within a session"
+    )
+    list_runs_parser.add_argument(
+        "session", help="Session ID (full or prefix)"
+    )
+    list_runs_parser.add_argument(
+        "--model", type=str, default=None, help="Filter by model name"
+    )
+    list_runs_parser.add_argument(
+        "--benchmark", type=str, default=None, help="Filter by benchmark"
+    )
+    list_runs_parser.add_argument(
+        "--intervention", type=str, default=None, help="Filter by intervention"
+    )
+    list_runs_parser.add_argument(
+        "--failed", action="store_true", help="Show only failed runs"
+    )
+    list_runs_parser.set_defaults(func=handle_list_runs)
+
+    # --- delete-results ---
+    delete_parser = subparsers.add_parser(
+        "delete-results", help="Delete a session and its results"
+    )
+    delete_parser.add_argument(
+        "session", help="Session ID (full or prefix)"
+    )
+    delete_parser.add_argument(
+        "--yes", action="store_true", help="Skip confirmation prompt"
+    )
+    delete_parser.set_defaults(func=handle_delete_results)
+
+    # --- compare-results ---
+    compare_parser = subparsers.add_parser(
+        "compare-results", help="Compare two sessions side by side"
+    )
+    compare_parser.add_argument(
+        "session1", help="First session ID"
+    )
+    compare_parser.add_argument(
+        "session2", help="Second session ID"
+    )
+    compare_parser.set_defaults(func=handle_compare_results)
 
     # --- argcomplete ---
     try:
@@ -260,14 +323,41 @@ def build_cli() -> argparse.ArgumentParser:
     return parser
 
 
+def _resolve_db_path(args: argparse.Namespace) -> str:
+    """Resolve the database path from --db, --session, or latest session.
+
+    Priority: --db > --session > latest session > config default.
+
+    Args:
+        args: Parsed CLI arguments.
+
+    Returns:
+        Path to the results database.
+    """
+    if getattr(args, "db", None):
+        return args.db
+
+    session_id = getattr(args, "session", None)
+    if session_id is not None:
+        from src.session import resolve_session
+        return resolve_session(session_id)
+
+    # Default: try latest session, fall back to config
+    try:
+        from src.session import resolve_session
+        return resolve_session(None)
+    except ValueError:
+        from src.config_manager import load_config
+        config = load_config()
+        return config.results_db_path
+
+
 def handle_report(args: argparse.Namespace) -> None:
     """Show post-run report with actual metrics from results database."""
-    from src.config_manager import load_config
     from src.db import init_database
     from src.execution_summary import format_post_run_report
 
-    config = load_config()
-    db_path = args.db if args.db else config.results_db_path
+    db_path = _resolve_db_path(args)
     conn = init_database(db_path)
     print(format_post_run_report(conn, benchmark=args.benchmark))
     conn.close()
@@ -276,12 +366,10 @@ def handle_report(args: argparse.Namespace) -> None:
 def handle_inspect(args: argparse.Namespace) -> None:
     """Show full details for a specific experiment run."""
     import sqlite3
-    from src.config_manager import load_config
     from src.db import init_database
 
-    config = load_config()
-    db_path = args.db if args.db else config.results_db_path
-    conn = init_database(db_path)
+    db_path_str = _resolve_db_path(args)
+    conn = init_database(db_path_str)
     conn.row_factory = sqlite3.Row
 
     # Query experiment run with LEFT JOIN on grading_details
@@ -403,7 +491,7 @@ def handle_regrade(args: argparse.Namespace) -> None:
     from src.run_experiment import _get_benchmark
 
     config = load_config()
-    db_path = args.db if args.db else config.results_db_path
+    db_path = _resolve_db_path(args)
     conn = init_database(db_path)
 
     # Count totals before
@@ -453,12 +541,49 @@ def handle_regrade(args: argparse.Namespace) -> None:
 
 
 def handle_clean(args: argparse.Namespace) -> None:
-    """Delete experiment results database and associated files to start fresh."""
+    """Delete experiment results database and associated files to start fresh.
+
+    If --session is provided, delegates to delete_session instead of
+    file-by-file cleanup.
+    """
+    session_id = getattr(args, "session", None)
+    if session_id:
+        from src.session import delete_session, resolve_session
+
+        # Show what will be deleted
+        db_path = resolve_session(session_id)
+        from pathlib import Path
+        session_dir = Path(db_path).parent
+        total_size = sum(f.stat().st_size for f in session_dir.rglob("*") if f.is_file())
+        if total_size >= 1_048_576:
+            size_str = f"{total_size / 1_048_576:.1f} MB"
+        elif total_size >= 1024:
+            size_str = f"{total_size / 1024:.1f} KB"
+        else:
+            size_str = f"{total_size} bytes"
+
+        print(f"Session to delete: {session_dir.name} ({size_str})")
+
+        if not args.yes:
+            try:
+                confirm = input("\nDelete this session? This cannot be undone. (y/N): ").strip().lower()
+            except KeyboardInterrupt:
+                print("\nAborted.")
+                return
+            if confirm not in ("y", "yes"):
+                print("Aborted.")
+                return
+
+        delete_session(session_id)
+        print(f"Deleted session: {session_dir.name}")
+        return
+
     from pathlib import Path
     from src.config_manager import load_config
 
     config = load_config()
-    db_path = Path(args.db if args.db else config.results_db_path)
+    db_path_str = args.db if args.db else config.results_db_path
+    db_path = Path(db_path_str)
 
     files_to_delete: list[Path] = []
     if db_path.exists():
@@ -501,6 +626,137 @@ def handle_clean(args: argparse.Namespace) -> None:
         print(f"  Deleted: {f}")
 
     print("\nClean complete. Run `propt pilot` or `propt run` to start fresh.")
+
+
+def handle_list(args: argparse.Namespace) -> None:
+    """List all experiment sessions with metadata."""
+    from tabulate import tabulate
+    from src.session import list_sessions
+
+    sessions = list_sessions()
+    if not sessions:
+        print("No sessions found. Run `propt pilot` or `propt run` to create one.")
+        return
+
+    table = []
+    for i, s in enumerate(sessions, 1):
+        models_str = ", ".join(s["models"][:3])
+        if len(s["models"]) > 3:
+            models_str += f" +{len(s['models']) - 3}"
+        date_str = s["created_at"][:19].replace("T", " ") if s["created_at"] else "--"
+        cost_str = f"${s['cost']:.4f}" if s["cost"] else "--"
+        table.append([
+            i, s["session_id"], date_str, models_str,
+            s["status"], s["item_count"], cost_str,
+        ])
+
+    print(tabulate(
+        table,
+        headers=["#", "Session ID", "Date", "Models", "Status", "Items", "Cost"],
+        tablefmt="simple",
+    ))
+
+
+def handle_list_runs(args: argparse.Namespace) -> None:
+    """List individual runs within a session."""
+    import sqlite3
+    from tabulate import tabulate
+    from src.session import resolve_session
+    from src.db import init_database
+
+    db_path = resolve_session(args.session)
+    conn = init_database(db_path)
+    conn.row_factory = sqlite3.Row
+
+    query = """
+        SELECT run_id, prompt_id, benchmark, noise_type, intervention,
+               model, pass_fail, status
+        FROM experiment_runs
+    """
+    conditions: list[str] = []
+    params: list[str] = []
+
+    if args.model:
+        conditions.append("model LIKE ?")
+        params.append(f"%{args.model}%")
+    if args.benchmark:
+        conditions.append("benchmark = ?")
+        params.append(args.benchmark)
+    if args.intervention:
+        conditions.append("intervention = ?")
+        params.append(args.intervention)
+    if args.failed:
+        conditions.append("(pass_fail = 0 OR status = 'failed')")
+
+    if conditions:
+        query += " WHERE " + " AND ".join(conditions)
+
+    query += " ORDER BY run_id LIMIT 100"
+
+    rows = conn.execute(query, params).fetchall()
+    conn.close()
+
+    if not rows:
+        print("No runs found matching filters.")
+        return
+
+    table = []
+    for r in rows:
+        run_id_short = r["run_id"][:40] + "..." if len(r["run_id"]) > 40 else r["run_id"]
+        pf = "PASS" if r["pass_fail"] == 1 else "FAIL" if r["pass_fail"] == 0 else "--"
+        table.append([
+            run_id_short, r["prompt_id"], r["benchmark"],
+            r["noise_type"], r["intervention"], r["model"], pf,
+        ])
+
+    print(tabulate(
+        table,
+        headers=["Run ID", "Prompt", "Benchmark", "Noise", "Intervention", "Model", "Result"],
+        tablefmt="simple",
+    ))
+    if len(rows) == 100:
+        print(f"\n(showing first 100 runs, use filters to narrow)")
+
+
+def handle_delete_results(args: argparse.Namespace) -> None:
+    """Delete a session after confirmation."""
+    from pathlib import Path
+    from src.session import resolve_session, delete_session
+
+    db_path = resolve_session(args.session)
+    session_dir = Path(db_path).parent
+
+    total_size = sum(f.stat().st_size for f in session_dir.rglob("*") if f.is_file())
+    if total_size >= 1_048_576:
+        size_str = f"{total_size / 1_048_576:.1f} MB"
+    elif total_size >= 1024:
+        size_str = f"{total_size / 1024:.1f} KB"
+    else:
+        size_str = f"{total_size} bytes"
+
+    print(f"Session to delete: {args.session} ({size_str})")
+    print(f"  Directory: {session_dir}")
+
+    if not args.yes:
+        try:
+            confirm = input("\nDelete this session? This cannot be undone. (y/N): ").strip().lower()
+        except KeyboardInterrupt:
+            print("\nAborted.")
+            return
+        if confirm not in ("y", "yes"):
+            print("Aborted.")
+            return
+
+    delete_session(args.session)
+    print(f"Deleted session: {args.session}")
+
+
+def handle_compare_results(args: argparse.Namespace) -> None:
+    """Compare two sessions side by side."""
+    from src.session import compare_sessions
+
+    result = compare_sessions(args.session1, args.session2)
+    print(result)
 
 
 def main() -> None:

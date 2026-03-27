@@ -7,6 +7,7 @@ calls LLM APIs, grades responses inline, and manages resumability.
 import argparse
 import json
 import logging
+import os
 import random
 import sys
 import time
@@ -424,8 +425,16 @@ def run_engine(args: argparse.Namespace, config: ExperimentConfig | None = None)
         from src.config_manager import load_config
         config = load_config()
 
-    # Override DB path if specified
-    db_path = args.db if args.db else config.results_db_path
+    # Session management: create a new session unless --db is specified
+    session_id = None
+    if args.db:
+        db_path = args.db
+    else:
+        from src.session import create_session, update_session_status
+        session_id = create_session()
+        db_path = f"{os.path.join('results', session_id, 'results.db')}"
+        print(f"Session: {session_id}")
+
     conn = init_database(db_path)
 
     # Load prompts
@@ -548,7 +557,12 @@ def run_engine(args: argparse.Namespace, config: ExperimentConfig | None = None)
     filters: dict[str, Any] = {"model": args.model, "limit": args.limit}
     if hasattr(args, "intervention"):
         filters["intervention"] = args.intervention
-    save_execution_plan(pending, cost_estimate, runtime_seconds, filters=filters)
+    plan_path = (
+        os.path.join("results", session_id, "execution_plan.json")
+        if session_id
+        else "results/execution_plan.json"
+    )
+    save_execution_plan(pending, cost_estimate, runtime_seconds, filters=filters, output_path=plan_path)
 
     # Validate API keys and preflight check each model
     unique_models = set(item["model"] for item in pending)
@@ -673,9 +687,19 @@ def run_engine(args: argparse.Namespace, config: ExperimentConfig | None = None)
                 pbar.update(1)
     except KeyboardInterrupt:
         print("\nInterrupted. Saving progress...")
+        if session_id:
+            update_session_status(db_path, "canceled")
         conn.close()
         print(f"Completed {completed_count_run} of {total} items.")
         sys.exit(130)
+
+    # Update session status
+    if session_id:
+        failed_count_pre = total - completed_count_run - skipped_count
+        if failed_count_pre > 0:
+            update_session_status(db_path, "partial")
+        else:
+            update_session_status(db_path, "completed")
 
     # Report quota-exhausted models
     if quota_exhausted_models:

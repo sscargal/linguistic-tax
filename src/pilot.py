@@ -272,16 +272,30 @@ def run_pilot(
             "status": "modify",
         }
 
+    # Create session for the pilot unless db_path is overridden
+    session_id = None
+    if not db_path:
+        from src.session import create_session, update_session_status
+        session_id = create_session(description="pilot")
+        actual_db_path = os.path.join("results", session_id, "results.db")
+        print(f"Session: {session_id}")
+    else:
+        actual_db_path = db_path
+
+    pilot_plan_path = (
+        os.path.join("results", session_id, "pilot_plan.json")
+        if session_id
+        else "results/pilot_plan.json"
+    )
     save_execution_plan(
         filtered, cost_estimate, runtime_seconds,
         filters={"mode": "pilot"},
-        output_path="results/pilot_plan.json",
+        output_path=pilot_plan_path,
     )
 
     if not analyze_only:
         # Write filtered matrix to temp file and run engine
         import tempfile
-        import os
 
         with tempfile.NamedTemporaryFile(
             mode="w", suffix=".json", delete=False, dir="data"
@@ -294,7 +308,7 @@ def run_pilot(
 
             pilot_config = ExperimentConfig(
                 matrix_path=tmp_matrix_path,
-                results_db_path=db_path or config.results_db_path,
+                results_db_path=actual_db_path,
             )
 
             args = argparse.Namespace(
@@ -303,11 +317,19 @@ def run_pilot(
                 retry_failed=False,
                 dry_run=False,
                 yes=True,  # Pilot already confirmed — skip engine's gate
-                db=db_path,
+                db=actual_db_path,  # Pass db to bypass engine's own session creation
             )
             run_engine(args, config=pilot_config)
+        except KeyboardInterrupt:
+            if session_id:
+                update_session_status(actual_db_path, "canceled")
+            raise
         finally:
             os.unlink(tmp_matrix_path)
+
+        # Update session status
+        if session_id:
+            update_session_status(actual_db_path, "completed")
 
     return {
         "pilot_prompt_ids": pilot_ids,

@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Configurable Models and Dynamic Pricing
 status: unknown
-stopped_at: Completed 23-01-PLAN.md
-last_updated: "2026-03-27T21:20:08.890Z"
+stopped_at: Completed 23-02-PLAN.md
+last_updated: "2026-03-27T21:22:49.405Z"
 last_activity: 2026-03-27
 progress:
   total_phases: 8
-  completed_phases: 7
+  completed_phases: 8
   total_plans: 21
-  completed_plans: 20
+  completed_plans: 21
 ---
 
 # Project State
@@ -67,6 +67,7 @@ Plan: 2 of 2
 | Phase 22 P02 | 5min | 2 tasks | 6 files |
 | Phase 22 P03 | 7min | 2 tasks | 10 files |
 | Phase 23 P01 | 3min | 2 tasks | 4 files |
+| Phase 23 P02 | 1min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -103,6 +104,7 @@ Recent decisions affecting current work:
 - [Phase 23]: noise_type parameter backward-compatible: empty string default preserves old caller behavior
 - [Phase 23]: Token-ratio warning is informational only, does not trigger fallback
 - [Phase 23]: Anti-reasoning directives added to system prompts, not user messages
+- [Phase 23]: Guidance placed after model table in getting-started.md for natural reading flow
 
 ### Pending Todos
 
@@ -147,6 +149,6 @@ Recent decisions affecting current work:
 ## Session Continuity
 
 Last activity: 2026-03-27
-Last session: 2026-03-27T21:20:08.888Z
-Stopped at: Completed 23-01-PLAN.md
+Last session: 2026-03-27T21:22:49.403Z
+Stopped at: Completed 23-02-PLAN.md
 Resume file: None

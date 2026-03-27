@@ -166,7 +166,7 @@ Plans:
 **Goal:** Diagnose and fix the pre-processor pipeline producing bloated output (869K tokens from 172K input, 5x ratio) and degrading accuracy (73.6% pre_proc_sanitize vs 74.4% raw) -- root-cause the prompt mangling, fix sanitize/compress prompt templates and fallback thresholds, and verify fixes improve both output quality and accuracy
 **Requirements**: TODO-preproc-sanitize-accuracy, TODO-preproc-performance-anomaly
 **Depends on:** Phase 22
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 - [ ] 23-01-PLAN.md -- Noise-aware skip logic, anti-reasoning system prompts, token-ratio warning, tests

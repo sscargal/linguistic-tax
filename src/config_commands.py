@@ -64,17 +64,27 @@ def _load_raw_overrides(config_path: Path | None = None) -> tuple[dict, Path]:
     return {}, Path(".") / CONFIG_FILENAME
 
 
-def _format_value(value: Any) -> str:
+def _format_value(value: Any, field_name: str = "") -> str:
     """Format a config value for human-readable display.
 
-    Tuples and lists are formatted as comma-separated strings.
+    Models are formatted as a compact summary. Tuples and lists are
+    formatted as comma-separated strings.
 
     Args:
         value: The config value to format.
+        field_name: Optional field name for context-aware formatting.
 
     Returns:
         Human-readable string representation.
     """
+    if field_name == "models" and isinstance(value, (list, tuple)) and value:
+        lines = []
+        for m in value:
+            if isinstance(m, dict):
+                model_id = m.get("model_id", "?")
+                role = m.get("role", "?")
+                lines.append(f"{role}: {model_id}")
+        return "\n".join(lines) if lines else str(value)
     if isinstance(value, (tuple, list)):
         return ", ".join(str(v) for v in value)
     return str(value)
@@ -155,7 +165,7 @@ def handle_show_config(args: Any) -> None:
         if getattr(args, "json", False):
             print(json.dumps({args.property: value}, default=_json_default))
         else:
-            print(_format_value(value))
+            print(_format_value(value, args.property))
         return
 
     # Build rows for table display
@@ -164,7 +174,7 @@ def handle_show_config(args: Any) -> None:
         cur_val = getattr(current, f.name)
         def_val = getattr(defaults, f.name)
         modified = "*" if cur_val != def_val else ""
-        row = [f"{modified}{f.name}", _format_value(cur_val), _format_value(def_val)]
+        row = [f"{modified}{f.name}", _format_value(cur_val, f.name), _format_value(def_val, f.name)]
         if getattr(args, "verbose", False):
             row.append(FIELD_DESCRIPTIONS.get(f.name, ""))
         rows.append(row)

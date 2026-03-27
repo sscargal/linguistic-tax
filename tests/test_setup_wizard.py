@@ -104,11 +104,11 @@ class TestSelectProviders:
         assert result == ["anthropic", "google", "openrouter"]
 
     def test_select_providers_marks_existing(self, capsys):
-        """Existing providers are marked '(configured)' in output."""
+        """Existing providers are marked '[configured]' in output."""
         input_fn = lambda prompt="": "1"
         _select_providers(input_fn, existing_providers=["anthropic"])
         captured = capsys.readouterr()
-        assert "(configured)" in captured.out
+        assert "[configured]" in captured.out
 
 
 # ---------------------------------------------------------------------------

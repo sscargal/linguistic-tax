@@ -247,12 +247,23 @@ def _select_providers(
         List of selected provider keys.
     """
     print("\nAvailable providers:")
+    configured_nums = []
     for i, key in enumerate(PROVIDER_ORDER, 1):
         name = PROVIDER_NAMES[key]
-        marker = " (configured)" if existing_providers and key in existing_providers else ""
-        print(f"  {i}. {name}{marker}")
+        if existing_providers and key in existing_providers:
+            print(f"  {i}. {name} [configured]")
+            configured_nums.append(str(i))
+        else:
+            print(f"  {i}. {name}")
 
-    raw = input_fn("Enter numbers separated by commas (e.g., 1,3): ")
+    if configured_nums:
+        default_str = ",".join(configured_nums)
+        print(f"\nCurrently configured: {default_str}")
+        raw = input_fn(f"Enter numbers separated by commas (default: {default_str}): ")
+        if raw.strip() == "":
+            raw = default_str
+    else:
+        raw = input_fn("Enter numbers separated by commas (e.g., 1,3): ")
     return _parse_provider_selection(raw, PROVIDER_ORDER)
 
 

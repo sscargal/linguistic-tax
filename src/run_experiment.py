@@ -549,10 +549,37 @@ def run_engine(args: argparse.Namespace, config: ExperimentConfig | None = None)
         filters["intervention"] = args.intervention
     save_execution_plan(pending, cost_estimate, runtime_seconds, filters=filters)
 
-    # Validate API keys for models in pending items
+    # Validate API keys and preflight check each model
     unique_models = set(item["model"] for item in pending)
     for model in unique_models:
         _validate_api_keys(model)
+
+    # Also check preproc models
+    preproc_models = {registry.get_preproc(m) for m in unique_models}
+    preproc_models.discard(None)
+    for model in preproc_models:
+        _validate_api_keys(model)
+
+    # Preflight: test each model with actual experiment parameters
+    logger.info("Running preflight checks...")
+    all_check_models = unique_models | preproc_models
+    for model in sorted(all_check_models):
+        try:
+            call_model(
+                model=model,
+                system=None,
+                user_message="Respond with OK.",
+                max_tokens=10,
+                temperature=config.temperature,
+            )
+            logger.info("  Preflight OK: %s", model)
+        except Exception as e:
+            logger.error("  Preflight FAILED: %s — %s", model, e)
+            print(f"\nPreflight check failed for {model}:")
+            print(f"  {e}")
+            print("\nFix the issue and re-run, or remove this model from your config.")
+            conn.close()
+            sys.exit(1)
 
     # Process items with tqdm progress bar
     total = len(pending)

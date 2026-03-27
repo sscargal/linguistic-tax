@@ -219,8 +219,16 @@ def _build_mbpp_harness(llm_code: str, test_code: str) -> str:
     """
     # Extract expected function name from test assertions
     expected_match = re.search(r'assert (\w+)\(', test_code)
-    # Extract actual function name from LLM code
-    actual_match = re.search(r'def (\w+)\(', llm_code)
+    # Extract actual function name from LLM code (skip __init__, __str__, etc.)
+    actual_match = re.search(r'^def (\w+)\(', llm_code, re.MULTILINE)
+    # Skip dunder methods — find a regular function name instead
+    if actual_match and actual_match.group(1).startswith("__"):
+        all_defs = re.findall(r'^def (\w+)\(', llm_code, re.MULTILINE)
+        non_dunder = [d for d in all_defs if not d.startswith("__")]
+        if non_dunder:
+            actual_match = re.search(rf'^def ({re.escape(non_dunder[0])})\(', llm_code, re.MULTILINE)
+        else:
+            actual_match = None
 
     alias = ""
     if expected_match and actual_match:

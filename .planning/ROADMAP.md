@@ -163,7 +163,11 @@ Plans:
 
 ### Phase 23: Fix pre-processor output quality and performance
 
-**Goal:** Diagnose and fix the pre-processor pipeline producing bloated output (869K tokens from 172K input, 5x ratio) and degrading accuracy (73.6% pre_proc_sanitize vs 74.4% raw) — root-cause the prompt mangling, fix sanitize/compress prompt templates and fallback thresholds, and verify fixes improve both output quality and accuracy
+**Goal:** Diagnose and fix the pre-processor pipeline producing bloated output (869K tokens from 172K input, 5x ratio) and degrading accuracy (73.6% pre_proc_sanitize vs 74.4% raw) -- root-cause the prompt mangling, fix sanitize/compress prompt templates and fallback thresholds, and verify fixes improve both output quality and accuracy
 **Requirements**: TODO-preproc-sanitize-accuracy, TODO-preproc-performance-anomaly
 **Depends on:** Phase 22
-**Plans:** 0 plans
+**Plans:** 2 plans
+
+Plans:
+- [ ] 23-01-PLAN.md -- Noise-aware skip logic, anti-reasoning system prompts, token-ratio warning, tests
+- [ ] 23-02-PLAN.md -- Pre-processor model guidance docs, wizard update, re-pilot verification

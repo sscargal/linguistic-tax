@@ -161,41 +161,44 @@ This shows the pre-execution summary without making any API calls:
 === Pre-Execution Summary ===
 
 Models:
-Model                                               Items    Est. Cost
-------------------------------------------------  -------  -----------
-claude-sonnet-4-20250514                              400        $0.86
-gemini-1.5-pro                                        400        $0.28
-gpt-4o-2024-11-20                                     400        $0.60
-openrouter/nvidia/nemotron-3-super-120b-a12b:free     400        $0.00
+Model                                              Role     Input (per 1M)    Output (per 1M)
+-------------------------------------------------  -------  ----------------  -----------------
+openrouter/nvidia/nemotron-3-super-120b-a12b:free  target   $0.00             $0.00
+openrouter/nvidia/nemotron-3-nano-30b-a3b:free     preproc  $0.00             $0.00
 
-Interventions:
-Intervention                Items
---------------------------  -------
-pre_proc_sanitize               320
-pre_proc_sanitize_compress      320
-prompt_repetition               320
-raw                             320
-self_correct                    320
+Experiment Design:
+  Intervention                API Calls
+--------------------------  -----------
+compress_only                       100
+pre_proc_sanitize                   800
+pre_proc_sanitize_compress          800
+prompt_repetition                   800
+raw                                 800
+self_correct                        800
 
-Noise Conditions:
-Noise Type    Items
-----------  -------
-clean           400
-type_a_05       400
-type_a_10       400
-type_a_20       400
-type_b          400
+  Noise Type       API Calls
+---------------  -----------
+clean                    600
+type_a_10pct             500
+type_a_20pct             500
+type_a_5pct              500
+type_b_japanese          500
+type_b_mandarin          500
+type_b_mixed             500
+type_b_spanish           500
 
-Cost:
-  Target model cost:    $1.74
-  Pre-processor cost:   $0.04
-  Total estimated cost:  $1.78
+Estimates:
+                        API Calls         Tokens (in / out)       Cost (in + out)
+                     ────────────  ────────────────────────  ────────────────────
+  Target model:             4,100     216,070 / 291,510       $0.00 + $0.00 = $0.00
+  Pre-processor:            1,700      89,590 / 70,975        $0.00 + $0.00 = $0.00
+                     ────────────  ────────────────────────  ────────────────────
+  Total:                    5,800     305,660 / 362,485       $0.00
 
-Runtime:
-  Estimated runtime: 8m 0s
+  Estimated runtime: 34m 10s
 ```
 
-The exact models and costs shown depend on your configuration. If you configured fewer providers, fewer model rows will appear.
+The exact models, pricing, and token estimates depend on your configuration. Only configured providers appear in the output.
 
 ### Step 2: Run the pilot
 

@@ -382,8 +382,30 @@ def handle_inspect(args: argparse.Namespace) -> None:
     ).fetchone()
 
     if row is None:
-        print(f"Run not found: {args.run_id}")
         conn.close()
+        # Search across all sessions for this run_id
+        from src.session import list_sessions
+        for session in list_sessions():
+            if session["db_path"] == db_path_str:
+                continue  # Already checked
+            try:
+                conn = sqlite3.connect(session["db_path"])
+                conn.row_factory = sqlite3.Row
+                row = conn.execute(
+                    """SELECT e.*, g.fail_reason, g.extraction_method
+                       FROM experiment_runs e
+                       LEFT JOIN grading_details g ON e.run_id = g.run_id
+                       WHERE e.run_id = ?""",
+                    (args.run_id,),
+                ).fetchone()
+                if row is not None:
+                    break
+                conn.close()
+            except Exception:
+                continue
+
+    if row is None:
+        print(f"Run not found: {args.run_id}")
         return
 
     r = dict(row)

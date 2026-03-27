@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Configurable Models and Dynamic Pricing
 status: unknown
-stopped_at: Phase 23 context gathered
-last_updated: "2026-03-27T21:05:09.590Z"
-last_activity: "2026-03-27 - Completed quick task 260327-rhk: Per-session result tracking"
+stopped_at: Completed 23-01-PLAN.md
+last_updated: "2026-03-27T21:20:08.890Z"
+last_activity: 2026-03-27
 progress:
   total_phases: 8
   completed_phases: 7
-  total_plans: 19
-  completed_plans: 19
+  total_plans: 21
+  completed_plans: 20
 ---
 
 # Project State
@@ -20,12 +20,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-26)
 
 **Core value:** Produce rigorous, reproducible experimental data showing how prompt noise degrades LLM accuracy and whether automated prompt optimization recovers it
-**Current focus:** Phase 22 — experiment-all-caps-and-emphasis-formatting-effects-on-llm-attention
+**Current focus:** Phase 23 — fix-pre-processor-output-quality-and-performance
 
 ## Current Position
 
-Phase: 22 (experiment-all-caps-and-emphasis-formatting-effects-on-llm-attention) — COMPLETE
-Plan: 3 of 3 (all complete)
+Phase: 23 (fix-pre-processor-output-quality-and-performance) — EXECUTING
+Plan: 2 of 2
 
 ## Performance Metrics
 
@@ -66,6 +66,7 @@ Plan: 3 of 3 (all complete)
 | Phase 22 P01 | 3min | 2 tasks | 6 files |
 | Phase 22 P02 | 5min | 2 tasks | 6 files |
 | Phase 22 P03 | 7min | 2 tasks | 10 files |
+| Phase 23 P01 | 3min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -99,6 +100,9 @@ Recent decisions affecting current work:
 - [Phase 22]: Natural-language key terms instead of function identifiers to avoid breaking code in def lines
 - [Phase 22]: Direct _replace_terms bypasses code-block protection for HumanEval indented docstrings
 - [Phase 22]: Docstring content treated as natural language, not code, for emphasis conversion
+- [Phase 23]: noise_type parameter backward-compatible: empty string default preserves old caller behavior
+- [Phase 23]: Token-ratio warning is informational only, does not trigger fallback
+- [Phase 23]: Anti-reasoning directives added to system prompts, not user messages
 
 ### Pending Todos
 
@@ -142,7 +146,7 @@ Recent decisions affecting current work:
 
 ## Session Continuity
 
-Last activity: 2026-03-27 - Completed quick task 260327-rhk: Per-session result tracking
-Last session: 2026-03-27T21:05:09.588Z
-Stopped at: Phase 23 context gathered
-Resume file: .planning/phases/23-fix-pre-processor-output-quality-and-performance/23-CONTEXT.md
+Last activity: 2026-03-27
+Last session: 2026-03-27T21:20:08.888Z
+Stopped at: Completed 23-01-PLAN.md
+Resume file: None

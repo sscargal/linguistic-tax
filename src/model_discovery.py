@@ -320,6 +320,84 @@ class RateLimitInfo:
         return f"{minutes}m"
 
 
+def lookup_pricing(
+    model_id: str,
+    provider: str | None = None,
+    timeout: float = 5.0,
+) -> tuple[float | None, float | None]:
+    """Look up model pricing via OpenRouter's public model list.
+
+    OpenRouter exposes pricing for models from all providers (OpenAI,
+    Anthropic, Google, etc.) via its public /models endpoint. This
+    provides pricing data for providers whose own APIs don't expose it.
+
+    Args:
+        model_id: Model identifier (e.g., "gpt-5.1", "claude-sonnet-4-20250514").
+        provider: Optional provider hint for building the OpenRouter model ID.
+        timeout: HTTP timeout in seconds.
+
+    Returns:
+        Tuple of (input_price_per_1m, output_price_per_1m) in USD,
+        or (None, None) if pricing not found.
+    """
+    # Map provider to OpenRouter prefix
+    prefix_map = {
+        "openai": "openai/",
+        "anthropic": "anthropic/",
+        "google": "google/",
+    }
+
+    # Build candidate IDs to search for (exact, prefixed, and without date pin)
+    candidates = [model_id]
+    if provider and provider in prefix_map:
+        prefixed = prefix_map[provider] + model_id
+        candidates.insert(0, prefixed)
+
+    # Also try without date suffix (e.g., claude-sonnet-4-20250514 -> claude-sonnet-4)
+    import re
+    base = re.sub(r"-\d{8}$", "", model_id)
+    if base != model_id:
+        candidates.append(base)
+        if provider and provider in prefix_map:
+            candidates.append(prefix_map[provider] + base)
+
+    try:
+        resp = requests.get(
+            f"{OPENROUTER_BASE_URL}/models",
+            timeout=timeout,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+
+        models_by_id = {m["id"]: m for m in data.get("data", [])}
+
+        for candidate in candidates:
+            if candidate in models_by_id:
+                pricing = models_by_id[candidate].get("pricing", {})
+                prompt_price = pricing.get("prompt")
+                completion_price = pricing.get("completion")
+                inp = float(prompt_price) * 1_000_000 if prompt_price else None
+                out = float(completion_price) * 1_000_000 if completion_price else None
+                return (inp, out)
+
+        # Partial match: find models whose ID starts with a candidate
+        for candidate in candidates:
+            for or_id, or_model in models_by_id.items():
+                if or_id.startswith(candidate):
+                    pricing = or_model.get("pricing", {})
+                    prompt_price = pricing.get("prompt")
+                    completion_price = pricing.get("completion")
+                    inp = float(prompt_price) * 1_000_000 if prompt_price else None
+                    out = float(completion_price) * 1_000_000 if completion_price else None
+                    return (inp, out)
+
+        return (None, None)
+
+    except Exception:
+        logger.debug("Pricing lookup failed for %s", model_id)
+        return (None, None)
+
+
 _FREE_TIER_DAILY_LIMIT = 50  # OpenRouter free tier: 50 free-model requests/day
 
 

@@ -957,14 +957,26 @@ def _build_config_dict(models: list[dict]) -> dict:
     models_list: list[dict] = []
     seen_preproc: set[str] = set()
 
+    from src.model_discovery import lookup_pricing
+
+    # Cache for pricing lookups (avoid duplicate OpenRouter API calls)
+    pricing_cache: dict[str, tuple[float | None, float | None]] = {}
+
+    def _get_pricing(model_id: str, provider: str) -> tuple[float | None, float | None]:
+        """Get pricing from registry, then fall back to OpenRouter lookup."""
+        if model_id in registry._models:
+            return registry.get_price(model_id)
+        if model_id not in pricing_cache:
+            pricing_cache[model_id] = lookup_pricing(model_id, provider=provider)
+        return pricing_cache[model_id]
+
     for entry in models:
         provider = entry["provider"]
         target = entry["target_model"]
         preproc = entry["preproc_model"]
 
-        # Look up pricing from registry for known models
-        target_price = registry.get_price(target)
-        target_in_registry = target in registry._models
+        # Look up pricing (registry first, then OpenRouter)
+        target_price = _get_pricing(target, provider)
         target_mc = registry._models.get(target)
 
         target_entry: dict[str, Any] = {
@@ -972,8 +984,8 @@ def _build_config_dict(models: list[dict]) -> dict:
             "provider": provider,
             "role": "target",
             "preproc_model_id": preproc,
-            "input_price_per_1m": target_price[0] if target_in_registry else None,
-            "output_price_per_1m": target_price[1] if target_in_registry else None,
+            "input_price_per_1m": target_price[0],
+            "output_price_per_1m": target_price[1],
             "rate_limit_delay": target_mc.rate_limit_delay if target_mc else None,
         }
         models_list.append(target_entry)
@@ -981,8 +993,7 @@ def _build_config_dict(models: list[dict]) -> dict:
         # Preproc entry (deduplicated)
         if preproc not in seen_preproc:
             seen_preproc.add(preproc)
-            preproc_price = registry.get_price(preproc)
-            preproc_in_registry = preproc in registry._models
+            preproc_price = _get_pricing(preproc, provider)
             preproc_mc = registry._models.get(preproc)
 
             preproc_entry: dict[str, Any] = {
@@ -990,8 +1001,8 @@ def _build_config_dict(models: list[dict]) -> dict:
                 "provider": provider,
                 "role": "preproc",
                 "preproc_model_id": None,
-                "input_price_per_1m": preproc_price[0] if preproc_in_registry else None,
-                "output_price_per_1m": preproc_price[1] if preproc_in_registry else None,
+                "input_price_per_1m": preproc_price[0],
+                "output_price_per_1m": preproc_price[1],
                 "rate_limit_delay": preproc_mc.rate_limit_delay if preproc_mc else None,
             }
             models_list.append(preproc_entry)

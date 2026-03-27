@@ -32,13 +32,19 @@ AVG_TOKENS: dict[str, dict[str, int]] = {
     "gsm8k": {"input": 300, "output": 100},
 }
 
-# Estimated output/input ratio per benchmark (output tokens are harder
-# to predict — use benchmark-appropriate multipliers)
+# Estimated output/input ratio per benchmark. Models produce substantially
+# more output tokens than input — code includes implementations, imports,
+# docstrings; math includes chain-of-thought reasoning steps.
+# Calibrated from GPT-5.1 pilot run (actual ratio ~2.6x overall).
 _OUTPUT_RATIO: dict[str, float] = {
-    "humaneval": 1.5,  # Code generation: output typically longer than prompt
-    "mbpp": 2.0,       # Short prompts, longer code output
-    "gsm8k": 1.0,      # Math: output roughly matches input length
+    "humaneval": 3.0,  # Code generation: full function implementations
+    "mbpp": 4.0,       # Short prompts but full code output
+    "gsm8k": 2.0,      # Math with chain-of-thought reasoning
 }
+
+# Estimated seconds per API call (rate-limit delay + model response time).
+# Rate-limit delay alone underestimates by ~10x. Calibrated from pilot data.
+_SECONDS_PER_CALL: float = 4.5
 
 PREPROC_INTERVENTIONS: set[str] = {
     "pre_proc_sanitize",
@@ -216,10 +222,11 @@ def estimate_cost(
 
 
 def estimate_runtime(items: list[dict[str, Any]]) -> float:
-    """Estimate wall-clock runtime from rate-limit delays.
+    """Estimate wall-clock runtime including API response time.
 
-    Sums per-model delay times item count to produce a lower bound on
-    execution time (assumes sequential processing per model).
+    Uses a calibrated per-call estimate that includes both rate-limit
+    delay and model response time. Pre-processor calls for applicable
+    interventions are counted separately.
 
     Args:
         items: List of experiment matrix item dicts with "model" key.
@@ -227,12 +234,11 @@ def estimate_runtime(items: list[dict[str, Any]]) -> float:
     Returns:
         Estimated wall-clock seconds.
     """
-    model_counts: Counter[str] = Counter(item["model"] for item in items)
-    total_seconds = 0.0
-    for model, count in model_counts.items():
-        delay = registry.get_delay(model)
-        total_seconds += count * delay
-    return total_seconds
+    target_calls = len(items)
+    preproc_calls = sum(
+        1 for item in items if item["intervention"] in PREPROC_INTERVENTIONS
+    )
+    return (target_calls + preproc_calls) * _SECONDS_PER_CALL
 
 
 def count_completed(

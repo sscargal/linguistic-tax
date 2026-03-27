@@ -65,8 +65,8 @@ class TestCostEstimation:
         """Single raw HumanEval item has correct target cost and zero preproc."""
         items = [_make_item()]
         result = estimate_cost(items, prompts_path=self._NO_PROMPTS)
-        # Fallback: input=500, output=int(500*1.5)=750
-        expected_target = registry.compute_cost("claude-sonnet-4-20250514", 500, 750)
+        # Fallback: input=500, output=int(500*3.0)=1500
+        expected_target = registry.compute_cost("claude-sonnet-4-20250514", 500, 1500)
         assert result["target_cost"] == pytest.approx(expected_target)
         assert result["preproc_cost"] == 0.0
         assert result["total_cost"] == pytest.approx(expected_target)
@@ -83,10 +83,10 @@ class TestCostEstimation:
         assert result["preproc_cost"] == pytest.approx(expected_preproc)
 
     def test_estimate_cost_gsm8k_uses_different_tokens(self):
-        """GSM8K items use fallback 300 input, output_ratio 1.0 -> 300 output."""
+        """GSM8K items use fallback 300 input, output_ratio 2.0 -> 600 output."""
         items = [_make_item(prompt_id="gsm8k_1")]
         result = estimate_cost(items, prompts_path=self._NO_PROMPTS)
-        expected = registry.compute_cost("claude-sonnet-4-20250514", 300, 300)
+        expected = registry.compute_cost("claude-sonnet-4-20250514", 300, 600)
         assert result["target_cost"] == pytest.approx(expected)
 
     def test_estimate_cost_empty_list(self):
@@ -147,23 +147,18 @@ class TestCostEstimation:
 class TestRuntimeEstimation:
     """Tests for estimate_runtime function."""
 
-    def test_estimate_runtime_single_model(self):
-        """10 claude-sonnet items at 0.2s each = 2.0 seconds."""
+    def test_estimate_runtime_counts_all_calls(self):
+        """10 raw items = 10 target calls at 4.5s each = 45s."""
         items = [_make_item() for _ in range(10)]
         result = estimate_runtime(items)
-        expected = 10 * registry.get_delay("claude-sonnet-4-20250514")
-        assert result == pytest.approx(expected)
+        assert result == pytest.approx(10 * 4.5)
 
-    def test_estimate_runtime_mixed_models(self):
-        """Mixed models sum per-model delays correctly."""
-        items = [_make_item(model="claude-sonnet-4-20250514") for _ in range(5)]
-        items += [_make_item(model="gemini-1.5-pro") for _ in range(5)]
+    def test_estimate_runtime_includes_preproc_calls(self):
+        """5 raw + 5 preproc items = 10 target + 5 preproc = 15 calls."""
+        items = [_make_item() for _ in range(5)]
+        items += [_make_item(intervention="pre_proc_sanitize") for _ in range(5)]
         result = estimate_runtime(items)
-        expected = (
-            5 * registry.get_delay("claude-sonnet-4-20250514")
-            + 5 * registry.get_delay("gemini-1.5-pro")
-        )
-        assert result == pytest.approx(expected)
+        assert result == pytest.approx(15 * 4.5)
 
     def test_estimate_runtime_empty_list(self):
         """Empty item list returns 0.0."""

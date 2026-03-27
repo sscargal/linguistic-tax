@@ -203,6 +203,15 @@ def build_cli() -> argparse.ArgumentParser:
     )
     pilot_parser.set_defaults(func=handle_pilot)
 
+    # --- report ---
+    report_parser = subparsers.add_parser(
+        "report", help="Show post-run report with actual metrics"
+    )
+    report_parser.add_argument(
+        "--db", type=str, default=None, help="Override database path"
+    )
+    report_parser.set_defaults(func=handle_report)
+
     # --- argcomplete ---
     try:
         import argcomplete
@@ -212,6 +221,19 @@ def build_cli() -> argparse.ArgumentParser:
         pass
 
     return parser
+
+
+def handle_report(args: argparse.Namespace) -> None:
+    """Show post-run report with actual metrics from results database."""
+    from src.config_manager import load_config
+    from src.db import init_database
+    from src.execution_summary import format_post_run_report
+
+    config = load_config()
+    db_path = args.db if args.db else config.results_db_path
+    conn = init_database(db_path)
+    print(format_post_run_report(conn))
+    conn.close()
 
 
 def main() -> None:

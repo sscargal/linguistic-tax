@@ -450,3 +450,208 @@ def save_execution_plan(
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(plan, indent=2) + "\n")
     logger.debug("Execution plan saved to %s", output_path)
+
+
+def format_post_run_report(conn: Any) -> str:
+    """Generate a post-run report comparing actual metrics against estimates.
+
+    Queries results.db for completed runs and summarizes actual token counts,
+    costs, timing, and pass rates. Shows per-model and per-intervention
+    breakdowns.
+
+    Args:
+        conn: An open SQLite database connection.
+
+    Returns:
+        Multi-line formatted report string.
+    """
+    import sqlite3
+
+    conn.row_factory = sqlite3.Row
+    lines: list[str] = []
+    lines.append("=== Post-Run Report ===")
+    lines.append("")
+
+    # Overall stats
+    row = conn.execute("""
+        SELECT
+            COUNT(*) as total,
+            SUM(CASE WHEN status='completed' THEN 1 ELSE 0 END) as completed,
+            SUM(CASE WHEN status='failed' THEN 1 ELSE 0 END) as failed,
+            SUM(CASE WHEN status='pending' THEN 1 ELSE 0 END) as pending
+        FROM experiment_runs
+    """).fetchone()
+
+    total = row["total"]
+    completed = row["completed"]
+    failed = row["failed"]
+    pending_count = row["pending"]
+
+    if total == 0:
+        lines.append("No runs found in database.")
+        return "\n".join(lines)
+
+    lines.append(f"Runs: {completed:,} completed, {failed:,} failed, {pending_count:,} pending ({total:,} total)")
+    lines.append("")
+
+    # Per-model breakdown
+    model_rows = conn.execute("""
+        SELECT
+            model,
+            COUNT(*) as calls,
+            SUM(CASE WHEN pass_fail=1 THEN 1 ELSE 0 END) as passed,
+            COALESCE(SUM(prompt_tokens), 0) as input_tokens,
+            COALESCE(SUM(completion_tokens), 0) as output_tokens,
+            COALESCE(SUM(main_model_input_cost_usd), 0) + COALESCE(SUM(main_model_output_cost_usd), 0) as model_cost,
+            AVG(ttft_ms) as avg_ttft,
+            AVG(ttlt_ms) as avg_ttlt
+        FROM experiment_runs
+        WHERE status='completed'
+        GROUP BY model
+        ORDER BY model
+    """).fetchall()
+
+    if model_rows:
+        model_table = []
+        for r in model_rows:
+            pass_rate = (r["passed"] / r["calls"] * 100) if r["calls"] > 0 else 0
+            model_table.append([
+                r["model"],
+                "target",
+                f"{r['calls']:,}",
+                f"{r['input_tokens']:,} / {r['output_tokens']:,}",
+                f"${r['model_cost']:.4f}",
+                f"{pass_rate:.1f}%",
+            ])
+
+        # Pre-processor stats
+        preproc_rows = conn.execute("""
+            SELECT
+                preproc_model,
+                COUNT(*) as calls,
+                COALESCE(SUM(preproc_input_tokens), 0) as input_tokens,
+                COALESCE(SUM(preproc_output_tokens), 0) as output_tokens,
+                COALESCE(SUM(preproc_cost_usd), 0) as preproc_cost,
+                AVG(preproc_ttft_ms) as avg_ttft,
+                AVG(preproc_ttlt_ms) as avg_ttlt
+            FROM experiment_runs
+            WHERE status='completed' AND preproc_model IS NOT NULL
+            GROUP BY preproc_model
+            ORDER BY preproc_model
+        """).fetchall()
+
+        for r in preproc_rows:
+            model_table.append([
+                f"  {r['preproc_model']}",
+                "preproc",
+                f"{r['calls']:,}",
+                f"{r['input_tokens']:,} / {r['output_tokens']:,}",
+                f"${r['preproc_cost']:.4f}",
+                "--",
+            ])
+
+        lines.append("Models:")
+        lines.append(tabulate(
+            model_table,
+            headers=["Model", "Role", "API Calls", "Tokens (in/out)", "Cost", "Pass Rate"],
+            tablefmt="simple",
+        ))
+        lines.append("")
+
+    # Timing summary
+    timing_row = conn.execute("""
+        SELECT
+            AVG(ttft_ms) as avg_ttft,
+            AVG(ttlt_ms) as avg_ttlt,
+            MIN(ttft_ms) as min_ttft,
+            MAX(ttft_ms) as max_ttft,
+            AVG(preproc_ttft_ms) as avg_preproc_ttft,
+            AVG(preproc_ttlt_ms) as avg_preproc_ttlt
+        FROM experiment_runs
+        WHERE status='completed'
+    """).fetchone()
+
+    if timing_row and timing_row["avg_ttft"] is not None:
+        lines.append("Timing (completed runs):")
+        lines.append(f"  Target TTFT:       avg {timing_row['avg_ttft']:.0f}ms  (min {timing_row['min_ttft']:.0f}ms, max {timing_row['max_ttft']:.0f}ms)")
+        lines.append(f"  Target TTLT:       avg {timing_row['avg_ttlt']:.0f}ms")
+        if timing_row["avg_preproc_ttft"] is not None:
+            lines.append(f"  Pre-proc TTFT:     avg {timing_row['avg_preproc_ttft']:.0f}ms")
+            lines.append(f"  Pre-proc TTLT:     avg {timing_row['avg_preproc_ttlt']:.0f}ms")
+        lines.append("")
+
+    # Per-intervention breakdown
+    intervention_rows = conn.execute("""
+        SELECT
+            intervention,
+            COUNT(*) as calls,
+            SUM(CASE WHEN pass_fail=1 THEN 1 ELSE 0 END) as passed,
+            COALESCE(SUM(total_cost_usd), 0) as cost
+        FROM experiment_runs
+        WHERE status='completed'
+        GROUP BY intervention
+        ORDER BY intervention
+    """).fetchall()
+
+    if intervention_rows:
+        int_table = []
+        for r in intervention_rows:
+            pass_rate = (r["passed"] / r["calls"] * 100) if r["calls"] > 0 else 0
+            int_table.append([
+                r["intervention"], f"{r['calls']:,}", f"{pass_rate:.1f}%", f"${r['cost']:.4f}",
+            ])
+        lines.append("Interventions:")
+        lines.append(tabulate(
+            int_table,
+            headers=["Intervention", "API Calls", "Pass Rate", "Cost"],
+            tablefmt="simple",
+        ))
+        lines.append("")
+
+    # Per-noise breakdown
+    noise_rows = conn.execute("""
+        SELECT
+            noise_type,
+            COUNT(*) as calls,
+            SUM(CASE WHEN pass_fail=1 THEN 1 ELSE 0 END) as passed
+        FROM experiment_runs
+        WHERE status='completed'
+        GROUP BY noise_type
+        ORDER BY noise_type
+    """).fetchall()
+
+    if noise_rows:
+        noise_table = []
+        for r in noise_rows:
+            pass_rate = (r["passed"] / r["calls"] * 100) if r["calls"] > 0 else 0
+            noise_table.append([r["noise_type"], f"{r['calls']:,}", f"{pass_rate:.1f}%"])
+        lines.append("Noise Conditions:")
+        lines.append(tabulate(
+            noise_table,
+            headers=["Noise Type", "API Calls", "Pass Rate"],
+            tablefmt="simple",
+        ))
+        lines.append("")
+
+    # Cost totals
+    cost_row = conn.execute("""
+        SELECT
+            COALESCE(SUM(main_model_input_cost_usd), 0) + COALESCE(SUM(main_model_output_cost_usd), 0) as target_cost,
+            COALESCE(SUM(preproc_cost_usd), 0) as preproc_cost,
+            COALESCE(SUM(total_cost_usd), 0) as total_cost,
+            COALESCE(SUM(prompt_tokens), 0) as total_input_tokens,
+            COALESCE(SUM(completion_tokens), 0) as total_output_tokens,
+            COALESCE(SUM(preproc_input_tokens), 0) as preproc_input_tokens,
+            COALESCE(SUM(preproc_output_tokens), 0) as preproc_output_tokens
+        FROM experiment_runs
+        WHERE status='completed'
+    """).fetchone()
+
+    lines.append("Actual Totals:")
+    lines.append(f"  Target tokens:     {cost_row['total_input_tokens']:,} in / {cost_row['total_output_tokens']:,} out")
+    lines.append(f"  Pre-proc tokens:   {cost_row['preproc_input_tokens']:,} in / {cost_row['preproc_output_tokens']:,} out")
+    lines.append(f"  Target cost:       ${cost_row['target_cost']:.4f}")
+    lines.append(f"  Pre-proc cost:     ${cost_row['preproc_cost']:.4f}")
+    lines.append(f"  Total cost:        ${cost_row['total_cost']:.4f}")
+
+    return "\n".join(lines)

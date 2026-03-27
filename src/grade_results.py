@@ -92,8 +92,9 @@ _UNIT_PATTERN = re.compile(
 def extract_code(response: str) -> str:
     """Extract Python code from LLM response, handling markdown fences.
 
-    Uses the LAST code block if multiple are present (LLMs often iterate).
-    Falls back to the full response text if no fences found.
+    Prefers the code block containing a function definition (``def``).
+    If multiple blocks have definitions, uses the last one (LLMs often
+    iterate). Falls back to the last block, then the full response.
 
     Args:
         response: Raw LLM response text.
@@ -102,9 +103,15 @@ def extract_code(response: str) -> str:
         Extracted code string, stripped of markdown fences.
     """
     blocks = re.findall(r'```(?:python)?\s*\n(.*?)```', response, re.DOTALL)
-    if blocks:
-        return blocks[-1].strip()
-    return response.strip()
+    if not blocks:
+        return response.strip()
+
+    # Prefer blocks containing function definitions
+    def_blocks = [b for b in blocks if re.search(r'^def \w+\(', b, re.MULTILINE)]
+    if def_blocks:
+        return def_blocks[-1].strip()
+
+    return blocks[-1].strip()
 
 
 # ---------------------------------------------------------------------------

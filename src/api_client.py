@@ -8,6 +8,7 @@ import logging
 import os
 import time
 from dataclasses import dataclass
+from typing import Any
 
 import anthropic
 import openai
@@ -241,28 +242,28 @@ def _call_openai(
         messages.append({"role": "system", "content": system})
     messages.append({"role": "user", "content": user_message})
 
+    # Build params — some models reject certain parameters
+    params: dict[str, Any] = {
+        "model": model,
+        "messages": messages,
+        "max_completion_tokens": max_tokens,
+        "stream": True,
+        "stream_options": {"include_usage": True},
+    }
+    if temperature is not None:
+        params["temperature"] = temperature
+
     try:
-        stream = client.chat.completions.create(
-            model=model,
-            messages=messages,
-            max_completion_tokens=max_tokens,
-            temperature=temperature,
-            stream=True,
-            stream_options={"include_usage": True},
-        )
+        stream = client.chat.completions.create(**params)
     except openai.BadRequestError as e:
-        if "max_completion_tokens" in str(e):
-            # Older model doesn't support max_completion_tokens
-            stream = client.chat.completions.create(
-                model=model,
-                messages=messages,
-                max_tokens=max_tokens,
-                temperature=temperature,
-                stream=True,
-                stream_options={"include_usage": True},
-            )
-        else:
-            raise
+        err_msg = str(e)
+        # Retry with adjusted params based on error
+        if "max_completion_tokens" in err_msg:
+            params.pop("max_completion_tokens")
+            params["max_tokens"] = max_tokens
+        if "temperature" in err_msg:
+            params.pop("temperature", None)
+        stream = client.chat.completions.create(**params)
 
     usage = None
     for chunk in stream:
@@ -327,27 +328,26 @@ def _call_openrouter(
         messages.append({"role": "system", "content": system})
     messages.append({"role": "user", "content": user_message})
 
+    params: dict[str, Any] = {
+        "model": api_model,
+        "messages": messages,
+        "max_completion_tokens": max_tokens,
+        "stream": True,
+        "stream_options": {"include_usage": True},
+    }
+    if temperature is not None:
+        params["temperature"] = temperature
+
     try:
-        stream = client.chat.completions.create(
-            model=api_model,
-            messages=messages,
-            max_completion_tokens=max_tokens,
-            temperature=temperature,
-            stream=True,
-            stream_options={"include_usage": True},
-        )
+        stream = client.chat.completions.create(**params)
     except openai.BadRequestError as e:
-        if "max_completion_tokens" in str(e):
-            stream = client.chat.completions.create(
-                model=api_model,
-                messages=messages,
-                max_tokens=max_tokens,
-                temperature=temperature,
-                stream=True,
-                stream_options={"include_usage": True},
-            )
-        else:
-            raise
+        err_msg = str(e)
+        if "max_completion_tokens" in err_msg:
+            params.pop("max_completion_tokens")
+            params["max_tokens"] = max_tokens
+        if "temperature" in err_msg:
+            params.pop("temperature", None)
+        stream = client.chat.completions.create(**params)
 
     usage = None
     for chunk in stream:

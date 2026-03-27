@@ -405,8 +405,8 @@ def confirm_execution(
 
     try:
         while True:
-            choice = input_fn("[Y]es to run, [N]o to abort, [M]odify filters: ").strip().lower()
-            if choice in ("y", "yes"):
+            choice = input_fn("[Y]es to run, [N]o to abort, [M]odify filters (default: Y): ").strip().lower()
+            if choice in ("", "y", "yes"):
                 return "yes"
             elif choice in ("n", "no"):
                 return "no"

@@ -302,6 +302,7 @@ def run_pilot(
                 limit=None,
                 retry_failed=False,
                 dry_run=False,
+                yes=True,  # Pilot already confirmed — skip engine's gate
                 db=db_path,
             )
             run_engine(args, config=pilot_config)

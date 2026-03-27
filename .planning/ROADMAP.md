@@ -160,3 +160,10 @@ Plans:
 - [ ] 22-01-PLAN.md -- Emphasis converter module, config.py INTERVENTIONS, run_experiment.py routing, tests
 - [ ] 22-02-PLAN.md -- Cluster A: select 20 prompts, identify key terms, generate bold/CAPS/quotes variants, 400-item matrix
 - [ ] 22-03-PLAN.md -- Clusters B+C: select prompts, generate instruction emphasis and capitalization variants, 700-item matrix
+
+### Phase 23: Fix pre-processor output quality and performance
+
+**Goal:** Diagnose and fix the pre-processor pipeline producing bloated output (869K tokens from 172K input, 5x ratio) and degrading accuracy (73.6% pre_proc_sanitize vs 74.4% raw) — root-cause the prompt mangling, fix sanitize/compress prompt templates and fallback thresholds, and verify fixes improve both output quality and accuracy
+**Requirements**: TODO-preproc-sanitize-accuracy, TODO-preproc-performance-anomaly
+**Depends on:** Phase 22
+**Plans:** 0 plans

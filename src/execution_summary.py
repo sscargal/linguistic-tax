@@ -364,6 +364,37 @@ def format_summary(
     lines.append("")
     lines.append(f"  Estimated runtime: {_format_duration(runtime_seconds)}")
 
+    # Check provider rate limits for configured models
+    configured_providers = {
+        registry._models[m].provider
+        for m in set(item["model"] for item in items)
+        if m in registry._models
+    }
+
+    if "openrouter" in configured_providers:
+        from src.model_discovery import check_openrouter_limits
+
+        limit_info = check_openrouter_limits()
+        if limit_info.error is None and limit_info.remaining is not None:
+            total_calls = total_target_calls + total_preproc_calls
+            reset_str = f" (resets in {limit_info.time_until_reset})" if limit_info.time_until_reset else ""
+            lines.append("")
+            if limit_info.remaining < total_calls:
+                lines.append(
+                    f"  WARNING: OpenRouter limit: {limit_info.remaining} remaining "
+                    f"of {limit_info.limit}{reset_str}"
+                )
+                lines.append(f"  This run requires {total_calls:,} API calls — will not complete.")
+                lines.append("  Options:")
+                lines.append("    - Add credits at openrouter.ai to increase limit")
+                lines.append("    - Run a smaller subset with --limit")
+                lines.append("    - Wait for reset")
+            else:
+                lines.append(
+                    f"  OpenRouter limit: {limit_info.remaining} remaining "
+                    f"of {limit_info.limit}{reset_str} — sufficient"
+                )
+
     return "\n".join(lines)
 
 

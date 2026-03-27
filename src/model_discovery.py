@@ -8,7 +8,8 @@ Falls back to registry data when provider queries fail.
 import logging
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
 
 import anthropic
 import openai
@@ -292,3 +293,90 @@ def _get_fallback_models(provider: str) -> list[DiscoveredModel]:
                 )
             )
     return fallback
+
+
+@dataclass
+class RateLimitInfo:
+    """Rate limit status from a provider API."""
+
+    provider: str
+    limit: int | None = None
+    remaining: int | None = None
+    reset_time: datetime | None = None
+    error: str | None = None
+
+    @property
+    def time_until_reset(self) -> str | None:
+        """Human-readable time until reset, or None if unknown."""
+        if self.reset_time is None:
+            return None
+        delta = self.reset_time - datetime.now(timezone.utc)
+        if delta.total_seconds() <= 0:
+            return "now"
+        hours = int(delta.total_seconds() // 3600)
+        minutes = int((delta.total_seconds() % 3600) // 60)
+        if hours > 0:
+            return f"{hours}h {minutes}m"
+        return f"{minutes}m"
+
+
+_FREE_TIER_DAILY_LIMIT = 50  # OpenRouter free tier: 50 free-model requests/day
+
+
+def check_openrouter_limits(timeout: float = 5.0) -> RateLimitInfo:
+    """Query OpenRouter rate limit and usage via GET /api/v1/auth/key.
+
+    For free tier users, OpenRouter limits free-model requests to 50/day.
+    This endpoint returns usage counts and tier info from the response body.
+
+    Args:
+        timeout: HTTP timeout in seconds.
+
+    Returns:
+        RateLimitInfo with current limit, remaining, and reset time.
+    """
+    api_key = os.environ.get("OPENROUTER_API_KEY", "")
+    if not api_key:
+        return RateLimitInfo(provider="openrouter", error="OPENROUTER_API_KEY not set")
+
+    try:
+        resp = requests.get(
+            f"{OPENROUTER_BASE_URL}/auth/key",
+            headers={"Authorization": f"Bearer {api_key}"},
+            timeout=timeout,
+        )
+        resp.raise_for_status()
+
+        data = resp.json().get("data", {})
+        info = RateLimitInfo(provider="openrouter")
+
+        is_free = data.get("is_free_tier", False)
+        usage_daily = data.get("usage_daily", 0)
+
+        # Check explicit limit from API
+        api_limit = data.get("limit")
+        limit_remaining = data.get("limit_remaining")
+
+        if api_limit is not None:
+            info.limit = int(api_limit)
+            if limit_remaining is not None:
+                info.remaining = int(limit_remaining)
+            else:
+                info.remaining = int(api_limit) - int(usage_daily)
+        elif is_free:
+            # Free tier has implicit daily limit for free models
+            info.limit = _FREE_TIER_DAILY_LIMIT
+            info.remaining = max(0, _FREE_TIER_DAILY_LIMIT - int(usage_daily))
+
+        # Parse reset time if provided
+        limit_reset = data.get("limit_reset")
+        if limit_reset:
+            try:
+                info.reset_time = datetime.fromisoformat(limit_reset)
+            except (ValueError, TypeError):
+                pass
+
+        return info
+
+    except Exception as e:
+        return RateLimitInfo(provider="openrouter", error=str(e))

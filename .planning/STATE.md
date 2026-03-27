@@ -104,7 +104,6 @@ Recent decisions affecting current work:
 
 - Investigate fine-tuned small LM as pre-processor (general)
 - Experiment with provider prompt best practices as preprocessing (general)
-- Experiment idea: Don't shout at your LLM — all-caps impact (general)
 
 ### Roadmap Evolution
 

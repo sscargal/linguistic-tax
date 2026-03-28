@@ -110,9 +110,10 @@ Recent decisions affecting current work:
 
 - Investigate fine-tuned small LM as pre-processor (general)
 - Experiment with provider prompt best practices as preprocessing (general)
-- Add benchmark breakdown to propt report (general)
-- Investigate pre-processor performance anomaly — slow TTFT, high output (general)
-- Investigate why pre_proc_sanitize hurts accuracy vs raw (general)
+- Fix triple pre-execution summary in pilot run (general)
+- Fix cost estimation output tokens 4x underestimate (general)
+- Fix runtime estimate underestimate (general)
+- Investigate compress_only 100 calls vs 800 for other interventions (general)
 
 ### Roadmap Evolution
 

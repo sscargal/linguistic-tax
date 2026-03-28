@@ -277,7 +277,7 @@ class TestComputeDerivedEdgeCases:
             "repetition": 1,
             "pass_fail": 1,
             "prompt_tokens": 100,
-            "optimized_tokens": 85,
+            "preproc_output_tokens": 85,
             "completion_tokens": 50,
             "total_cost_usd": 0.001,
             "preproc_cost_usd": 0.0,

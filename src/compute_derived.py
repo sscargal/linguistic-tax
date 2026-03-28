@@ -211,11 +211,14 @@ def compute_derived_metrics(
         # Cost
         mean_total_cost = group["total_cost_usd"].mean()
 
-        # Token savings
+        # Token savings: compare prompt tokens to preproc output tokens
         prompt_tokens = group["prompt_tokens"]
-        optimized_tokens = group["optimized_tokens"].fillna(group["prompt_tokens"])
-        savings = (prompt_tokens - optimized_tokens).mean()
-        token_savings = int(round(savings))
+        if "preproc_output_tokens" in group.columns:
+            preproc_out = group["preproc_output_tokens"].fillna(group["prompt_tokens"])
+            savings = (prompt_tokens - preproc_out).mean()
+            token_savings = int(round(savings))
+        else:
+            token_savings = 0
         net_token_cost = int(round(prompt_tokens.mean())) - token_savings
 
         conn.execute(
@@ -345,7 +348,7 @@ def compute_cost_rollups(db_path: str) -> list[dict[str, Any]]:
         "SELECT model, noise_type, intervention, "
         "total_cost_usd, preproc_cost_usd, "
         "main_model_input_cost_usd, main_model_output_cost_usd, "
-        "prompt_tokens, optimized_tokens "
+        "prompt_tokens, preproc_output_tokens "
         "FROM experiment_runs WHERE status = 'completed'",
         conn,
     )
@@ -363,8 +366,8 @@ def compute_cost_rollups(db_path: str) -> list[dict[str, Any]]:
             group["main_model_input_cost_usd"].fillna(0)
             + group["main_model_output_cost_usd"].fillna(0)
         )
-        optimized = group["optimized_tokens"].fillna(group["prompt_tokens"])
-        token_savings = (group["prompt_tokens"] - optimized).mean()
+        preproc_out = group["preproc_output_tokens"].fillna(group["prompt_tokens"])
+        token_savings = (group["prompt_tokens"] - preproc_out).mean()
 
         rollups.append({
             "model": model,

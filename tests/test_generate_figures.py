@@ -55,7 +55,7 @@ def synthetic_db(tmp_path):
             model TEXT NOT NULL,
             repetition INTEGER NOT NULL,
             prompt_tokens INTEGER,
-            optimized_tokens INTEGER,
+            preproc_output_tokens INTEGER,
             completion_tokens INTEGER,
             pass_fail INTEGER,
             total_cost_usd REAL,
@@ -106,7 +106,7 @@ def synthetic_db(tmp_path):
                             "INSERT INTO experiment_runs "
                             "(run_id, prompt_id, benchmark, noise_type, noise_level, "
                             "intervention, model, repetition, prompt_tokens, "
-                            "optimized_tokens, completion_tokens, pass_fail, "
+                            "preproc_output_tokens, completion_tokens, pass_fail, "
                             "total_cost_usd, preproc_cost_usd, "
                             "main_model_input_cost_usd, main_model_output_cost_usd, "
                             "status, ttft_ms, ttlt_ms) "

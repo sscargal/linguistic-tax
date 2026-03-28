@@ -66,8 +66,8 @@ class TestCostEstimation:
         """Single raw HumanEval item has correct target cost and zero preproc."""
         items = [_make_item()]
         result = estimate_cost(items, prompts_path=self._NO_PROMPTS)
-        # Fallback: input=500, output=int(500*3.0)=1500
-        expected_target = registry.compute_cost("claude-sonnet-4-20250514", 500, 1500)
+        # Fallback: input=500, output=int(500*8.0)=4000
+        expected_target = registry.compute_cost("claude-sonnet-4-20250514", 500, 4000)
         assert result["target_cost"] == pytest.approx(expected_target)
         assert result["preproc_cost"] == 0.0
         assert result["total_cost"] == pytest.approx(expected_target)
@@ -84,10 +84,10 @@ class TestCostEstimation:
         assert result["preproc_cost"] == pytest.approx(expected_preproc)
 
     def test_estimate_cost_gsm8k_uses_different_tokens(self):
-        """GSM8K items use fallback 300 input, output_ratio 2.0 -> 600 output."""
+        """GSM8K items use fallback 300 input, output_ratio 5.0 -> 1500 output."""
         items = [_make_item(prompt_id="gsm8k_1")]
         result = estimate_cost(items, prompts_path=self._NO_PROMPTS)
-        expected = registry.compute_cost("claude-sonnet-4-20250514", 300, 600)
+        expected = registry.compute_cost("claude-sonnet-4-20250514", 300, 1500)
         assert result["target_cost"] == pytest.approx(expected)
 
     def test_estimate_cost_empty_list(self):
@@ -149,17 +149,17 @@ class TestRuntimeEstimation:
     """Tests for estimate_runtime function."""
 
     def test_estimate_runtime_counts_all_calls(self):
-        """10 raw items = 10 target calls at 4.5s each = 45s."""
+        """10 raw items = 10 target calls at 6.0s each = 60s."""
         items = [_make_item() for _ in range(10)]
         result = estimate_runtime(items)
-        assert result == pytest.approx(10 * 4.5)
+        assert result == pytest.approx(10 * 6.0)
 
     def test_estimate_runtime_includes_preproc_calls(self):
         """5 raw + 5 preproc items = 10 target + 5 preproc = 15 calls."""
         items = [_make_item() for _ in range(5)]
         items += [_make_item(intervention="pre_proc_sanitize") for _ in range(5)]
         result = estimate_runtime(items)
-        assert result == pytest.approx(15 * 4.5)
+        assert result == pytest.approx(15 * 6.0)
 
     def test_estimate_runtime_empty_list(self):
         """Empty item list returns 0.0."""

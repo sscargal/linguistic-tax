@@ -424,7 +424,11 @@ def _process_item(
 # Engine
 # ---------------------------------------------------------------------------
 
-def run_engine(args: argparse.Namespace, config: ExperimentConfig | None = None) -> None:
+def run_engine(
+    args: argparse.Namespace,
+    config: ExperimentConfig | None = None,
+    show_summary: bool = True,
+) -> None:
     """Main execution engine loop.
 
     Loads the experiment matrix, filters and orders items, then processes
@@ -433,6 +437,8 @@ def run_engine(args: argparse.Namespace, config: ExperimentConfig | None = None)
     Args:
         args: Parsed CLI arguments.
         config: Optional experiment configuration (defaults to load_config()).
+        show_summary: If False, skip printing the pre-execution summary.
+            Used when the caller (e.g., pilot) has already shown it.
     """
     if config is None:
         from src.config_manager import load_config
@@ -532,39 +538,41 @@ def run_engine(args: argparse.Namespace, config: ExperimentConfig | None = None)
     runtime_seconds = estimate_runtime(pending)
     completed_count = len(completed_runs)
     total_count = len(matrix)
-    summary = format_summary(
-        pending, completed_count, total_count, cost_estimate, runtime_seconds
-    )
 
-    # --dry-run: show summary and exit
-    if args.dry_run:
-        print(summary)
-        conn.close()
-        return
-
-    # Confirmation prompt
-    yes_flag = getattr(args, "yes", False)
-    budget_flag = getattr(args, "budget", None)
-
-    decision = confirm_execution(
-        summary,
-        yes=yes_flag,
-        budget=budget_flag,
-        estimated_cost=cost_estimate["total_cost"],
-    )
-
-    if decision == "no":
-        print("Aborted.")
-        conn.close()
-        return
-    elif decision == "modify":
-        print(
-            "Modify filters by re-running with different "
-            "--model, --limit, or --intervention flags."
+    if show_summary:
+        summary = format_summary(
+            pending, completed_count, total_count, cost_estimate, runtime_seconds
         )
-        print("Use `propt set-config` for full configuration changes.")
-        conn.close()
-        return
+
+        # --dry-run: show summary and exit
+        if args.dry_run:
+            print(summary)
+            conn.close()
+            return
+
+        # Confirmation prompt
+        yes_flag = getattr(args, "yes", False)
+        budget_flag = getattr(args, "budget", None)
+
+        decision = confirm_execution(
+            summary,
+            yes=yes_flag,
+            budget=budget_flag,
+            estimated_cost=cost_estimate["total_cost"],
+        )
+
+        if decision == "no":
+            print("Aborted.")
+            conn.close()
+            return
+        elif decision == "modify":
+            print(
+                "Modify filters by re-running with different "
+                "--model, --limit, or --intervention flags."
+            )
+            print("Use `propt set-config` for full configuration changes.")
+            conn.close()
+            return
 
     # Save execution plan before running
     filters: dict[str, Any] = {"model": args.model, "limit": args.limit}

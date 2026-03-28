@@ -319,7 +319,7 @@ def run_pilot(
                 yes=True,  # Pilot already confirmed — skip engine's gate
                 db=actual_db_path,  # Pass db to bypass engine's own session creation
             )
-            run_engine(args, config=pilot_config)
+            run_engine(args, config=pilot_config, show_summary=False)
         except KeyboardInterrupt:
             if session_id:
                 update_session_status(actual_db_path, "canceled")

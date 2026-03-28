@@ -35,16 +35,17 @@ AVG_TOKENS: dict[str, dict[str, int]] = {
 # Estimated output/input ratio per benchmark. Models produce substantially
 # more output tokens than input — code includes implementations, imports,
 # docstrings; math includes chain-of-thought reasoning steps.
-# Calibrated from GPT-5.1 pilot run (actual ratio ~2.6x overall).
+# Calibrated from gpt-5.1 and gpt-5-mini pilot runs.
+# gpt-5-mini pilot: 312K in / 2.7M out = ~8.6x overall.
 _OUTPUT_RATIO: dict[str, float] = {
-    "humaneval": 3.0,  # Code generation: full function implementations
-    "mbpp": 4.0,       # Short prompts but full code output
-    "gsm8k": 2.0,      # Math with chain-of-thought reasoning
+    "humaneval": 8.0,   # Code generation: full function + imports + docstrings
+    "mbpp": 10.0,       # Short prompts but verbose code output
+    "gsm8k": 5.0,       # Math with chain-of-thought reasoning steps
 }
 
 # Estimated seconds per API call (rate-limit delay + model response time).
-# Rate-limit delay alone underestimates by ~10x. Calibrated from pilot data.
-_SECONDS_PER_CALL: float = 4.5
+# Calibrated from gpt-5-mini pilot: 9h43m / 5800 calls = 6.0s/call.
+_SECONDS_PER_CALL: float = 6.0
 
 PREPROC_INTERVENTIONS: set[str] = {
     "pre_proc_sanitize",

@@ -41,6 +41,10 @@ class GradeResult:
         stderr: Captured stderr from execution.
         execution_time_ms: Wall-clock execution time in milliseconds.
         extraction_method: GSM8K extraction method used; None for code.
+        extracted_value: GSM8K extracted numerical value; None for code.
+        expected_value: GSM8K canonical answer; None for code.
+        extracted_raw_match: GSM8K raw matched string; None for code.
+        extracted_code: Extracted code from LLM response; None for GSM8K.
     """
 
     passed: bool
@@ -49,6 +53,10 @@ class GradeResult:
     stderr: str
     execution_time_ms: float
     extraction_method: str | None
+    extracted_value: float | None = None
+    expected_value: float | None = None
+    extracted_raw_match: str | None = None
+    extracted_code: str | None = None
 
 
 @dataclass
@@ -397,6 +405,7 @@ def grade_code(raw_output: str, prompt_record: dict) -> GradeResult:
             passed=True, fail_reason=None,
             stdout=result.stdout, stderr=result.stderr,
             execution_time_ms=elapsed, extraction_method=None,
+            extracted_code=code,
         )
 
     # Determine failure reason from stderr/returncode
@@ -418,6 +427,7 @@ def grade_code(raw_output: str, prompt_record: dict) -> GradeResult:
         passed=False, fail_reason=fail_reason,
         stdout=result.stdout, stderr=stderr,
         execution_time_ms=elapsed, extraction_method=None,
+        extracted_code=code,
     )
 
 
@@ -650,19 +660,16 @@ def grade_math(raw_output: str, prompt_record: dict) -> GradeResult:
 
     # Compare with epsilon
     elapsed = (time.monotonic() - start) * 1000
-    if abs(extraction.value - canonical) < 1e-6:
-        return GradeResult(
-            passed=True, fail_reason=None,
-            stdout=f"Extracted: {extraction.value} (canonical: {canonical})",
-            stderr="", execution_time_ms=elapsed,
-            extraction_method=extraction.method,
-        )
-
+    passed = abs(extraction.value - canonical) < 1e-6
     return GradeResult(
-        passed=False, fail_reason="wrong_answer",
+        passed=passed,
+        fail_reason=None if passed else "wrong_answer",
         stdout=f"Extracted: {extraction.value} (canonical: {canonical})",
         stderr="", execution_time_ms=elapsed,
         extraction_method=extraction.method,
+        extracted_value=extraction.value,
+        expected_value=canonical,
+        extracted_raw_match=extraction.raw_match,
     )
 
 

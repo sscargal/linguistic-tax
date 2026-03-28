@@ -299,8 +299,10 @@ class TestDBSchema:
         conn = init_database(tmp_db_path)
         cursor = conn.execute("PRAGMA table_info(grading_details)")
         columns = {row[1] for row in cursor.fetchall()}
-        expected = {"run_id", "fail_reason", "extraction_method", "stdout",
-                    "stderr", "execution_time_ms", "graded_at"}
+        expected = {"run_id", "fail_reason", "extraction_method",
+                    "extracted_value", "expected_value", "extracted_raw_match",
+                    "extracted_code", "stdout", "stderr", "execution_time_ms",
+                    "graded_at"}
         assert expected == columns
         conn.close()
 

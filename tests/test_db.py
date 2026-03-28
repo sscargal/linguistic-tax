@@ -25,11 +25,12 @@ class TestInitDatabase:
         columns = {row[1] for row in cursor.fetchall()}
         expected_columns = {
             "run_id", "prompt_id", "benchmark", "noise_type", "noise_level",
-            "intervention", "model", "repetition", "prompt_text", "prompt_tokens",
-            "optimized_tokens", "raw_output", "cot_trace", "completion_tokens",
+            "intervention", "model", "repetition", "noisy_prompt_text",
+            "prompt_text", "prompt_tokens", "raw_output", "completion_tokens",
             "pass_fail", "ttft_ms", "ttlt_ms", "generation_ms", "preproc_model",
             "preproc_input_tokens", "preproc_output_tokens", "preproc_ttft_ms",
-            "preproc_ttlt_ms", "preproc_raw_output", "main_model_input_cost_usd", "main_model_output_cost_usd",
+            "preproc_ttlt_ms", "preproc_raw_output", "preproc_failed",
+            "main_model_input_cost_usd", "main_model_output_cost_usd",
             "preproc_cost_usd", "total_cost_usd", "temperature", "timestamp", "status",
         }
         assert expected_columns.issubset(columns)

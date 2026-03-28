@@ -22,13 +22,12 @@ CREATE TABLE IF NOT EXISTS experiment_runs (
     repetition INTEGER NOT NULL,
 
     -- Prompt data
+    noisy_prompt_text TEXT,
     prompt_text TEXT,
     prompt_tokens INTEGER,
-    optimized_tokens INTEGER,
 
     -- Response data
     raw_output TEXT,
-    cot_trace TEXT,
     completion_tokens INTEGER,
 
     -- Grading
@@ -46,6 +45,7 @@ CREATE TABLE IF NOT EXISTS experiment_runs (
     preproc_ttft_ms REAL,
     preproc_ttlt_ms REAL,
     preproc_raw_output TEXT,
+    preproc_failed INTEGER DEFAULT 0,
 
     -- Cost tracking
     main_model_input_cost_usd REAL,
@@ -85,6 +85,10 @@ CREATE TABLE IF NOT EXISTS grading_details (
     run_id TEXT PRIMARY KEY REFERENCES experiment_runs(run_id),
     fail_reason TEXT,
     extraction_method TEXT,
+    extracted_value REAL,
+    expected_value REAL,
+    extracted_raw_match TEXT,
+    extracted_code TEXT,
     stdout TEXT,
     stderr TEXT,
     execution_time_ms REAL,
@@ -95,11 +99,12 @@ CREATE TABLE IF NOT EXISTS grading_details (
 # Column names for experiment_runs, used by insert_run
 _EXPERIMENT_RUNS_COLUMNS = [
     "run_id", "prompt_id", "benchmark", "noise_type", "noise_level",
-    "intervention", "model", "repetition", "prompt_text", "prompt_tokens",
-    "optimized_tokens", "raw_output", "cot_trace", "completion_tokens",
+    "intervention", "model", "repetition", "noisy_prompt_text", "prompt_text",
+    "prompt_tokens", "raw_output", "completion_tokens",
     "pass_fail", "ttft_ms", "ttlt_ms", "generation_ms", "preproc_model",
     "preproc_input_tokens", "preproc_output_tokens", "preproc_ttft_ms",
-    "preproc_ttlt_ms", "preproc_raw_output", "main_model_input_cost_usd", "main_model_output_cost_usd",
+    "preproc_ttlt_ms", "preproc_raw_output", "preproc_failed",
+    "main_model_input_cost_usd", "main_model_output_cost_usd",
     "preproc_cost_usd", "total_cost_usd", "temperature", "timestamp", "status",
 ]
 
@@ -120,13 +125,21 @@ def init_database(db_path: str) -> sqlite3.Connection:
     conn = sqlite3.connect(db_path)
     conn.executescript(CREATE_SCHEMA)
 
-    # Migration: add preproc_raw_output column to existing databases
-    try:
-        conn.execute(
-            "ALTER TABLE experiment_runs ADD COLUMN preproc_raw_output TEXT"
-        )
-    except sqlite3.OperationalError:
-        pass  # Column already exists
+    # Migrations: add columns to existing databases
+    _migrations = [
+        "ALTER TABLE experiment_runs ADD COLUMN preproc_raw_output TEXT",
+        "ALTER TABLE experiment_runs ADD COLUMN noisy_prompt_text TEXT",
+        "ALTER TABLE experiment_runs ADD COLUMN preproc_failed INTEGER DEFAULT 0",
+        "ALTER TABLE grading_details ADD COLUMN extracted_value REAL",
+        "ALTER TABLE grading_details ADD COLUMN expected_value REAL",
+        "ALTER TABLE grading_details ADD COLUMN extracted_raw_match TEXT",
+        "ALTER TABLE grading_details ADD COLUMN extracted_code TEXT",
+    ]
+    for migration in _migrations:
+        try:
+            conn.execute(migration)
+        except sqlite3.OperationalError:
+            pass  # Column already exists
 
     conn.execute("PRAGMA journal_mode=WAL")
     conn.execute("PRAGMA foreign_keys=ON")
@@ -169,6 +182,10 @@ def save_grade_result(
     stderr: str,
     execution_time_ms: float,
     extraction_method: str | None,
+    extracted_value: float | None = None,
+    expected_value: float | None = None,
+    extracted_raw_match: str | None = None,
+    extracted_code: str | None = None,
 ) -> None:
     """Save grading result to experiment_runs and grading_details tables.
 
@@ -184,6 +201,10 @@ def save_grade_result(
         stderr: Captured stderr from sandbox execution.
         execution_time_ms: Wall-clock execution time in milliseconds.
         extraction_method: GSM8K extraction method used (None for code).
+        extracted_value: GSM8K extracted numerical value (None for code).
+        expected_value: GSM8K canonical answer (None for code).
+        extracted_raw_match: GSM8K raw matched string before normalization.
+        extracted_code: Extracted code from LLM response (HumanEval/MBPP).
     """
     from datetime import datetime, timezone
 
@@ -195,10 +216,13 @@ def save_grade_result(
     graded_at = datetime.now(timezone.utc).isoformat()
     conn.execute(
         "INSERT OR REPLACE INTO grading_details "
-        "(run_id, fail_reason, extraction_method, stdout, stderr, "
-        "execution_time_ms, graded_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        (run_id, fail_reason, extraction_method, stdout, stderr,
-         execution_time_ms, graded_at),
+        "(run_id, fail_reason, extraction_method, extracted_value, "
+        "expected_value, extracted_raw_match, extracted_code, "
+        "stdout, stderr, execution_time_ms, graded_at) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (run_id, fail_reason, extraction_method, extracted_value,
+         expected_value, extracted_raw_match, extracted_code,
+         stdout, stderr, execution_time_ms, graded_at),
     )
     conn.commit()
     logger.debug("Saved grade result for run %s: passed=%s", run_id, passed)

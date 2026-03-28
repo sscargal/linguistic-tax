@@ -110,6 +110,19 @@ Recent decisions affecting current work:
 
 - Investigate fine-tuned small LM as pre-processor (general)
 - Experiment with provider prompt best practices as preprocessing (general)
+- Fix AssertionError typo in grading — wrong_answer never classified (general)
+- Add noisy_prompt_text column to DB schema (general)
+- Fix null rate_limit_delay defaulting to 0.5s (general)
+- Cache preprocessor results across repetitions (general)
+- Add preproc_failed flag to DB schema (general)
+- Add extracted/expected values to grading_details table (general)
+- Type B ESL noise corrupts code terms in prompts (general)
+- Fix adaptive rate limit — never resets after 429s (general)
+- Fix GSM8K answer extraction for negative numbers (general)
+- Remove or populate dead schema columns (general)
+- Add provider-level parallelism for multi-model runs (general)
+- Add async concurrency within a single provider (general)
+- Fix transposition double-mutation in noise generator (general)
 
 ### Roadmap Evolution
 

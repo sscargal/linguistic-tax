@@ -114,6 +114,7 @@ Recent decisions affecting current work:
 - Fix cost estimation output tokens 4x underestimate (general)
 - Fix runtime estimate underestimate (general)
 - Investigate compress_only 100 calls vs 800 for other interventions (general)
+- Analyze preprocessor and target model input/output quality (general)
 
 ### Roadmap Evolution
 

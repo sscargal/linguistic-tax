@@ -130,13 +130,13 @@ class ModelRegistry:
             model_id: The model identifier to look up.
 
         Returns:
-            Delay in seconds. Defaults to 0.5 for unknown models or models
+            Delay in seconds. Defaults to 0.1 for unknown models or models
             with None delay.
         """
         mc = self._models.get(model_id)
         if mc is None:
-            return 0.5
-        return mc.rate_limit_delay if mc.rate_limit_delay is not None else 0.5
+            return 0.1
+        return mc.rate_limit_delay if mc.rate_limit_delay is not None else 0.1
 
     def target_models(self) -> list[str]:
         """Return model_ids for all models with role='target'.

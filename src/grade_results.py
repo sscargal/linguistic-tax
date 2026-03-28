@@ -470,11 +470,11 @@ def _normalize_number(raw: str) -> float:
 
 _RE_HASH_ANSWER = re.compile(r'####\s*(.+)')
 _RE_ANSWER_IS = re.compile(
-    r'(?:the\s+)?answer\s+is[:\s]+\$?([\d,]+\.?\d*)',
+    r'(?:the\s+)?answer\s+is[:\s]+\$?(-?[\d,]+\.?\d*)',
     re.IGNORECASE,
 )
 _RE_ANSWER_COLON = re.compile(
-    r'answer\s*:\s*\$?([\d,]+\.?\d*)',
+    r'answer\s*:\s*\$?(-?[\d,]+\.?\d*)',
     re.IGNORECASE,
 )
 

@@ -107,8 +107,8 @@ class TestModelRegistry:
         assert reg.get_delay("claude-sonnet-4-20250514") == 0.2
 
     def test_get_delay_unknown_model(self, reg: ModelRegistry) -> None:
-        """get_delay returns 0.5 default for unknown model."""
-        assert reg.get_delay("unknown-model") == 0.5
+        """get_delay returns 0.1 default for unknown model."""
+        assert reg.get_delay("unknown-model") == 0.1
 
     def test_target_models(self, reg: ModelRegistry) -> None:
         """target_models returns only model_ids with role='target'."""

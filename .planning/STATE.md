@@ -110,9 +110,6 @@ Recent decisions affecting current work:
 
 - Investigate fine-tuned small LM as pre-processor (general)
 - Experiment with provider prompt best practices as preprocessing (general)
-- Self-correct inherently harmful for code benchmarks (general)
-- MBPP always-fail prompts returning wrong data types (general)
-- High instability — 41% of prompts inconsistent across reps (general)
 
 ### Roadmap Evolution
 

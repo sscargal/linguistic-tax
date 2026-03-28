@@ -110,7 +110,6 @@ Recent decisions affecting current work:
 
 - Investigate fine-tuned small LM as pre-processor (general)
 - Experiment with provider prompt best practices as preprocessing (general)
-- Analyze preprocessor and target model input/output quality (general)
 
 ### Roadmap Evolution
 

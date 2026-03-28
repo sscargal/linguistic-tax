@@ -113,14 +113,6 @@ def apply_intervention(
     Raises:
         ValueError: If intervention is not a known strategy.
     """
-    # Skip preproc for non-type_a noise (clean and ESL handled natively by target models)
-    if intervention in ("pre_proc_sanitize", "pre_proc_sanitize_compress", "compress_only"):
-        if noise_type and not noise_type.startswith("type_a_"):
-            return (prompt_text, {
-                "preproc_skipped": True,
-                "preproc_skip_reason": f"noise_type={noise_type}",
-            })
-
     match intervention:
         case "raw":
             return (prompt_text, {})

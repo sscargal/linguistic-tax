@@ -198,44 +198,43 @@ class TestApplyIntervention:
             )
             assert text == "'quoted' text"
 
-    def test_skip_preproc_for_clean_noise(self) -> None:
+    def test_preproc_runs_for_clean_noise(self) -> None:
         from src.run_experiment import apply_intervention
-        text, meta = apply_intervention(
-            "hello", "pre_proc_sanitize", "claude-sonnet-4-20250514",
-            mock_call_fn, noise_type="clean",
-        )
-        assert text == "hello"
-        assert meta["preproc_skipped"] is True
-        assert meta["preproc_skip_reason"] == "noise_type=clean"
+        with patch("src.run_experiment.sanitize", return_value=("sanitized", {"preproc_model": "haiku"})):
+            text, meta = apply_intervention(
+                "hello", "pre_proc_sanitize", "claude-sonnet-4-20250514",
+                mock_call_fn, noise_type="clean",
+            )
+            assert text == "sanitized"
 
-    def test_skip_preproc_for_type_b_esl(self) -> None:
+    def test_preproc_runs_for_type_b_esl(self) -> None:
         from src.run_experiment import apply_intervention
-        text, meta = apply_intervention(
-            "hello", "pre_proc_sanitize", "claude-sonnet-4-20250514",
-            mock_call_fn, noise_type="type_b_esl",
-        )
-        assert text == "hello"
-        assert meta["preproc_skipped"] is True
+        with patch("src.run_experiment.sanitize", return_value=("sanitized", {"preproc_model": "haiku"})):
+            text, meta = apply_intervention(
+                "hello", "pre_proc_sanitize", "claude-sonnet-4-20250514",
+                mock_call_fn, noise_type="type_b_esl",
+            )
+            assert text == "sanitized"
 
-    def test_skip_compress_only_for_clean(self) -> None:
+    def test_compress_only_runs_for_clean(self) -> None:
         from src.run_experiment import apply_intervention
-        text, meta = apply_intervention(
-            "hello", "compress_only", "claude-sonnet-4-20250514",
-            mock_call_fn, noise_type="clean",
-        )
-        assert text == "hello"
-        assert meta["preproc_skipped"] is True
+        with patch("src.run_experiment.sanitize_and_compress", return_value=("compressed", {"preproc_model": "haiku"})):
+            text, meta = apply_intervention(
+                "hello", "compress_only", "claude-sonnet-4-20250514",
+                mock_call_fn, noise_type="clean",
+            )
+            assert text == "compressed"
 
-    def test_skip_sanitize_compress_for_type_b(self) -> None:
+    def test_sanitize_compress_runs_for_type_b(self) -> None:
         from src.run_experiment import apply_intervention
-        text, meta = apply_intervention(
-            "hello", "pre_proc_sanitize_compress", "claude-sonnet-4-20250514",
-            mock_call_fn, noise_type="type_b_esl",
-        )
-        assert text == "hello"
-        assert meta["preproc_skipped"] is True
+        with patch("src.run_experiment.sanitize_and_compress", return_value=("processed", {"preproc_model": "haiku"})):
+            text, meta = apply_intervention(
+                "hello", "pre_proc_sanitize_compress", "claude-sonnet-4-20250514",
+                mock_call_fn, noise_type="type_b_esl",
+            )
+            assert text == "processed"
 
-    def test_no_skip_for_type_a_5pct(self) -> None:
+    def test_preproc_runs_for_type_a_5pct(self) -> None:
         from src.run_experiment import apply_intervention
         with patch("src.run_experiment.sanitize", return_value=("sanitized", {"preproc_model": "haiku"})) as mock_san:
             text, meta = apply_intervention(

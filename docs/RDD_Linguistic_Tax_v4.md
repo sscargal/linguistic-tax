@@ -243,7 +243,7 @@ of whether the output is stable across runs.
 We use a focused design with TWO independent experiments that share
 the same prompt dataset.
 
-    EXPERIMENT 1: NOISE & RECOVERY (2x4 Factorial)
+    EXPERIMENT 1: NOISE & RECOVERY (3x5 Factorial)
     ================================================
 
     Noise Type (rows) x Intervention (columns)
@@ -253,6 +253,9 @@ the same prompt dataset.
                       |          | ("Fix my  | (external | Compress   | (x2 input) |
                       |          |  prompt") | LLM call) |            | (NEW v4.0) |
     ==================+=========+===========+===========+============+============+
+    Clean:            |         |           |           |            |            |
+    (no noise)        | Cell 0  | Cell 0a   | Cell 0b   | Cell 0c    | Cell 0d    |
+    ------------------+---------+-----------+-----------+------------+------------+
     Type A:           |         |           |           |            |            |
     Character Noise   |  Cell 1 |  Cell 2   |  Cell 3   |  Cell 4    |  Cell 5    |
     (5%, 10%, 20%)    |         |           |           |            |            |
@@ -261,6 +264,14 @@ the same prompt dataset.
     Syntactic Noise   |  Cell 6 |  Cell 7   |  Cell 8   |  Cell 9    |  Cell 10   |
     (L1 patterns)     |         |           |           |            |            |
     ------------------+---------+-----------+-----------+------------+------------+
+
+    Cell 0 (Raw + Clean) is the PRIMARY BASELINE. All other cells are
+    compared against it to measure degradation or improvement.
+
+    Cells 0a-0d measure INTERVENTION OVERHEAD on clean text. If an
+    intervention scores lower than Cell 0, it has an inherent cost
+    even when there's nothing to fix. This is important for real-world
+    deployment where not all user prompts are noisy.
 
     NOTE (v4.0): Prompt Repetition is inspired by Leviathan et al.
     (2025), "Prompt Repetition Improves Non-Reasoning LLMs" (ArXiv:
@@ -272,12 +283,12 @@ the same prompt dataset.
     as a fascinating control: does naive repetition recover as much
     accuracy as intelligent sanitization?
 
-    Baseline: All cells compared against CLEAN prompt performance.
+    EXPERIMENT 2: COMPRESSION STUDY (via compress_only intervention)
+    ================================================================
 
-    EXPERIMENT 2: COMPRESSION STUDY (Independent)
-    ================================================
-
-    Take CLEAN prompts. Apply compression. Measure:
+    Takes CLEAN prompts and applies compression only (no sanitization).
+    Implemented as the `compress_only` intervention in the experiment
+    matrix, which only runs on clean noise conditions. Measures:
     - Token reduction (%)
     - Accuracy preservation (delta vs. uncompressed)
     - Semantic similarity of outputs (BERTScore)

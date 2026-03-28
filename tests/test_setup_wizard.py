@@ -16,6 +16,7 @@ from src.setup_wizard import (
     _parse_provider_selection,
     _detect_existing_config,
     _handle_existing_config,
+    _remove_existing_config,
     _select_providers,
     _collect_api_keys,
     _explain_model_roles,
@@ -605,38 +606,58 @@ class TestExistingConfig:
             result = _detect_existing_config()
         assert result is None
 
-    def test_handle_existing_config_reconfigure(self):
-        """Choosing '2' returns 'reconfigure'."""
-        existing = {
-            "providers": ["anthropic"],
-            "models": {"anthropic": {"targets": [{"target": "claude-sonnet-4-20250514", "preproc": "haiku"}]}},
-        }
-        input_fn = lambda prompt="": "2"
-        result = _handle_existing_config(existing, input_fn)
-        assert result == "reconfigure"
-
-    def test_handle_existing_config_default_is_reconfigure(self):
-        """Empty input defaults to 'reconfigure'."""
+    def test_handle_existing_config_default_is_modify(self):
+        """Empty input defaults to 'modify'."""
         existing = {
             "providers": ["anthropic"],
             "models": {"anthropic": {"targets": [{"target": "claude-sonnet-4-20250514", "preproc": "haiku"}]}},
         }
         input_fn = lambda prompt="": ""
         result = _handle_existing_config(existing, input_fn)
-        assert result == "reconfigure"
+        assert result == "modify"
 
-    def test_handle_existing_config_add(self):
-        """Choosing '1' returns 'add'."""
+    def test_handle_existing_config_modify(self):
+        """Choosing '1' returns 'modify'."""
         existing = {
             "providers": ["anthropic"],
             "models": {"anthropic": {"targets": [{"target": "claude-sonnet-4-20250514", "preproc": "haiku"}]}},
         }
         input_fn = lambda prompt="": "1"
         result = _handle_existing_config(existing, input_fn)
+        assert result == "modify"
+
+    def test_handle_existing_config_remove(self):
+        """Choosing '2' returns 'remove'."""
+        existing = {
+            "providers": ["anthropic"],
+            "models": {"anthropic": {"targets": [{"target": "claude-sonnet-4-20250514", "preproc": "haiku"}]}},
+        }
+        input_fn = lambda prompt="": "2"
+        result = _handle_existing_config(existing, input_fn)
+        assert result == "remove"
+
+    def test_handle_existing_config_add(self):
+        """Choosing '3' returns 'add'."""
+        existing = {
+            "providers": ["anthropic"],
+            "models": {"anthropic": {"targets": [{"target": "claude-sonnet-4-20250514", "preproc": "haiku"}]}},
+        }
+        input_fn = lambda prompt="": "3"
+        result = _handle_existing_config(existing, input_fn)
         assert result == "add"
 
-    def test_handle_existing_config_shows_multiple_targets(self, capsys):
-        """Multiple targets per provider are displayed in the summary."""
+    def test_handle_existing_config_reconfigure(self):
+        """Choosing '4' returns 'reconfigure'."""
+        existing = {
+            "providers": ["anthropic"],
+            "models": {"anthropic": {"targets": [{"target": "claude-sonnet-4-20250514", "preproc": "haiku"}]}},
+        }
+        input_fn = lambda prompt="": "4"
+        result = _handle_existing_config(existing, input_fn)
+        assert result == "reconfigure"
+
+    def test_handle_existing_config_shows_numbered_targets(self, capsys):
+        """Multiple targets per provider are displayed with numbers."""
         existing = {
             "providers": ["anthropic"],
             "models": {"anthropic": {"targets": [
@@ -644,12 +665,42 @@ class TestExistingConfig:
                 {"target": "claude-opus-4-20250514", "preproc": "haiku"},
             ]}},
         }
-        input_fn = lambda prompt="": "2"
+        input_fn = lambda prompt="": "4"
         _handle_existing_config(existing, input_fn)
         captured = capsys.readouterr()
-        assert "2 targets" in captured.out
+        assert "1." in captured.out
+        assert "2." in captured.out
         assert "claude-sonnet-4-20250514" in captured.out
         assert "claude-opus-4-20250514" in captured.out
+
+
+    def test_remove_existing_config_removes_entry(self):
+        """Removing entry 1 from a 2-entry config leaves 1 entry."""
+        existing = {
+            "providers": ["anthropic"],
+            "models": {"anthropic": {"targets": [
+                {"target": "claude-sonnet-4-20250514", "preproc": "haiku"},
+                {"target": "claude-opus-4-20250514", "preproc": "haiku"},
+            ]}},
+        }
+        responses = iter(["1", "d"])
+        input_fn = lambda prompt="": next(responses)
+        result = _remove_existing_config(existing, input_fn)
+        assert result is not None
+        assert len(result) == 1
+        assert result[0]["target_model"] == "claude-opus-4-20250514"
+
+    def test_remove_existing_config_all_returns_none(self):
+        """Removing all entries returns None."""
+        existing = {
+            "providers": ["openai"],
+            "models": {"openai": {"targets": [
+                {"target": "gpt-5.1", "preproc": "gpt-5-nano"},
+            ]}},
+        }
+        input_fn = lambda prompt="": "1"
+        result = _remove_existing_config(existing, input_fn)
+        assert result is None
 
 
 # ---------------------------------------------------------------------------

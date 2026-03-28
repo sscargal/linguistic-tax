@@ -214,9 +214,10 @@ def _handle_existing_config(
         input_fn: Callable for reading user input.
 
     Returns:
-        One of 'add', 'reconfigure', or 'fresh'.
+        One of 'modify', 'remove', 'add', or 'reconfigure'.
     """
     print("\nExisting configuration found:")
+    config_num = 1
     for provider in existing["providers"]:
         model_info = existing["models"].get(provider, {})
         name = PROVIDER_NAMES.get(provider, provider)
@@ -225,26 +226,27 @@ def _handle_existing_config(
             # Backward compat: old single-target format
             target = model_info.get("target", "unknown")
             preproc = model_info.get("preproc", "none")
-            print(f"  {name}: target={target}, preproc={preproc}")
-        elif len(targets) == 1:
-            t = targets[0]
-            print(f"  {name}: target={t.get('target', 'unknown')}, preproc={t.get('preproc', 'none')}")
+            print(f"  {config_num}. {name}: target={target}, preproc={preproc}")
+            config_num += 1
         else:
-            print(f"  {name}: {len(targets)} targets")
-            for i, t in enumerate(targets, 1):
-                print(f"    {i}. {t.get('target', 'unknown')} (preproc: {t.get('preproc', 'none')})")
+            for t in targets:
+                print(f"  {config_num}. {name}: target={t.get('target', 'unknown')}, preproc={t.get('preproc', 'none')}")
+                config_num += 1
 
     print("\nWhat would you like to do?")
-    print("  1. Add a provider")
-    print("  2. Reconfigure everything")
-    print("  3. Start fresh")
-    choice = input_fn("Choice [2]: ").strip()
+    print("  1. Modify a config")
+    print("  2. Remove a config")
+    print("  3. Add a provider")
+    print("  4. Reconfigure from scratch")
+    choice = input_fn("Choice [1]: ").strip()
 
-    if choice == "1":
-        return "add"
+    if choice == "2":
+        return "remove"
     elif choice == "3":
-        return "fresh"
-    return "reconfigure"
+        return "add"
+    elif choice == "4":
+        return "reconfigure"
+    return "modify"
 
 
 def _select_providers(
@@ -532,6 +534,7 @@ def _select_single_target(
     global_preproc: str | None,
     input_fn: Callable[..., str],
     provider_models: list,
+    default_preproc: str | None = None,
 ) -> tuple[str, str]:
     """Select a single target + preproc model pair for a provider.
 
@@ -543,6 +546,8 @@ def _select_single_target(
         global_preproc: Current global preproc model (if set).
         input_fn: Callable for reading user input.
         provider_models: Pre-fetched model list for validation.
+        default_preproc: Explicit default preproc model ID. When set,
+            shown as the default instead of the auto-assigned one.
 
     Returns:
         Tuple of (target_model, preproc_model).
@@ -572,21 +577,26 @@ def _select_single_target(
         preproc_model = global_preproc
         print(f"  Pre-processor: {preproc_model} (global)")
     else:
-        auto_preproc = registry.get_preproc(target_model)
-        if auto_preproc is None:
-            for mc in registry._models.values():
-                if mc.provider == provider and mc.role == "preproc":
-                    auto_preproc = mc.model_id
-                    break
-        if auto_preproc is None:
-            auto_preproc = target_model
+        if default_preproc is not None:
+            preproc_default = default_preproc
+            label = "Pre-processor"
+        else:
+            preproc_default = registry.get_preproc(target_model)
+            if preproc_default is None:
+                for mc in registry._models.values():
+                    if mc.provider == provider and mc.role == "preproc":
+                        preproc_default = mc.model_id
+                        break
+            if preproc_default is None:
+                preproc_default = target_model
+            label = "Pre-processor (auto-assigned)"
 
-        raw_preproc = input_fn(f"  Pre-processor (auto-assigned) [{auto_preproc}]: ").strip()
+        raw_preproc = input_fn(f"  {label} [{preproc_default}]: ").strip()
         if raw_preproc.lower() == "list":
             selected = _browse_models(provider, input_fn)
-            preproc_model = selected if selected else auto_preproc
+            preproc_model = selected if selected else preproc_default
         elif raw_preproc == "":
-            preproc_model = auto_preproc
+            preproc_model = preproc_default
         else:
             preproc_model = raw_preproc
 
@@ -872,76 +882,117 @@ def validate_api_key(
         return (False, f"API call failed (key may be valid, but got error): {e}")
 
 
+def _validate_single_model(
+    model_id: str,
+    label: str,
+    provider: str,
+    env_var: str,
+    input_fn: Callable[..., str],
+) -> tuple[bool, str]:
+    """Validate a single model ID by pinging the API.
+
+    On failure, offers user choices: keep anyway, enter a different model
+    ID, list available models, or skip.
+
+    Args:
+        model_id: The model ID to validate.
+        label: Display label (e.g., "target" or "preproc").
+        provider: Provider key.
+        env_var: Environment variable name for the API key.
+        input_fn: Callable for reading user input.
+
+    Returns:
+        Tuple of (accepted, final_model_id). accepted is False if user
+        chose to skip.
+    """
+    print(f"\nValidating {label} {model_id}... ", end="", flush=True)
+    ok, msg = validate_api_key(provider, env_var, model_id=model_id)
+
+    if ok:
+        print("OK")
+        return True, model_id
+
+    print(f"FAILED: {msg}")
+    while True:
+        print("  Options:")
+        print("    y    - Keep this model anyway")
+        print("    n    - Skip this model")
+        print("    list - Browse available models")
+        print("    Or type a different model ID")
+        choice = input_fn("Choice: ").strip()
+
+        if choice.lower() in ("y", "yes", ""):
+            return True, model_id
+        elif choice.lower() == "n":
+            return False, model_id
+        elif choice.lower() == "list":
+            selected = _browse_models(provider, input_fn)
+            if selected:
+                model_id = selected
+                print(f"\nValidating {label} {selected}... ", end="", flush=True)
+                ok2, msg2 = validate_api_key(provider, env_var, model_id=selected)
+                if ok2:
+                    print("OK")
+                    return True, model_id
+                else:
+                    print(f"FAILED: {msg2}")
+        else:
+            model_id = choice
+            print(f"\nValidating {label} {choice}... ", end="", flush=True)
+            ok2, msg2 = validate_api_key(provider, env_var, model_id=choice)
+            if ok2:
+                print("OK")
+                return True, model_id
+            else:
+                print(f"FAILED: {msg2}")
+
+
 def _validate_models(
     models: list[dict], input_fn: Callable[..., str]
 ) -> list[dict]:
-    """Validate each model by pinging the API with the actual target model.
+    """Validate each model by pinging the API with target and preproc models.
 
     When validation fails, offers the user choices: keep anyway, enter a
     different model ID, list available models, or skip the provider.
 
     Args:
-        models: List of model config dicts with 'provider', 'target_model'.
+        models: List of model config dicts with 'provider', 'target_model',
+                'preproc_model'.
         input_fn: Callable for reading user input.
 
     Returns:
         Filtered list with only validated or user-accepted models.
     """
     validated: list[dict] = []
+    validated_preprocs: set[str] = set()
 
     for entry in models:
         provider = entry["provider"]
         target = entry["target_model"]
+        preproc = entry.get("preproc_model", "")
         env_var = PROVIDER_ENV_VARS[provider]
 
-        print(f"\nValidating {target}... ", end="", flush=True)
-        ok, msg = validate_api_key(provider, env_var, model_id=target)
+        # Validate target
+        accepted, final_target = _validate_single_model(
+            target, "target", provider, env_var, input_fn,
+        )
+        if not accepted:
+            continue
+        entry["target_model"] = final_target
 
-        if ok:
-            print("OK")
-            validated.append(entry)
-        else:
-            print(f"FAILED: {msg}")
-            while True:
-                print("  Options:")
-                print("    y    - Keep this model anyway")
-                print("    n    - Skip this provider")
-                print("    list - Browse available models")
-                print("    Or type a different model ID")
-                choice = input_fn("Choice: ").strip()
+        # Validate preproc (skip if already validated in this run)
+        if preproc and preproc not in validated_preprocs:
+            accepted_p, final_preproc = _validate_single_model(
+                preproc, "preproc", provider, env_var, input_fn,
+            )
+            if accepted_p:
+                validated_preprocs.add(final_preproc)
+                entry["preproc_model"] = final_preproc
+            else:
+                # Preproc rejected — skip this entry
+                continue
 
-                if choice.lower() in ("y", "yes", ""):
-                    validated.append(entry)
-                    break
-                elif choice.lower() == "n":
-                    break
-                elif choice.lower() == "list":
-                    selected = _browse_models(provider, input_fn)
-                    if selected:
-                        entry["target_model"] = selected
-                        # Re-validate the new selection
-                        print(f"\nValidating {selected}... ", end="", flush=True)
-                        ok2, msg2 = validate_api_key(provider, env_var, model_id=selected)
-                        if ok2:
-                            print("OK")
-                            validated.append(entry)
-                            break
-                        else:
-                            print(f"FAILED: {msg2}")
-                            # Loop back to options
-                    # If browse returned None, loop back
-                else:
-                    # Treat as a model ID
-                    entry["target_model"] = choice
-                    print(f"\nValidating {choice}... ", end="", flush=True)
-                    ok2, msg2 = validate_api_key(provider, env_var, model_id=choice)
-                    if ok2:
-                        print("OK")
-                        validated.append(entry)
-                        break
-                    else:
-                        print(f"FAILED: {msg2}")
-                        # Loop back to options
+        validated.append(entry)
 
     return validated
 
@@ -1205,6 +1256,146 @@ def check_environment() -> list[tuple[str, bool, str]]:
     return results
 
 
+def _flatten_existing_entries(existing: dict) -> list[dict]:
+    """Build a flat list of model entries from existing config.
+
+    Args:
+        existing: Dict from _detect_existing_config().
+
+    Returns:
+        List of dicts with 'provider', 'target_model', 'preproc_model'.
+    """
+    entries: list[dict] = []
+    for provider in existing["providers"]:
+        model_info = existing["models"].get(provider, {})
+        targets = model_info.get("targets", [])
+        if not targets:
+            entries.append({
+                "provider": provider,
+                "target_model": model_info.get("target", "unknown"),
+                "preproc_model": model_info.get("preproc", "unknown"),
+            })
+        else:
+            for t in targets:
+                entries.append({
+                    "provider": provider,
+                    "target_model": t.get("target", "unknown"),
+                    "preproc_model": t.get("preproc", "unknown"),
+                })
+    return entries
+
+
+def _print_config_list(entries: list[dict]) -> None:
+    """Print numbered config entries."""
+    for i, entry in enumerate(entries, 1):
+        name = PROVIDER_NAMES.get(entry["provider"], entry["provider"])
+        print(f"  {i}. {name}: target={entry['target_model']}, preproc={entry['preproc_model']}")
+
+
+def _modify_existing_config(
+    existing: dict,
+    input_fn: Callable[..., str],
+) -> list[dict] | None:
+    """Let user pick a numbered config entry to modify in-place.
+
+    Args:
+        existing: Dict from _detect_existing_config().
+        input_fn: Callable for reading user input.
+
+    Returns:
+        Updated flat model list ready for validation/confirmation,
+        or None if user cancels.
+    """
+    entries = _flatten_existing_entries(existing)
+
+    while True:
+        print("\nCurrent configurations:")
+        _print_config_list(entries)
+
+        print(f"\n  d - Done editing")
+        choice = input_fn("Select a number to modify, or 'd' to finish: ").strip().lower()
+
+        if choice == "d" or choice == "":
+            break
+
+        try:
+            idx = int(choice) - 1
+            if idx < 0 or idx >= len(entries):
+                print("  Invalid number.")
+                continue
+        except ValueError:
+            print("  Invalid input.")
+            continue
+
+        entry = entries[idx]
+        provider = entry["provider"]
+        name = PROVIDER_NAMES.get(provider, provider)
+        provider_models = _get_provider_models(provider)
+
+        print(f"\n  Modifying {name} configuration #{idx + 1}:")
+        target_model, preproc_model = _select_single_target(
+            provider, name,
+            entry["target_model"],  # current value as default
+            "per-provider", None,
+            input_fn, provider_models,
+            default_preproc=entry["preproc_model"],
+        )
+        entries[idx] = {
+            "provider": provider,
+            "target_model": target_model,
+            "preproc_model": preproc_model,
+        }
+        print(f"  Updated: target={target_model}, preproc={preproc_model}")
+
+    return entries
+
+
+def _remove_existing_config(
+    existing: dict,
+    input_fn: Callable[..., str],
+) -> list[dict] | None:
+    """Let user remove model configurations by number.
+
+    Args:
+        existing: Dict from _detect_existing_config().
+        input_fn: Callable for reading user input.
+
+    Returns:
+        Updated flat model list with removals applied,
+        or None if all entries removed.
+    """
+    entries = _flatten_existing_entries(existing)
+
+    while True:
+        if not entries:
+            print("\n  All configurations removed.")
+            return None
+
+        print("\nCurrent configurations:")
+        _print_config_list(entries)
+
+        print(f"\n  d - Done removing")
+        choice = input_fn("Select a number to remove, or 'd' to finish: ").strip().lower()
+
+        if choice == "d" or choice == "":
+            break
+
+        try:
+            idx = int(choice) - 1
+            if idx < 0 or idx >= len(entries):
+                print("  Invalid number.")
+                continue
+        except ValueError:
+            print("  Invalid input.")
+            continue
+
+        removed = entries.pop(idx)
+        name = PROVIDER_NAMES.get(removed["provider"], removed["provider"])
+        print(f"  Removed: {name} target={removed['target_model']}")
+
+    return entries if entries else None
+
+
 # ---------------------------------------------------------------------------
 # Main wizard entry point
 # ---------------------------------------------------------------------------
@@ -1253,14 +1444,52 @@ def run_setup_wizard(
 
         if existing:
             action = _handle_existing_config(existing, input_fn)
-            if action == "add":
+            if action in ("modify", "remove"):
+                if action == "modify":
+                    selected_models = _modify_existing_config(existing, input_fn)
+                else:
+                    selected_models = _remove_existing_config(existing, input_fn)
+                if selected_models:
+                    mod_providers = list(dict.fromkeys(
+                        e["provider"] for e in selected_models
+                    ))
+                    keys = _collect_api_keys(mod_providers, input_fn)
+                    selected_models = _validate_models(selected_models, input_fn)
+                    if not selected_models:
+                        print("No valid models configured. Exiting.")
+                        return
+                    if not _show_confirmation(selected_models, keys, input_fn):
+                        print("Configuration not saved.")
+                        return
+                    config = _build_config_dict(selected_models)
+                    saved_path = save_config(config)
+                    model_configs = [
+                        ModelConfig(
+                            model_id=m["model_id"],
+                            provider=m.get("provider", "unknown"),
+                            role=m.get("role", "target"),
+                            preproc_model_id=m.get("preproc_model_id"),
+                            input_price_per_1m=m.get("input_price_per_1m"),
+                            output_price_per_1m=m.get("output_price_per_1m"),
+                            rate_limit_delay=m.get("rate_limit_delay"),
+                        )
+                        for m in config["models"]
+                    ]
+                    registry.reload(model_configs)
+                    print(f"\nConfig saved to {saved_path}")
+                    print("\nNext steps:")
+                    print("  Run 'propt pilot' to test with 20 prompts")
+                    print("  Run 'propt list-models' to see available models")
+                    print("  Run 'propt config show' to review your configuration")
+                    return
+                else:
+                    print("No valid models configured. Exiting.")
+                    return
+            elif action == "add":
                 existing_providers = existing["providers"]
                 existing_models = existing["models"]
-            elif action == "fresh":
-                existing = None
             else:  # reconfigure
-                existing_providers = existing["providers"]
-                existing_models = existing["models"]
+                pass  # fall through to full wizard with no existing context
 
         # Step 3: Provider selection
         print("Each provider gives access to different LLM families. Select all")

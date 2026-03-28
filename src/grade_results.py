@@ -89,29 +89,84 @@ _UNIT_PATTERN = re.compile(
 # Code extraction
 # ---------------------------------------------------------------------------
 
-def extract_code(response: str) -> str:
+def extract_code(response: str, expected_fn: str | None = None) -> str:
     """Extract Python code from LLM response, handling markdown fences.
 
     Prefers the code block containing a function definition (``def``).
-    If multiple blocks have definitions, uses the last one (LLMs often
-    iterate). Falls back to the last block, then the full response.
+    When ``expected_fn`` is provided, prefers the block defining that
+    function. If multiple blocks match, uses the last one (LLMs often
+    iterate). Falls back to the last block, then strips prose preamble
+    and extracts code starting from the first ``def``, ``import``, or
+    ``from`` statement.
 
     Args:
         response: Raw LLM response text.
+        expected_fn: Optional expected function name to prefer when
+            multiple blocks contain function definitions.
 
     Returns:
         Extracted code string, stripped of markdown fences.
     """
     blocks = re.findall(r'```(?:python)?\s*\n(.*?)```', response, re.DOTALL)
-    if not blocks:
+    if blocks:
+        # Prefer blocks containing the expected function name
+        if expected_fn:
+            fn_blocks = [b for b in blocks if re.search(
+                rf'^def {re.escape(expected_fn)}\s*\(', b, re.MULTILINE
+            )]
+            if fn_blocks:
+                return fn_blocks[-1].strip()
+
+        # Fall back to blocks with any function definition
+        def_blocks = [b for b in blocks if re.search(r'^def \w+\(', b, re.MULTILINE)]
+        if def_blocks:
+            return def_blocks[-1].strip()
+
+        return blocks[-1].strip()
+
+    # No fences: strip prose preamble and find code start,
+    # then trim trailing prose after the code ends.
+    lines = response.split('\n')
+    code_start = None
+    for i, line in enumerate(lines):
+        stripped = line.lstrip()
+        if stripped.startswith(('def ', 'import ', 'from ', 'class ')):
+            code_start = i
+            break
+
+    if code_start is None:
         return response.strip()
 
-    # Prefer blocks containing function definitions
-    def_blocks = [b for b in blocks if re.search(r'^def \w+\(', b, re.MULTILINE)]
-    if def_blocks:
-        return def_blocks[-1].strip()
+    # Walk forward from code_start, collecting code lines.
+    # Stop at a blank-line-then-prose boundary: a non-empty, non-indented
+    # line that isn't valid Python syntax (e.g., "Example execution:").
+    code_lines = []
+    in_body = False
+    for line in lines[code_start:]:
+        stripped = line.lstrip()
+        indent = len(line) - len(line.lstrip())
 
-    return blocks[-1].strip()
+        # Indented lines or blank lines are always code
+        if indent > 0 or stripped == '':
+            code_lines.append(line)
+            in_body = True
+            continue
+
+        # Non-indented: could be new def/class/import or prose
+        if stripped.startswith(('def ', 'import ', 'from ', 'class ',
+                                'return ', 'if ', 'for ', 'while ',
+                                'try:', 'except ', 'with ', '#',
+                                '@')):
+            code_lines.append(line)
+            in_body = True
+            continue
+
+        # Non-indented line that doesn't look like Python — stop
+        if in_body:
+            break
+        code_lines.append(line)
+
+    return '\n'.join(code_lines).strip()
 
 
 # ---------------------------------------------------------------------------
@@ -285,8 +340,20 @@ def grade_code(raw_output: str, prompt_record: dict) -> GradeResult:
             extraction_method=None,
         )
 
+    # Determine expected function name for extraction preference
+    benchmark = prompt_record["benchmark_source"]
+    test_code = prompt_record.get("test_code", "")
+    expected_fn: str | None = None
+
+    if benchmark == "humaneval":
+        expected_fn = _extract_entry_point(prompt_record["prompt_text"])
+    elif benchmark == "mbpp":
+        fn_match = re.search(r'assert (\w+)\(', test_code)
+        if fn_match:
+            expected_fn = fn_match.group(1)
+
     # Extract code from markdown fences
-    code = extract_code(raw_output)
+    code = extract_code(raw_output, expected_fn=expected_fn)
 
     # Optional syntax pre-check
     try:
@@ -300,11 +367,8 @@ def grade_code(raw_output: str, prompt_record: dict) -> GradeResult:
         )
 
     # Build harness based on benchmark
-    benchmark = prompt_record["benchmark_source"]
-    test_code = prompt_record.get("test_code", "")
-
     if benchmark == "humaneval":
-        entry_point = _extract_entry_point(prompt_record["prompt_text"])
+        entry_point = expected_fn
         if entry_point is None:
             elapsed = (time.monotonic() - start) * 1000
             return GradeResult(

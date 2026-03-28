@@ -335,7 +335,10 @@ def format_summary(
 
     # Interventions
     intervention_counts: Counter[str] = Counter(item["intervention"] for item in items)
-    intervention_table = [[intervention, count] for intervention, count in sorted(intervention_counts.items())]
+    intervention_table = [
+        [f"{name} (clean only)" if name == "compress_only" else name, count]
+        for name, count in sorted(intervention_counts.items())
+    ]
     lines.append(tabulate(intervention_table, headers=["  Intervention", "API Calls"], tablefmt="simple"))
     lines.append("")
 
@@ -696,8 +699,11 @@ def format_post_run_report(
         int_table = []
         for r in intervention_rows:
             pass_rate = (r["passed"] / r["calls"] * 100) if r["calls"] > 0 else 0
+            label = r["intervention"]
+            if label == "compress_only":
+                label = "compress_only (clean only)"
             int_table.append([
-                r["intervention"], f"{r['calls']:,}", f"{pass_rate:.1f}%", f"${r['cost']:.4f}",
+                label, f"{r['calls']:,}", f"{pass_rate:.1f}%", f"${r['cost']:.4f}",
             ])
         report_data["interventions"] = [
             {"intervention": r[0], "api_calls": r[1], "pass_rate": r[2], "cost": r[3]}

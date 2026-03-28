@@ -110,7 +110,6 @@ Recent decisions affecting current work:
 
 - Investigate fine-tuned small LM as pre-processor (general)
 - Experiment with provider prompt best practices as preprocessing (general)
-- Investigate compress_only 100 calls vs 800 for other interventions (general)
 - Analyze preprocessor and target model input/output quality (general)
 
 ### Roadmap Evolution

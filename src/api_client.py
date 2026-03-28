@@ -38,6 +38,27 @@ class APIResponse:
 _rate_delays: dict[str, float] = {
     m: registry.get_delay(m) for m in registry._models
 }
+_rate_baselines: dict[str, float] = dict(_rate_delays)
+_rate_successes: dict[str, int] = {}
+
+_RATE_DECAY_AFTER: int = 50  # halve delay after N consecutive successes
+
+
+def _rate_limit_success(model: str) -> None:
+    """Record a successful API call and decay inflated rate limits."""
+    _rate_successes[model] = _rate_successes.get(model, 0) + 1
+    if _rate_successes[model] >= _RATE_DECAY_AFTER:
+        baseline = _rate_baselines.get(model, registry.get_delay(model))
+        current = _rate_delays.get(model, baseline)
+        if current > baseline:
+            _rate_delays[model] = max(baseline, current / 2)
+        _rate_successes[model] = 0
+
+
+def _rate_limit_backoff(model: str) -> None:
+    """Double the rate limit delay after a 429 error."""
+    _rate_delays[model] = _rate_delays.get(model, 0.2) * 2
+    _rate_successes[model] = 0
 
 
 def _validate_api_keys(model: str) -> None:
@@ -409,33 +430,33 @@ def call_model(
         try:
             _apply_rate_limit(model)
             if model.startswith("claude"):
-                return _call_anthropic(
+                result = _call_anthropic(
                     model, system, user_message, max_tokens, temperature
                 )
             elif model.startswith("gemini"):
-                return _call_google(
+                result = _call_google(
                     model, system, user_message, max_tokens, temperature
                 )
             elif model.startswith("gpt"):
-                return _call_openai(
+                result = _call_openai(
                     model, system, user_message, max_tokens, temperature
                 )
             elif model.startswith("openrouter/"):
-                return _call_openrouter(
+                result = _call_openrouter(
                     model, system, user_message, max_tokens, temperature
                 )
             else:
                 raise ValueError(f"Unknown model: {model}")
+            _rate_limit_success(model)
+            return result
         except anthropic.RateLimitError as e:
             if _is_quota_error(e):
                 raise
             last_error = e
-            _rate_delays[model] = _rate_delays.get(model, 0.2) * 2
+            _rate_limit_backoff(model)
             logger.warning(
                 "Rate limited on %s (attempt %d/4), delay now %.1fs",
-                model,
-                attempt + 1,
-                _rate_delays[model],
+                model, attempt + 1, _rate_delays.get(model, 0.2),
             )
             if attempt < 3:
                 time.sleep(retry_delays[attempt])
@@ -443,12 +464,10 @@ def call_model(
             if _is_quota_error(e):
                 raise
             last_error = e
-            _rate_delays[model] = _rate_delays.get(model, 0.2) * 2
+            _rate_limit_backoff(model)
             logger.warning(
                 "Rate limited on %s (attempt %d/4), delay now %.1fs",
-                model,
-                attempt + 1,
-                _rate_delays[model],
+                model, attempt + 1, _rate_delays.get(model, 0.2),
             )
             if attempt < 3:
                 time.sleep(retry_delays[attempt])
@@ -457,12 +476,10 @@ def call_model(
                 if _is_quota_error(e):
                     raise
                 last_error = e
-                _rate_delays[model] = _rate_delays.get(model, 0.2) * 2
+                _rate_limit_backoff(model)
                 logger.warning(
                     "Rate limited on %s (attempt %d/4), delay now %.1fs",
-                    model,
-                    attempt + 1,
-                    _rate_delays[model],
+                    model, attempt + 1, _rate_delays.get(model, 0.2),
                 )
                 if attempt < 3:
                     time.sleep(retry_delays[attempt])

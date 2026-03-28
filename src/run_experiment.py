@@ -51,6 +51,12 @@ from src.emphasis_converter import (
 
 logger = logging.getLogger(__name__)
 
+# Cache for preprocessor results: (prompt_id, noise_type, intervention, model) → (text, meta)
+# Preprocessing is deterministic at temp=0, so repeated calls with the same
+# input produce identical output. This eliminates ~80% of preproc API calls
+# across 5 repetitions.
+_preproc_cache: dict[tuple[str, ...], tuple[str, dict[str, Any]]] = {}
+
 
 # ---------------------------------------------------------------------------
 # Deterministic run ID
@@ -298,12 +304,31 @@ def _process_item(
             answer_type, config.base_seed,
         )
 
-        # Apply intervention
-        processed_text, preproc_meta = apply_intervention(
-            prompt_text, item["intervention"], item["model"], call_model,
-            prompt_id=item["prompt_id"],
-            noise_type=item["noise_type"],
-        )
+        # Apply intervention (with preproc caching for deterministic calls)
+        intervention = item["intervention"]
+        _preproc_interventions = {
+            "pre_proc_sanitize", "pre_proc_sanitize_compress", "compress_only",
+        }
+        cache_key = None
+        if intervention in _preproc_interventions:
+            cache_key = (item["prompt_id"], item["noise_type"], intervention, item["model"])
+            cached = _preproc_cache.get(cache_key)
+            if cached is not None:
+                processed_text, preproc_meta = cached
+                preproc_meta = {**preproc_meta, "preproc_cached": True}
+            else:
+                processed_text, preproc_meta = apply_intervention(
+                    prompt_text, intervention, item["model"], call_model,
+                    prompt_id=item["prompt_id"],
+                    noise_type=item["noise_type"],
+                )
+                _preproc_cache[cache_key] = (processed_text, preproc_meta)
+        else:
+            processed_text, preproc_meta = apply_intervention(
+                prompt_text, intervention, item["model"], call_model,
+                prompt_id=item["prompt_id"],
+                noise_type=item["noise_type"],
+            )
 
         # Determine max tokens
         max_tokens = MAX_TOKENS_BY_BENCHMARK.get(benchmark, 2048)

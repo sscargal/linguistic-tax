@@ -234,6 +234,7 @@ def inject_type_a_noise(
     chars = list(text)
     result: list[str] = []
     skip_next = False
+    swapped_positions: set[int] = set()
 
     for i, char in enumerate(chars):
         if skip_next:
@@ -242,6 +243,11 @@ def inject_type_a_noise(
 
         # Skip whitespace and protected characters
         if char.isspace() or _is_protected(i, protected_spans):
+            result.append(char)
+            continue
+
+        # Skip positions already involved in a transposition swap
+        if i in swapped_positions:
             result.append(char)
             continue
 
@@ -263,17 +269,19 @@ def inject_type_a_noise(
             result.append(apply_char_doubling(char))
         else:
             # Transposition: swap with next mutable character
-            # Find next non-protected, non-whitespace char
             next_idx = None
             for j in range(i + 1, len(chars)):
-                if not chars[j].isspace() and not _is_protected(j, protected_spans):
+                if (not chars[j].isspace()
+                        and not _is_protected(j, protected_spans)
+                        and j not in swapped_positions):
                     next_idx = j
                     break
 
             if next_idx is not None:
                 result.append(chars[next_idx])
-                # We need to put the current char where next_idx was
                 chars[next_idx] = char
+                swapped_positions.add(i)
+                swapped_positions.add(next_idx)
                 skip_next = (next_idx == i + 1)
             else:
                 result.append(char)
@@ -491,11 +499,52 @@ def inject_type_b_noise(
             f"Expected one of: mandarin, spanish, japanese, mixed"
         )
 
-    result = text
-    for pattern in patterns:
-        result = re.sub(pattern.pattern, pattern.replacement, result, flags=re.IGNORECASE)
+    # Split text into code and non-code segments. Code segments are:
+    # - Fenced code blocks (```...```)
+    # - Lines starting with def/class/import/from/return (and indented continuations)
+    # ESL patterns apply only to non-code segments to avoid corrupting
+    # function signatures, keywords, and identifiers.
+    code_fence_re = re.compile(r'(```.*?```)', re.DOTALL)
+    parts = code_fence_re.split(text)
 
-    return result
+    result_parts: list[str] = []
+    for part in parts:
+        # Keep fenced code blocks untouched
+        if part.startswith('```'):
+            result_parts.append(part)
+            continue
+
+        # Split remaining text into lines; protect code-like lines
+        lines = part.split('\n')
+        processed_lines: list[str] = []
+        in_code_block = False
+
+        for line in lines:
+            stripped = line.lstrip()
+            # Detect code-like lines
+            if stripped.startswith(('def ', 'class ', 'import ', 'from ', 'return ',
+                                    'if ', 'for ', 'while ', 'elif ', 'else:',
+                                    'try:', 'except ', 'with ', 'raise ', '@',
+                                    '>>> ', '... ')):
+                in_code_block = True
+                processed_lines.append(line)
+            elif in_code_block and (line.startswith((' ', '\t')) or stripped == ''):
+                # Indented continuation of code block
+                processed_lines.append(line)
+            else:
+                in_code_block = False
+                # Apply ESL patterns to this non-code line
+                result_line = line
+                for pattern in patterns:
+                    result_line = re.sub(
+                        pattern.pattern, pattern.replacement, result_line,
+                        flags=re.IGNORECASE,
+                    )
+                processed_lines.append(result_line)
+
+        result_parts.append('\n'.join(processed_lines))
+
+    return ''.join(result_parts)
 
 
 # ---------------------------------------------------------------------------

@@ -9,9 +9,13 @@ import json
 import logging
 import os
 import random
+import sqlite3
 import sys
+import threading
 import time
+from collections import defaultdict
 from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from typing import Any
 
@@ -56,6 +60,7 @@ logger = logging.getLogger(__name__)
 # input produce identical output. This eliminates ~80% of preproc API calls
 # across 5 repetitions.
 _preproc_cache: dict[tuple[str, ...], tuple[str, dict[str, Any]]] = {}
+_preproc_cache_lock = threading.Lock()
 
 
 # ---------------------------------------------------------------------------
@@ -309,10 +314,10 @@ def _process_item(
         _preproc_interventions = {
             "pre_proc_sanitize", "pre_proc_sanitize_compress", "compress_only",
         }
-        cache_key = None
         if intervention in _preproc_interventions:
             cache_key = (item["prompt_id"], item["noise_type"], intervention, item["model"])
-            cached = _preproc_cache.get(cache_key)
+            with _preproc_cache_lock:
+                cached = _preproc_cache.get(cache_key)
             if cached is not None:
                 processed_text, preproc_meta = cached
                 preproc_meta = {**preproc_meta, "preproc_cached": True}
@@ -322,7 +327,8 @@ def _process_item(
                     prompt_id=item["prompt_id"],
                     noise_type=item["noise_type"],
                 )
-                _preproc_cache[cache_key] = (processed_text, preproc_meta)
+                with _preproc_cache_lock:
+                    _preproc_cache[cache_key] = (processed_text, preproc_meta)
         else:
             processed_text, preproc_meta = apply_intervention(
                 prompt_text, intervention, item["model"], call_model,
@@ -645,13 +651,27 @@ def run_engine(
                 sys.exit(1)
     print()
 
-    # Process items with tqdm progress bar
+    # Partition items by model for parallel execution
+    items_by_model: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for item in pending:
+        items_by_model[item["model"]].append(item)
+
+    model_count = len(items_by_model)
     total = len(pending)
+
+    if model_count > 1:
+        print(f"Running {model_count} models in parallel: {', '.join(sorted(items_by_model))}")
+
+    # Thread-safe shared state
+    lock = threading.Lock()
     cost_so_far = 0.0
     tokens_in = 0
     tokens_out = 0
     pass_count = 0
     completed_count_run = 0
+    quota_exhausted_models: set[str] = set()
+    skipped_count = 0
+    interrupted = threading.Event()
 
     def _fmt_tokens(n: int) -> str:
         if n >= 1_000_000:
@@ -660,80 +680,127 @@ def run_engine(
             return f"{n / 1_000:.1f}K"
         return str(n)
 
-    quota_exhausted_models: set[str] = set()
-    skipped_count = 0
+    def _process_model_items(
+        model_id: str,
+        items: list[dict[str, Any]],
+        pbar: tqdm,
+    ) -> None:
+        """Process all items for a single model sequentially.
 
-    try:
-        with tqdm(total=total, desc="Experiments", unit="item") as pbar:
-            for i, item in enumerate(pending):
+        Each model gets its own DB connection for thread safety.
+        Shared counters are updated under the lock.
+        """
+        nonlocal cost_so_far, tokens_in, tokens_out, pass_count
+        nonlocal completed_count_run, skipped_count
+
+        model_conn = sqlite3.connect(db_path, check_same_thread=False)
+        model_conn.execute("PRAGMA journal_mode=WAL")
+        model_conn.execute("PRAGMA foreign_keys=ON")
+
+        try:
+            for item in items:
+                if interrupted.is_set():
+                    break
+
                 model = item["model"]
 
-                # Skip items for models that hit quota limits
-                if model in quota_exhausted_models:
-                    skipped_count += 1
-                    pbar.update(1)
-                    continue
+                with lock:
+                    if model in quota_exhausted_models:
+                        skipped_count += 1
+                        pbar.update(1)
+                        continue
 
-                # Also skip if preproc model is exhausted and this needs preproc
-                preproc_model = registry.get_preproc(model)
-                if (preproc_model and preproc_model in quota_exhausted_models
-                        and item["intervention"] in (
-                            "pre_proc_sanitize", "pre_proc_sanitize_compress",
-                            "compress_only")):
-                    skipped_count += 1
-                    pbar.update(1)
-                    continue
+                    preproc_model = registry.get_preproc(model)
+                    if (preproc_model and preproc_model in quota_exhausted_models
+                            and item["intervention"] in (
+                                "pre_proc_sanitize", "pre_proc_sanitize_compress",
+                                "compress_only")):
+                        skipped_count += 1
+                        pbar.update(1)
+                        continue
 
-                quota_hit = _process_item(item, conn, prompts_by_id, config, i, total)
+                quota_hit = _process_item(
+                    item, model_conn, prompts_by_id, config, 0, total,
+                )
 
                 if quota_hit:
-                    quota_exhausted_models.add(model)
-                    # Also mark the preproc model as exhausted if it's the same provider
-                    if preproc_model:
-                        quota_exhausted_models.add(preproc_model)
+                    with lock:
+                        quota_exhausted_models.add(model)
+                        if preproc_model:
+                            quota_exhausted_models.add(preproc_model)
                     tqdm.write(
-                        f"  Quota exhausted for {model} — skipping remaining items for this model."
+                        f"  Quota exhausted for {model} — skipping remaining items."
                     )
 
-                # Query metrics from last inserted row
-                row = conn.execute(
+                # Read metrics from the row we just wrote
+                row = model_conn.execute(
                     "SELECT total_cost_usd, pass_fail, prompt_tokens, "
                     "completion_tokens, ttlt_ms, status "
                     "FROM experiment_runs WHERE run_id = ?",
                     (make_run_id(item),),
                 ).fetchone()
-                last_result = "?"
-                last_ms = 0.0
-                if row:
-                    if row[5] == "failed":
-                        # Check if this was a quota error by re-reading the item
-                        last_result = "ERR"
-                    elif row[5] == "completed":
-                        if row[0]:
-                            cost_so_far += row[0]
-                        if row[2]:
-                            tokens_in += row[2]
-                        if row[3]:
-                            tokens_out += row[3]
-                        completed_count_run += 1
-                        if row[1] is not None:
-                            if row[1]:
-                                pass_count += 1
-                            last_result = "PASS" if row[1] else "FAIL"
-                    last_ms = row[4] or 0.0
 
-                pass_rate = (pass_count / completed_count_run * 100) if completed_count_run > 0 else 0
-                pbar.set_postfix_str(
-                    f"pass={pass_rate:.1f}% | cost=${cost_so_far:.2f} | "
-                    f"last={last_result} {last_ms:.0f}ms | "
-                    f"tokens={_fmt_tokens(tokens_in)}/{_fmt_tokens(tokens_out)}"
-                )
-                pbar.update(1)
+                with lock:
+                    last_result = "?"
+                    last_ms = 0.0
+                    if row:
+                        if row[5] == "failed":
+                            last_result = "ERR"
+                        elif row[5] == "completed":
+                            if row[0]:
+                                cost_so_far += row[0]
+                            if row[2]:
+                                tokens_in += row[2]
+                            if row[3]:
+                                tokens_out += row[3]
+                            completed_count_run += 1
+                            if row[1] is not None:
+                                if row[1]:
+                                    pass_count += 1
+                                last_result = "PASS" if row[1] else "FAIL"
+                        last_ms = row[4] or 0.0
+
+                    pass_rate = (pass_count / completed_count_run * 100) if completed_count_run > 0 else 0
+                    pbar.set_postfix_str(
+                        f"pass={pass_rate:.1f}% | cost=${cost_so_far:.2f} | "
+                        f"last={last_result} {last_ms:.0f}ms | "
+                        f"tokens={_fmt_tokens(tokens_in)}/{_fmt_tokens(tokens_out)}"
+                    )
+                    pbar.update(1)
+        finally:
+            model_conn.close()
+
+    try:
+        with tqdm(total=total, desc="Experiments", unit="item") as pbar:
+            if model_count == 0:
+                pass  # Nothing to process
+            elif model_count == 1:
+                # Single model: run in main thread (simpler, no overhead)
+                model_id = next(iter(items_by_model))
+                _process_model_items(model_id, items_by_model[model_id], pbar)
+            else:
+                # Multiple models: run each model in its own thread
+                with ThreadPoolExecutor(max_workers=model_count) as executor:
+                    futures = {
+                        executor.submit(
+                            _process_model_items, model_id, items, pbar,
+                        ): model_id
+                        for model_id, items in items_by_model.items()
+                    }
+                    try:
+                        for future in as_completed(futures):
+                            model_id = futures[future]
+                            exc = future.exception()
+                            if exc is not None:
+                                tqdm.write(f"  Error in {model_id} worker: {exc}")
+                    except KeyboardInterrupt:
+                        interrupted.set()
+                        raise
+
     except KeyboardInterrupt:
         print("\nInterrupted. Saving progress...")
         if session_id:
             update_session_status(db_path, "canceled")
-        conn.close()
         print(f"Completed {completed_count_run} of {total} items.")
         sys.exit(130)
 

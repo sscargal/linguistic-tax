@@ -468,11 +468,27 @@ def _normalize_number(raw: str) -> float:
     return float(s.strip())
 
 
-def _extract_number(text: str) -> ExtractionResult | None:
-    """Extract the last numerical answer from LLM response text.
+_RE_HASH_ANSWER = re.compile(r'####\s*(.+)')
+_RE_ANSWER_IS = re.compile(
+    r'(?:the\s+)?answer\s+is[:\s]+\$?([\d,]+\.?\d*)',
+    re.IGNORECASE,
+)
+_RE_ANSWER_COLON = re.compile(
+    r'answer\s*:\s*\$?([\d,]+\.?\d*)',
+    re.IGNORECASE,
+)
 
-    Strategy: Check for LaTeX boxed first (explicit answer marker),
-    then find all number-like patterns and take the LAST one by position.
+
+def _extract_number(text: str) -> ExtractionResult | None:
+    """Extract the numerical answer from LLM response text.
+
+    Uses a priority cascade to find the intended answer, avoiding
+    intermediate numbers in chain-of-thought reasoning:
+
+    1. LaTeX ``\\boxed{answer}`` — explicit answer marker
+    2. ``#### answer`` — standard GSM8K answer delimiter
+    3. ``Answer: N`` or ``the answer is N`` — explicit answer phrases
+    4. Last number, skipping numbers inside parenthetical explanations
 
     Args:
         text: Raw LLM response text.
@@ -494,7 +510,31 @@ def _extract_number(text: str) -> ExtractionResult | None:
         except ValueError:
             pass
 
-    # 2. Find all number-like patterns with their positions
+    # 2. Check for #### answer (standard GSM8K delimiter)
+    hash_match = _RE_HASH_ANSWER.search(text)
+    if hash_match:
+        raw = hash_match.group(1).strip()
+        try:
+            value = _normalize_number(raw)
+            return ExtractionResult(value=value, method="hash_delimiter", raw_match=raw)
+        except ValueError:
+            pass
+
+    # 3. Check for "Answer: N" or "the answer is N"
+    for pattern, method_name in [
+        (_RE_ANSWER_COLON, "answer_colon"),
+        (_RE_ANSWER_IS, "answer_is"),
+    ]:
+        matches = list(pattern.finditer(text))
+        if matches:
+            raw = matches[-1].group(1).strip()
+            try:
+                value = _normalize_number(raw)
+                return ExtractionResult(value=value, method=method_name, raw_match=raw)
+            except ValueError:
+                pass
+
+    # 4. Find all number-like patterns with their positions
     patterns = [
         (_RE_COMMA_SEP, "comma_separated"),
         (_RE_FRACTION, "fraction"),
@@ -519,7 +559,6 @@ def _extract_number(text: str) -> ExtractionResult | None:
     all_matches.sort(key=lambda x: (x[0], -(x[1] - x[0])))
     filtered: list[tuple[int, int, str, str]] = []
     for m in all_matches:
-        # Check if this match is subsumed by any already-kept match
         subsumed = False
         for kept in filtered:
             if m[0] >= kept[0] and m[1] <= kept[1]:
@@ -531,10 +570,40 @@ def _extract_number(text: str) -> ExtractionResult | None:
     if not filtered:
         return None
 
-    # Take the LAST match by start position
+    # Try to skip numbers inside parenthetical/explanatory suffixes.
+    # Walk backward from the last match, skip any that sit inside
+    # a parenthetical started after a prior number.
     filtered.sort(key=lambda x: x[0])
-    _, _, raw, method = filtered[-1]
 
+    # Find parenthetical regions: text between '(' and ')'
+    paren_regions: list[tuple[int, int]] = []
+    depth = 0
+    paren_start = -1
+    for i, ch in enumerate(text):
+        if ch == '(' and depth == 0:
+            paren_start = i
+            depth = 1
+        elif ch == '(':
+            depth += 1
+        elif ch == ')' and depth > 0:
+            depth -= 1
+            if depth == 0 and paren_start >= 0:
+                paren_regions.append((paren_start, i + 1))
+
+    def _in_parens(pos: int) -> bool:
+        return any(start <= pos < end for start, end in paren_regions)
+
+    # Take the last match NOT inside parentheses
+    for start, end, raw, method in reversed(filtered):
+        if not _in_parens(start):
+            try:
+                value = _normalize_number(raw)
+                return ExtractionResult(value=value, method=method, raw_match=raw)
+            except ValueError:
+                continue
+
+    # All numbers are in parens — fall back to absolute last
+    _, _, raw, method = filtered[-1]
     try:
         value = _normalize_number(raw)
         return ExtractionResult(value=value, method=method, raw_match=raw)

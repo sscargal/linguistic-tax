@@ -371,11 +371,11 @@ class TestExtractNumber:
     """Tests for _extract_number multi-pattern extractor."""
 
     def test_gsm8k_integer(self):
-        """Plain integer extraction."""
+        """Plain integer extraction via 'answer is' pattern."""
         result = _extract_number("The answer is 42")
         assert result is not None
         assert result.value == 42.0
-        assert result.method == "integer"
+        assert result.method == "answer_is"
 
     def test_gsm8k_commas(self):
         """Comma-separated number extraction."""
@@ -478,7 +478,7 @@ class TestGradeMath:
         }
         result = grade_math("The answer is 42", prompt_record)
         assert result.passed is True
-        assert result.extraction_method == "integer"
+        assert result.extraction_method == "answer_is"
 
     def test_wrong_answer(self):
         """grade_math with wrong answer returns passed=False."""

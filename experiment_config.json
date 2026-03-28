@@ -1,0 +1,40 @@
+{
+  "models": [
+    {
+      "model_id": "gpt-5-mini",
+      "provider": "openai",
+      "role": "target",
+      "preproc_model_id": "gpt-4o-mini",
+      "input_price_per_1m": 0.25,
+      "output_price_per_1m": 2.0,
+      "rate_limit_delay": null
+    },
+    {
+      "model_id": "gpt-4o-mini",
+      "provider": "openai",
+      "role": "preproc",
+      "preproc_model_id": null,
+      "input_price_per_1m": 0.15,
+      "output_price_per_1m": 0.6,
+      "rate_limit_delay": null
+    }
+  ],
+  "config_version": 2,
+  "base_seed": 42,
+  "type_a_rates": [
+    0.05,
+    0.1,
+    0.2
+  ],
+  "type_a_weights": [
+    0.4,
+    0.25,
+    0.2,
+    0.15
+  ],
+  "repetitions": 5,
+  "temperature": 0.0,
+  "prompts_path": "data/prompts.json",
+  "matrix_path": "data/experiment_matrix.json",
+  "results_db_path": "results/results.db"
+}

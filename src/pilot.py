@@ -128,12 +128,23 @@ def _remap_matrix_models(
     """
     matrix_models = sorted(set(item["model"] for item in matrix))
 
+    # Deduplicate configured models (preserves order)
+    original_count = len(configured_models)
+    configured_models = list(dict.fromkeys(configured_models))
+    if len(configured_models) < original_count:
+        logger.warning(
+            "Removed %d duplicate model(s) from configured targets",
+            original_count - len(configured_models),
+        )
+
     # Build model-agnostic items (deduplicated by removing model dimension)
     # then re-expand with configured models
     seen = set()
     base_items: list[dict[str, Any]] = []
     for item in matrix:
-        key = (item["prompt_id"], item["noise_type"], item["intervention"],
+        key = (item["prompt_id"], item["noise_type"],
+               str(item.get("noise_level", "")),
+               item["intervention"],
                item["repetition_num"], item.get("experiment", ""))
         if key not in seen:
             seen.add(key)

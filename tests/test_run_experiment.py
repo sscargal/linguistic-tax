@@ -533,7 +533,7 @@ class TestRunEngine:
         conn.close()
 
         args = _make_test_args(db=db_path)
-        run_engine(args, config=config)
+        run_engine(args, config=config, matrix=[SAMPLE_MATRIX_ITEM])
 
         # call_model should NOT have been called (item was skipped)
         mock_call.assert_not_called()
@@ -574,7 +574,7 @@ class TestRunEngine:
         )
 
         args = _make_test_args(retry_failed=True, db=db_path)
-        run_engine(args, config=config)
+        run_engine(args, config=config, matrix=[SAMPLE_MATRIX_ITEM])
 
         # call_model called for preflight checks + the reprocessed item
         # Preflight: 1 target model + 1 preproc model + 1 experiment call = 3
@@ -605,7 +605,7 @@ class TestRunEngine:
         )
 
         args = _make_test_args(limit=1, db=db_path)
-        run_engine(args, config=config)
+        run_engine(args, config=config, matrix=items)
 
         # Preflight calls + 1 experiment call
         experiment_calls = [c for c in mock_call.call_args_list
@@ -622,7 +622,7 @@ class TestRunEngine:
 
         with patch("src.run_experiment.call_model") as mock_call:
             args = _make_test_args(dry_run=True, db=db_path)
-            run_engine(args, config=config)
+            run_engine(args, config=config, matrix=items)
             mock_call.assert_not_called()
 
         # No runs in DB
@@ -657,7 +657,7 @@ class TestRunEngine:
         )
 
         args = _make_test_args(model="claude", db=db_path)
-        run_engine(args, config=config)
+        run_engine(args, config=config, matrix=items)
 
         # Preflight calls + 1 experiment call (claude only)
         experiment_calls = [c for c in mock_call.call_args_list
@@ -688,7 +688,7 @@ class TestRunEngine:
 
         args = _make_test_args(db=db_path)
         with caplog.at_level(logging.DEBUG, logger="src.run_experiment"):
-            run_engine(args, config=config)
+            run_engine(args, config=config, matrix=[SAMPLE_MATRIX_ITEM])
 
         # Check debug log contains expected format elements
         progress_logs = [r for r in caplog.records if "[1/1]" in r.message]

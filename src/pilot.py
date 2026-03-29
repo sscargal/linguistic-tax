@@ -106,85 +106,30 @@ def select_pilot_prompts(
 # Matrix filtering
 # ---------------------------------------------------------------------------
 
-def _remap_matrix_models(
-    matrix: list[dict[str, Any]],
-    configured_models: list[str],
-) -> list[dict[str, Any]]:
-    """Replace the model dimension in a matrix with configured models.
-
-    The pre-generated matrix may contain model IDs from default config.
-    This replaces each unique matrix model with a configured model,
-    preserving the experimental design (prompt x noise x intervention x
-    repetition) while swapping in the user's models.
-
-    Args:
-        matrix: Original matrix items.
-        configured_models: Target model IDs from the user's registry.
-
-    Returns:
-        New matrix with model IDs replaced. If configured models differ
-        in count from matrix models, items are duplicated or reduced
-        accordingly.
-    """
-    matrix_models = sorted(set(item["model"] for item in matrix))
-
-    # Deduplicate configured models (preserves order)
-    original_count = len(configured_models)
-    configured_models = list(dict.fromkeys(configured_models))
-    if len(configured_models) < original_count:
-        logger.warning(
-            "Removed %d duplicate model(s) from configured targets",
-            original_count - len(configured_models),
-        )
-
-    # Build model-agnostic items (deduplicated by removing model dimension)
-    # then re-expand with configured models
-    seen = set()
-    base_items: list[dict[str, Any]] = []
-    for item in matrix:
-        key = (item["prompt_id"], item["noise_type"],
-               str(item.get("noise_level", "")),
-               item["intervention"],
-               item["repetition_num"], item.get("experiment", ""))
-        if key not in seen:
-            seen.add(key)
-            base_items.append(item)
-
-    remapped: list[dict[str, Any]] = []
-    for item in base_items:
-        for model in configured_models:
-            new_item = dict(item)
-            new_item["model"] = model
-            remapped.append(new_item)
-
-    return remapped
-
-
 def filter_pilot_matrix(
-    matrix_path: str = "data/experiment_matrix.json",
+    prompts_path: str = "data/prompts.json",
     pilot_prompt_ids: list[str] | None = None,
-    configured_models: list[str] | None = None,
+    models: list[str] | None = None,
+    config: ExperimentConfig | None = None,
 ) -> list[dict[str, Any]]:
-    """Filter experiment matrix to pilot prompt IDs and remap to configured models.
+    """Generate experiment matrix in-memory and filter to pilot prompt IDs.
 
     Args:
-        matrix_path: Path to the full experiment matrix JSON.
+        prompts_path: Path to the curated prompts JSON file.
         pilot_prompt_ids: List of prompt IDs to include. If None, no prompt filter.
-        configured_models: List of target model IDs. If provided, replaces
-            the model dimension in the matrix with these models.
+        models: List of target model IDs. Defaults to registry.target_models().
+        config: Experiment configuration. Defaults to ExperimentConfig().
 
     Returns:
         Filtered list of matrix items.
     """
-    with open(matrix_path) as f:
-        matrix = json.load(f)
+    from src.matrix_generator import generate_matrix
+
+    matrix = generate_matrix(prompts_path=prompts_path, config=config, models=models)
 
     if pilot_prompt_ids is not None:
         id_set = set(pilot_prompt_ids)
         matrix = [item for item in matrix if item["prompt_id"] in id_set]
-
-    if configured_models is not None:
-        matrix = _remap_matrix_models(matrix, configured_models)
 
     logger.info("Filtered matrix: %d items for %d pilot prompts",
                 len(matrix), len(pilot_prompt_ids) if pilot_prompt_ids else 0)
@@ -239,11 +184,12 @@ def run_pilot(
             "status": "selected",
         }
 
-    # Filter matrix to pilot prompts and remap to configured models
+    # Generate matrix in-memory and filter to pilot prompts
     filtered = filter_pilot_matrix(
-        matrix_path=config.matrix_path,
+        prompts_path=config.prompts_path,
         pilot_prompt_ids=pilot_ids,
-        configured_models=registry.target_models(),
+        models=registry.target_models(),
+        config=config,
     )
 
     # Confirmation gate for pilot
@@ -305,20 +251,11 @@ def run_pilot(
     )
 
     if not analyze_only:
-        # Write filtered matrix to temp file and run engine
-        import tempfile
-
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".json", delete=False, dir="data"
-        ) as tmp:
-            json.dump(filtered, tmp)
-            tmp_matrix_path = tmp.name
-
+        # Pass filtered matrix directly to engine (no temp file needed)
         try:
             from src.run_experiment import run_engine
 
             pilot_config = ExperimentConfig(
-                matrix_path=tmp_matrix_path,
                 results_db_path=actual_db_path,
             )
 
@@ -330,13 +267,11 @@ def run_pilot(
                 yes=True,  # Pilot already confirmed — skip engine's gate
                 db=actual_db_path,  # Pass db to bypass engine's own session creation
             )
-            run_engine(args, config=pilot_config, show_summary=False)
+            run_engine(args, config=pilot_config, show_summary=False, matrix=filtered)
         except KeyboardInterrupt:
             if session_id:
                 update_session_status(actual_db_path, "canceled")
             raise
-        finally:
-            os.unlink(tmp_matrix_path)
 
         # Update session status
         if session_id:

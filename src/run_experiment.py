@@ -457,17 +457,20 @@ def run_engine(
     args: argparse.Namespace,
     config: ExperimentConfig | None = None,
     show_summary: bool = True,
+    matrix: list[dict[str, Any]] | None = None,
 ) -> None:
     """Main execution engine loop.
 
-    Loads the experiment matrix, filters and orders items, then processes
-    each through the full pipeline with resumability support.
+    Generates (or accepts) the experiment matrix, filters and orders items,
+    then processes each through the full pipeline with resumability support.
 
     Args:
         args: Parsed CLI arguments.
         config: Optional experiment configuration (defaults to load_config()).
         show_summary: If False, skip printing the pre-execution summary.
             Used when the caller (e.g., pilot) has already shown it.
+        matrix: Pre-generated experiment matrix. If None, generates from
+            configured models via generate_matrix().
     """
     if config is None:
         from src.config_manager import load_config
@@ -490,17 +493,16 @@ def run_engine(
         prompts_list = json.load(f)
     prompts_by_id = {p["problem_id"]: p for p in prompts_list}
 
-    # Load experiment matrix
-    with open(config.matrix_path) as f:
-        matrix = json.load(f)
+    # Generate experiment matrix in-memory if not provided
+    if matrix is None:
+        from src.matrix_generator import generate_matrix
+        matrix = generate_matrix(
+            prompts_path=config.prompts_path,
+            config=config,
+        )
 
-    # Remap matrix models to configured models if they don't match
     target_models = registry.target_models()
     target_ids = set(target_models)
-    matrix_models = set(item["model"] for item in matrix)
-    if not matrix_models.issubset(target_ids):
-        from src.pilot import _remap_matrix_models
-        matrix = _remap_matrix_models(matrix, target_models)
 
     # Further filter by --model arg if specified
     if args.model != "all":

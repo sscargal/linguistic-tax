@@ -729,3 +729,81 @@ class TestValidModels:
         from src.model_registry import registry
         from src.pilot import _VALID_MODELS
         assert _VALID_MODELS == set(registry.target_models())
+
+
+# ---------------------------------------------------------------------------
+# _remap_matrix_models tests
+# ---------------------------------------------------------------------------
+
+def _make_matrix_item(
+    prompt_id: str = "HumanEval/1",
+    noise_type: str = "clean",
+    noise_level: str | None = None,
+    intervention: str = "raw",
+    model: str = "model-default-a",
+    repetition_num: int = 1,
+    experiment: str = "",
+) -> dict:
+    """Build a minimal matrix item for remap tests."""
+    item: dict = {
+        "prompt_id": prompt_id,
+        "noise_type": noise_type,
+        "intervention": intervention,
+        "model": model,
+        "repetition_num": repetition_num,
+    }
+    if noise_level is not None:
+        item["noise_level"] = noise_level
+    if experiment:
+        item["experiment"] = experiment
+    return item
+
+
+class TestRemapMatrixModels:
+    """Tests for _remap_matrix_models deduplication behavior."""
+
+    def _build_base_matrix(self) -> list[dict]:
+        """Build a small 2-model matrix: 2 prompts x 2 noise x 2 models x 1 rep."""
+        items = []
+        for pid in ["HumanEval/1", "HumanEval/2"]:
+            for noise in ["clean", "type_a_5pct"]:
+                for model in ["model-default-a", "model-default-b"]:
+                    items.append(_make_matrix_item(
+                        prompt_id=pid, noise_type=noise, model=model,
+                    ))
+        return items  # 2*2*2 = 8 items
+
+    def test_duplicate_configured_models_deduped(self) -> None:
+        """When configured_models has duplicates, output matches single-model count."""
+        from src.pilot import _remap_matrix_models
+        matrix = self._build_base_matrix()  # 8 items, 2 matrix models
+        # base_items = 4 (2 prompts x 2 noise)
+        result_dup = _remap_matrix_models(matrix, ["model-a", "model-a"])
+        result_single = _remap_matrix_models(matrix, ["model-a"])
+        assert len(result_dup) == len(result_single)
+
+    def test_two_matrix_models_map_to_one_configured(self) -> None:
+        """When 2 matrix models remap to 1 configured, output = base_items * 1."""
+        from src.pilot import _remap_matrix_models
+        matrix = self._build_base_matrix()  # 8 items, 2 matrix models
+        result = _remap_matrix_models(matrix, ["model-target"])
+        # base_items = 4 (2 prompts x 2 noise_types)
+        assert len(result) == 4
+
+    def test_noise_level_preserved_in_dedup_key(self) -> None:
+        """Items differing only by noise_level are both preserved after remap."""
+        from src.pilot import _remap_matrix_models
+        matrix = [
+            _make_matrix_item(noise_type="type_a", noise_level="5pct", model="m-a"),
+            _make_matrix_item(noise_type="type_a", noise_level="10pct", model="m-a"),
+        ]
+        result = _remap_matrix_models(matrix, ["target-x"])
+        assert len(result) == 2
+
+    def test_two_distinct_configured_models_normal_expansion(self) -> None:
+        """When 2 matrix models remap to 2 distinct configured, output = base_items * 2."""
+        from src.pilot import _remap_matrix_models
+        matrix = self._build_base_matrix()  # 8 items, 2 matrix models
+        result = _remap_matrix_models(matrix, ["target-x", "target-y"])
+        # base_items = 4, 2 configured = 8
+        assert len(result) == 8

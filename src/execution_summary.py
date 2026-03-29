@@ -718,14 +718,14 @@ def format_post_run_report(
         ))
         lines.append("")
 
-    # Per-noise breakdown
+    # Per-noise breakdown (excluding compress_only to avoid diluting clean baseline)
     noise_rows = conn.execute("""
         SELECT
             noise_type,
             COUNT(*) as calls,
             SUM(CASE WHEN pass_fail=1 THEN 1 ELSE 0 END) as passed
         FROM experiment_runs
-        WHERE status='completed'
+        WHERE status='completed' AND intervention != 'compress_only'
         GROUP BY noise_type
         ORDER BY noise_type
     """).fetchall()
@@ -740,7 +740,7 @@ def format_post_run_report(
             for r in noise_table
         ]
 
-        lines.append("Noise Conditions:")
+        lines.append("Noise Conditions (excludes compress_only):")
         lines.append(tabulate(
             noise_table,
             headers=["Noise Type", "API Calls", "Pass Rate"],

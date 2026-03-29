@@ -21,6 +21,7 @@ from src.setup_wizard import (
     _collect_api_keys,
     _explain_model_roles,
     _select_models,
+    _select_single_target,
     _browse_models,
     _validate_models,
     _build_budget_preview,
@@ -813,3 +814,60 @@ class TestCheckEnvironment:
             package_checks = [r for r in results if r[0] != "Python >= 3.11"]
             failed = [r for r in package_checks if not r[1]]
             assert len(failed) > 0
+
+
+# ---------------------------------------------------------------------------
+# Section 10: Same-model preproc/target warning tests
+# ---------------------------------------------------------------------------
+
+
+class TestSelectSingleTargetSameModelWarning:
+    """Tests for same-model preproc/target warning in _select_single_target."""
+
+    def test_select_single_target_warns_same_preproc_target(self, capsys):
+        """Warning printed when user selects same model for target and preproc."""
+        # User accepts default target, then accepts default preproc (same model)
+        inputs = iter(["", ""])
+        input_fn = lambda prompt: next(inputs)
+
+        with patch("src.setup_wizard.registry") as mock_reg:
+            mock_reg.get_preproc.return_value = None  # force fallback to target
+            # No preproc role models found either
+            mock_reg._models = {}
+
+            target, preproc = _select_single_target(
+                provider="anthropic",
+                name="Anthropic",
+                default_target="claude-sonnet-4-20250514",
+                preproc_scope="per-provider",
+                global_preproc=None,
+                input_fn=input_fn,
+                provider_models=[],
+            )
+
+        captured = capsys.readouterr()
+        assert "same model" in captured.out.lower()
+        assert target == preproc
+
+    def test_select_single_target_no_warning_different_models(self, capsys):
+        """No warning when user selects different models for target and preproc."""
+        # User accepts default target, types a different preproc
+        inputs = iter(["", "claude-haiku-3"])
+        input_fn = lambda prompt: next(inputs)
+
+        with patch("src.setup_wizard.registry") as mock_reg:
+            mock_reg.get_preproc.return_value = "claude-haiku-3"
+
+            target, preproc = _select_single_target(
+                provider="anthropic",
+                name="Anthropic",
+                default_target="claude-sonnet-4-20250514",
+                preproc_scope="per-provider",
+                global_preproc=None,
+                input_fn=input_fn,
+                provider_models=[],
+            )
+
+        captured = capsys.readouterr()
+        assert "same model" not in captured.out.lower()
+        assert target != preproc

@@ -155,10 +155,11 @@ Recent decisions affecting current work:
 | 260327-rhk | Per-session result tracking with list/delete/compare | 2026-03-27 | da29381 | [260327-rhk-results-management-per-session-tracking-](./quick/260327-rhk-results-management-per-session-tracking-/) |
 | 260327-ub0 | Report output formats and multi-model comparison | 2026-03-27 | c1e304d | [260327-ub0-report-output-formats-and-multi-model-co](./quick/260327-ub0-report-output-formats-and-multi-model-co/) |
 | 260327-uz0 | Enhance setup wizard with multi-model support | 2026-03-27 | a705ec7 | [260327-uz0-enhance-setup-wizard-with-multi-model-su](./quick/260327-uz0-enhance-setup-wizard-with-multi-model-su/) |
+| 260329-30q | Deduplicate matrix model remap and detect same-model preproc | 2026-03-29 | 7ca8fbe | [260329-30q-deduplicate-matrix-model-remap-and-detec](./quick/260329-30q-deduplicate-matrix-model-remap-and-detec/) |
 
 ## Session Continuity
 
-Last activity: 2026-03-27 - Completed quick task 260327-uz0: Enhance setup wizard with multi-model support
-Last session: 2026-03-27T22:25:31.260Z
-Stopped at: Completed 260327-uz0
+Last activity: 2026-03-29 - Completed quick task 260329-30q: Deduplicate matrix model remap and detect same-model preproc
+Last session: 2026-03-29T02:16:17.000Z
+Stopped at: Completed 260329-30q
 Resume file: None

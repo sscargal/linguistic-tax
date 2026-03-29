@@ -8,7 +8,7 @@ import argparse
 import logging
 import sys
 
-from src.config import INTERVENTIONS
+from src.config import INTERVENTIONS, EMPHASIS_INTERVENTIONS
 from src.config_commands import (
     handle_show_config,
     handle_set_config,
@@ -179,7 +179,7 @@ def build_cli() -> argparse.ArgumentParser:
         "--dry-run", action="store_true", help="Show summary only, do not execute"
     )
     run_parser.add_argument(
-        "--intervention", type=str, choices=list(INTERVENTIONS), default=None,
+        "--intervention", type=str, choices=list(INTERVENTIONS + EMPHASIS_INTERVENTIONS), default=None,
         help="Filter to specific intervention",
     )
     run_parser.set_defaults(func=handle_run)

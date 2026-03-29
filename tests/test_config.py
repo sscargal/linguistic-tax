@@ -3,7 +3,8 @@
 import pytest
 
 from src.config import (
-    ExperimentConfig, derive_seed, NOISE_TYPES, INTERVENTIONS, OPENROUTER_BASE_URL,
+    ExperimentConfig, derive_seed, NOISE_TYPES, INTERVENTIONS,
+    EMPHASIS_INTERVENTIONS, OPENROUTER_BASE_URL,
 )
 
 
@@ -106,20 +107,30 @@ class TestConstants:
         assert set(NOISE_TYPES) == expected
 
     def test_interventions_count(self):
-        """INTERVENTIONS has exactly 13 entries (5 original + 8 emphasis)."""
-        assert len(INTERVENTIONS) == 13
+        """INTERVENTIONS has exactly 5 core entries."""
+        assert len(INTERVENTIONS) == 5
 
     def test_interventions_contents(self):
-        """INTERVENTIONS contains all expected intervention types."""
+        """INTERVENTIONS contains the 5 core intervention types."""
         expected = {
             "raw", "self_correct", "pre_proc_sanitize",
             "pre_proc_sanitize_compress", "prompt_repetition",
+        }
+        assert set(INTERVENTIONS) == expected
+
+    def test_emphasis_interventions_count(self):
+        """EMPHASIS_INTERVENTIONS has exactly 8 entries."""
+        assert len(EMPHASIS_INTERVENTIONS) == 8
+
+    def test_emphasis_interventions_contents(self):
+        """EMPHASIS_INTERVENTIONS contains all emphasis types."""
+        expected = {
             "emphasis_bold", "emphasis_caps", "emphasis_quotes",
             "emphasis_instruction_caps", "emphasis_instruction_bold",
             "emphasis_lowercase_initial",
             "emphasis_mixed", "emphasis_aggressive_caps",
         }
-        assert set(INTERVENTIONS) == expected
+        assert set(EMPHASIS_INTERVENTIONS) == expected
 
 
 class TestOpenRouterConfig:

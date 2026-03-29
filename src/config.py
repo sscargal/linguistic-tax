@@ -79,7 +79,12 @@ INTERVENTIONS: tuple[str, ...] = (
     "pre_proc_sanitize",
     "pre_proc_sanitize_compress",
     "prompt_repetition",
-    # Emphasis experiments (Phase 22)
+)
+
+# Emphasis experiments (Phase 22) — separate from core interventions.
+# These require pre-computed variant data in data/emphasis/ and only
+# apply to prompts with available variants (currently HumanEval subset).
+EMPHASIS_INTERVENTIONS: tuple[str, ...] = (
     "emphasis_bold",
     "emphasis_caps",
     "emphasis_quotes",

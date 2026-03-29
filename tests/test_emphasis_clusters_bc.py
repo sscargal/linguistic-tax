@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 import pytest
 
-from src.config import INTERVENTIONS
+from src.config import INTERVENTIONS, EMPHASIS_INTERVENTIONS
 from src.emphasis_converter import (
     apply_mixed_emphasis,
     apply_aggressive_caps,
@@ -316,7 +316,7 @@ class TestRoutingIntegration:
             assert result == "SHOULD MUST VERIFY text"
 
     def test_all_emphasis_interventions_in_config(self) -> None:
-        """All 8 emphasis intervention types are in INTERVENTIONS tuple."""
+        """All 8 emphasis intervention types are in EMPHASIS_INTERVENTIONS tuple."""
         emphasis_types = [
             "emphasis_bold",
             "emphasis_caps",
@@ -328,9 +328,10 @@ class TestRoutingIntegration:
             "emphasis_aggressive_caps",
         ]
         for et in emphasis_types:
-            assert et in INTERVENTIONS, f"{et} not in INTERVENTIONS"
-        # Total should be 13 (5 original + 8 emphasis)
-        assert len(INTERVENTIONS) == 13
+            assert et in EMPHASIS_INTERVENTIONS, f"{et} not in EMPHASIS_INTERVENTIONS"
+        assert len(EMPHASIS_INTERVENTIONS) == 8
+        # Core interventions stay at 5
+        assert len(INTERVENTIONS) == 5
 
 
 # ---------------------------------------------------------------------------

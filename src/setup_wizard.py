@@ -600,6 +600,11 @@ def _select_single_target(
         else:
             preproc_model = raw_preproc
 
+    if preproc_model == target_model:
+        print(f"\n  Warning: Pre-processor and target are the same model ({target_model}).")
+        print("  The pre-processor cleans prompts before sending to the target model.")
+        print("  Consider using a cheaper model as pre-processor to reduce costs.\n")
+
     return target_model, preproc_model
 
 

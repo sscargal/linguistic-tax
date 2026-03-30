@@ -1,0 +1,162 @@
+[
+  {
+    "id": "rw_mobile_01",
+    "category": "mobile_keyboard",
+    "benchmark_type": "code",
+    "prompt_text": "writ ea function taht takes a list of integrs and retruns the secodn largest valeu. if theres only one elment return it",
+    "clean_version": "Write a function that takes a list of integers and returns the second largest value. If there's only one element, return it.",
+    "noise_description": "Fat-finger typos on mobile keyboard: adjacent key hits, transpositions, missing spaces"
+  },
+  {
+    "id": "rw_mobile_02",
+    "category": "mobile_keyboard",
+    "benchmark_type": "math",
+    "prompt_text": "a stor has 45 appled and 32 ornages. thwy sell 18 apples abd 9 oranges. hiw many fruots are left?",
+    "clean_version": "A store has 45 apples and 32 oranges. They sell 18 apples and 9 oranges. How many fruits are left?",
+    "noise_description": "Rapid mobile typing: consistent adjacent-key swaps, missing letters"
+  },
+  {
+    "id": "rw_autocorrect_01",
+    "category": "autocorrect",
+    "benchmark_type": "code",
+    "prompt_text": "Write a function that checks if a string is a valid palindrome, considering only alphanumeric characters and ignoring cases. Return True for an empty sting.",
+    "clean_version": "Write a function that checks if a string is a valid palindrome, considering only alphanumeric characters and ignoring case. Return True for an empty string.",
+    "noise_description": "Subtle autocorrect: 'sting' for 'string', 'cases' for 'case' — plausible but wrong"
+  },
+  {
+    "id": "rw_autocorrect_02",
+    "category": "autocorrect",
+    "benchmark_type": "code",
+    "prompt_text": "Implement a function too merge two sorted lists into one sorted lost. Do not use the built in sort function.",
+    "clean_version": "Implement a function to merge two sorted lists into one sorted list. Do not use the built-in sort function.",
+    "noise_description": "Autocorrect mangling: 'too' for 'to', 'lost' for 'list'"
+  },
+  {
+    "id": "rw_esl_mandarin_01",
+    "category": "esl_natural",
+    "benchmark_type": "code",
+    "prompt_text": "Please help me write function, input is list of number, output should be all number that appear more than one time. Order not important.",
+    "clean_version": "Write a function that takes a list of numbers and returns all numbers that appear more than once. Order doesn't matter.",
+    "noise_description": "Natural Mandarin L1 transfer: missing articles, bare nouns, topic-comment structure"
+  },
+  {
+    "id": "rw_esl_mandarin_02",
+    "category": "esl_natural",
+    "benchmark_type": "math",
+    "prompt_text": "Factory produce 250 widget per day. After upgrade, production increase 40%. How many widget factory produce in 5 day after upgrade?",
+    "clean_version": "A factory produces 250 widgets per day. After an upgrade, production increases by 40%. How many widgets does the factory produce in 5 days after the upgrade?",
+    "noise_description": "Natural Mandarin L1: no articles, no plural markers, no auxiliary verbs"
+  },
+  {
+    "id": "rw_esl_spanish_01",
+    "category": "esl_natural",
+    "benchmark_type": "code",
+    "prompt_text": "I need a function that receive a string and return the string inversed. For example, if I pass 'hello' it should return 'olleh'. Is very simple no?",
+    "clean_version": "Write a function that takes a string and returns the reversed string. For example, 'hello' should return 'olleh'.",
+    "noise_description": "Natural Spanish L1: 'receive' for 'takes', 'inversed' for 'reversed', discourse markers"
+  },
+  {
+    "id": "rw_esl_spanish_02",
+    "category": "esl_natural",
+    "benchmark_type": "math",
+    "prompt_text": "Maria have 3 times more candies that Pedro. Pedro have 12 candies. They decide to share equal between the two. How many candies each one receive?",
+    "clean_version": "Maria has 3 times as many candies as Pedro. Pedro has 12 candies. They decide to share equally between them. How many candies does each one receive?",
+    "noise_description": "Natural Spanish L1: subject-verb disagreement, 'more...that' for 'as many...as'"
+  },
+  {
+    "id": "rw_esl_japanese_01",
+    "category": "esl_natural",
+    "benchmark_type": "code",
+    "prompt_text": "Function for checking the parentheses is balanced or not. Input is string type. If balanced, return True please.",
+    "clean_version": "Write a function to check whether parentheses in a string are balanced. Return True if balanced.",
+    "noise_description": "Natural Japanese L1: topic-first structure, 'is balanced or not', politeness marker"
+  },
+  {
+    "id": "rw_esl_mixed_01",
+    "category": "esl_natural",
+    "benchmark_type": "code",
+    "prompt_text": "make function what count how many vowel in the string. the uppercase and lowercase should be same treat. return integer number",
+    "clean_version": "Write a function that counts how many vowels are in a string. Uppercase and lowercase should be treated the same. Return an integer.",
+    "noise_description": "Mixed ESL: 'what' for 'that', 'same treat' for 'treated the same', missing articles"
+  },
+  {
+    "id": "rw_voice_01",
+    "category": "voice_to_text",
+    "benchmark_type": "code",
+    "prompt_text": "write a function that takes to lists and returns there intersection so like the elements that are in both lists no duplicates",
+    "clean_version": "Write a function that takes two lists and returns their intersection — the elements that are in both lists, with no duplicates.",
+    "noise_description": "Voice-to-text: 'to' for 'two', 'there' for 'their', no punctuation, run-on"
+  },
+  {
+    "id": "rw_voice_02",
+    "category": "voice_to_text",
+    "benchmark_type": "math",
+    "prompt_text": "if a train travels at sixty miles per our for too hours and then forty five miles per our for won hour how far does it travel in total",
+    "clean_version": "If a train travels at 60 miles per hour for 2 hours and then 45 miles per hour for 1 hour, how far does it travel in total?",
+    "noise_description": "Voice-to-text: spelled-out numbers, homophones ('our'/'hour', 'too'/'two', 'won'/'one'), no punctuation"
+  },
+  {
+    "id": "rw_rushed_01",
+    "category": "rushed_typing",
+    "benchmark_type": "code",
+    "prompt_text": "fn that flattens nested list. like [[1,2],[3,[4,5]]] -> [1,2,3,4,5]. recursive pls",
+    "clean_version": "Write a function that flattens a nested list. For example, [[1,2],[3,[4,5]]] should become [1,2,3,4,5]. Use recursion.",
+    "noise_description": "Rushed/shorthand: abbreviations, no full sentences, informal"
+  },
+  {
+    "id": "rw_rushed_02",
+    "category": "rushed_typing",
+    "benchmark_type": "math",
+    "prompt_text": "bob has 3x as many marbles as tim. tim has 5 more than sara. sara has 8. total marbles?",
+    "clean_version": "Bob has 3 times as many marbles as Tim. Tim has 5 more marbles than Sara. Sara has 8 marbles. What is the total number of marbles?",
+    "noise_description": "Rushed/terse: minimal words, no articles, abbreviations, question fragment"
+  },
+  {
+    "id": "rw_copypaste_01",
+    "category": "copy_paste_corruption",
+    "benchmark_type": "code",
+    "prompt_text": "Write a function to compute the nth Fibonacci number.\n\ndef fibonacci(n):\n    \"\"\"Returns the nth Fibonacci number.\n    >>> fibonacci(0)\n    0\n    >>> fibonacci(1)\n    1\n    >>> fibonacci(10)\n    55\n    \"\"\"\n\u00a0\u00a0\u00a0\u00a0pass",
+    "clean_version": "Write a function to compute the nth Fibonacci number.\n\ndef fibonacci(n):\n    \"\"\"Returns the nth Fibonacci number.\n    >>> fibonacci(0)\n    0\n    >>> fibonacci(1)\n    1\n    >>> fibonacci(10)\n    55\n    \"\"\"\n    pass",
+    "noise_description": "Copy-paste from web: non-breaking spaces (\\u00a0) replacing regular spaces in indentation"
+  },
+  {
+    "id": "rw_copypaste_02",
+    "category": "copy_paste_corruption",
+    "benchmark_type": "code",
+    "prompt_text": "Write a function that takes a string and returns True if it\u2019s a valid email address. Check for @ symbol and a dot after it. Don\u2019t use regex.",
+    "clean_version": "Write a function that takes a string and returns True if it's a valid email address. Check for an @ symbol and a dot after it. Don't use regex.",
+    "noise_description": "Smart quotes from word processor: curly apostrophes \\u2019 instead of ASCII apostrophes"
+  },
+  {
+    "id": "rw_mixed_01",
+    "category": "mixed_noise",
+    "benchmark_type": "code",
+    "prompt_text": "i need funciton for sort dictionary by it values (not keys). reutrn new dictionary. python 3 pls thx",
+    "clean_version": "Write a function to sort a dictionary by its values (not keys). Return a new dictionary. Use Python 3.",
+    "noise_description": "Mixed: ESL grammar + typos + rushed shorthand"
+  },
+  {
+    "id": "rw_mixed_02",
+    "category": "mixed_noise",
+    "benchmark_type": "math",
+    "prompt_text": "there is a reatangle pool thats 15 meeters long and 8 meeters wide. a path of 2 meeters wide goes arround it. what is area of the path",
+    "clean_version": "There is a rectangular pool that's 15 meters long and 8 meters wide. A path 2 meters wide goes around it. What is the area of the path?",
+    "noise_description": "Mixed: spelling errors + missing punctuation + minor grammar issues"
+  },
+  {
+    "id": "rw_mixed_03",
+    "category": "mixed_noise",
+    "benchmark_type": "code",
+    "prompt_text": "Can u make function to check if number is prime?? shoud return true or false. dont need to be fast just corect",
+    "clean_version": "Write a function to check if a number is prime. Return True or False. It doesn't need to be fast, just correct.",
+    "noise_description": "Mixed: informal ('u', '??'), typos ('shoud', 'corect'), missing articles"
+  },
+  {
+    "id": "rw_mixed_04",
+    "category": "mixed_noise",
+    "benchmark_type": "math",
+    "prompt_text": "A car uses 8 liters of fule per 100km. the tank holds 60 litres. How far can teh car travle on a ful tank? anser in km",
+    "clean_version": "A car uses 8 liters of fuel per 100km. The tank holds 60 liters. How far can the car travel on a full tank? Answer in km.",
+    "noise_description": "Mixed: typos ('fule', 'teh', 'travle', 'ful'), inconsistent spelling ('liters'/'litres'), abbreviation"
+  }
+]

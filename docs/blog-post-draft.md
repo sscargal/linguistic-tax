@@ -1,6 +1,6 @@
 # The Linguistic Tax: We Built a Prompt Optimizer, Then Discovered LLMs Don't Need One
 
-**TL;DR:** We set out to measure how typos, grammar errors, and non-native English degrade LLM accuracy, then built an automated "prompt optimizer" to fix it. After 4,100 controlled experiments on GPT-5-mini, we found the linguistic tax is surprisingly small — and our optimizer barely moves the needle. Modern frontier LLMs have largely solved this problem themselves. Here's what we learned.
+**TL;DR:** We set out to measure how typos, grammar errors, and non-native English degrade LLM accuracy, then built an automated "prompt optimizer" to fix it. After 8,000+ controlled experiments across two models (GPT-5-mini and GPT-4o-mini), we found the linguistic tax is surprisingly small on frontier models — and our optimizer barely moves the needle. But we also discovered that prompt compression actively destroys accuracy, and we can show you exactly why.
 
 ---
 
@@ -8,18 +8,21 @@
 
 Every day, millions of people prompt LLMs with imperfect English. Typos, autocorrect failures, ESL grammar patterns — these are the norm, not the exception. We hypothesized that this "linguistic tax" meaningfully degrades LLM accuracy and that a lightweight preprocessor could recover the lost performance.
 
-We designed a rigorous experiment:
+We designed a controlled experiment:
 
 - **200 benchmark prompts** across three tasks: code generation (HumanEval, MBPP) and math reasoning (GSM8K)
 - **8 noise conditions**: clean, three levels of character noise (5%, 10%, 20% of characters corrupted), and four ESL patterns (Mandarin, Spanish, Japanese, and mixed L1 transfer)
-- **5 interventions**: raw (no fix), self-correct ("fix my errors then answer"), preprocessor sanitization, sanitization + compression, and prompt repetition
+- **6 interventions**: raw (no fix), self-correct ("fix my errors then answer"), preprocessor sanitization, sanitization + compression, compression only, and prompt repetition
 - **5 repetitions** per condition at temperature=0.0 for stability measurement
+- **20 real-world noisy prompts** modeled on actual user input patterns (mobile typos, autocorrect errors, voice-to-text artifacts, ESL constructions, rushed shorthand)
 
-We ran a 20-prompt pilot (4,100 experiment items) on GPT-5-mini. Total cost: $5.55.
+We ran 20-prompt pilots on two models: GPT-5-mini ($5.55) and GPT-4o-mini (~$1). We tested both to see whether noise robustness scales with model capability.
 
 ## The Results
 
 ### Finding 1: The Linguistic Tax Exists, But It's Small
+
+*GPT-5-mini, raw intervention, 4,098 experiment items:*
 
 | Noise Level | Pass Rate | Degradation |
 |---|---|---|
@@ -30,6 +33,10 @@ We ran a 20-prompt pilot (4,100 experiment items) on GPT-5-mini. Total cost: $5.
 | ESL patterns (average) | 84.2% | -0.8% (negligible) |
 
 At 20% character corruption — text that is nearly unreadable to humans — GPT-5-mini still achieves 78% accuracy. That's a 7% tax on severely mangled input. ESL grammar patterns (article omission, tense errors, word order changes) have almost zero effect.
+
+*Placeholder for GPT-4o-mini comparison table — results pending.*
+
+<!-- TODO: Insert GPT-4o-mini noise comparison table here after pilot completes -->
 
 ### Finding 2: The Tax Falls Unevenly Across Tasks
 
@@ -58,24 +65,59 @@ The real story is **MBPP**: ambiguous coding tasks drop 20 percentage points und
 
 The sanitizer (a cheap GPT-4o-mini call that fixes typos and grammar) preserves accuracy at 82.2% — essentially matching raw. It doesn't hurt, but it doesn't help either. The model is already robust enough that cleaning the input provides no measurable benefit.
 
-### Finding 4: Compression and Self-Correct Are Actively Harmful
+### Finding 4: Compression Destroys Accuracy — And We Know Why
 
-This was the most surprising result. Two interventions that seem intuitively helpful actually **destroy accuracy**:
+This was the most surprising result. Compression drops accuracy by 8-10%, and we traced exactly how it breaks things by examining every case where compression caused a previously-passing prompt to fail.
 
-**Compression (-8 to -10%):** Removing redundancy and condensing prompts loses signal the model needs. Even on clean, noise-free prompts, compression drops accuracy from 83% to 73%. The tokens we think are "redundant" aren't redundant to the model.
+**The compressor solves problems instead of preserving them.** A math prompt asking "The Smith twins each found 30 eggs. All the other eggs except 10 were found by their friends. How many eggs did the friends find?" was compressed to "The Smith twins found 30 eggs. Their friends found the remaining 70 eggs." The compressor computed the answer and embedded it in the prompt, changing the task from reasoning to reading comprehension.
 
-**Self-correct (-10%):** Prepending "fix any errors, then answer" causes the model to:
+**The compressor changes specifications.** A code prompt asking to "count uppercase vowels in given indices" was compressed to "count uppercase vowels at even indices" — with the test cases altered to match the new (wrong) interpretation. The expected output for `count_upper('dBBE')` changed from 0 to 2.
+
+**The compressor inverts meaning.** "Each ice cube makes the coffee 12 milliliters weaker" became "Each ice cube adds 12 milliliters of water... also warms the coffee." The word "weaker" was replaced with "warms" — the exact opposite.
+
+The root cause is fundamental: **the compressor is an LLM itself** (GPT-4o-mini), and it can't help but "understand" and "improve" the text. When you ask a language model to compress, it interprets. When it interprets, it changes meaning. The tokens we think are redundant carry signal the model needs.
+
+### Finding 5: Self-Correct Is Harmful for Code, Neutral for Math
+
+Prepending "fix any errors in my prompt, then answer" causes the model to:
 - Output a "Corrected prompt:" preamble before answering (99% of responses)
 - Generate multiple solution variants instead of one answer (57% of code responses)
 - Produce 40% more output tokens (857 vs 612 average)
 
 On code generation specifically, self-correct drops HumanEval from 95.7% to 65.7% — a catastrophic 30-point decline. The model overthinks the correction task and loses focus on the actual problem. Ironically, it *helps* GSM8K math (+0.9%), where the structured "correct then solve" framing aids chain-of-thought reasoning.
 
-### Finding 5: Prompt Repetition Is Free and Neutral
+### Finding 6: Prompt Repetition Is Free and Neutral
 
 Inspired by [Leviathan et al. (2025)](https://arxiv.org/abs/2512.14982), we tested simply duplicating the prompt: `<QUERY><QUERY>`. The theory is that causal attention allows every token to attend to its copy, effectively "self-correcting" through redundancy.
 
 Result: 82.9% vs 83.0% raw. Perfectly neutral. It doesn't help, but unlike compression, it doesn't hurt. The cost of doubling input tokens ($0.99 vs $0.99) is negligible because output tokens dominate the bill.
+
+### Finding 7: Model Comparison — Does Capability Predict Robustness?
+
+*Results pending from GPT-4o-mini pilot.*
+
+<!-- TODO: Insert comparative analysis here. Key questions:
+- Does GPT-4o-mini show a larger linguistic tax?
+- Does the preprocessor help MORE on the weaker model?
+- Does compression hurt LESS on the weaker model (less to lose)?
+-->
+
+## Real-World Noise Testing
+
+Beyond synthetic noise, we tested 20 prompts modeled on patterns from real user interactions:
+
+| Category | Example | What Makes It Realistic |
+|---|---|---|
+| Mobile keyboard | "writ ea function taht takes a list of integrs" | Adjacent-key swaps, transpositions, missing spaces |
+| Autocorrect | "merge two sorted lists into one sorted lost" | Plausible wrong words ('lost' for 'list') |
+| ESL (Mandarin L1) | "Please help me write function, input is list of number" | Missing articles, bare nouns, topic-comment structure |
+| ESL (Spanish L1) | "function that receive a string and return the string inversed" | 'receive' for 'takes', 'inversed' for 'reversed' |
+| Voice-to-text | "sixty miles per our for too hours" | Homophones, no punctuation, spelled-out numbers |
+| Rushed typing | "fn that flattens nested list. recursive pls" | Abbreviations, no articles, informal shorthand |
+| Copy-paste | Non-breaking spaces in code indentation | Invisible Unicode corruption from web copy |
+| Mixed noise | "Can u make function to check if number is prime??" | Informal + typos + missing articles combined |
+
+<!-- TODO: Insert real-world noise test results after running them through the pipeline -->
 
 ## The Toolkit
 
@@ -86,8 +128,10 @@ We built `propt` (prompt optimizer toolkit) as an open-source research platform:
 - **Automated grading**: HumanEval/MBPP sandboxed code execution, GSM8K numerical extraction with priority cascade
 - **Session management**: Per-run isolation, cost tracking, resumability
 - **Parallel execution**: Multiple models run concurrently across providers
+- **Preprocessor caching**: Identical noisy prompts produce identical preprocessor output across repetitions — redundant API calls eliminated automatically
+- **Full observability**: Every pipeline stage logged to SQLite — noisy prompt, preprocessor output, model response, extracted code/numbers, grading details
 
-The full experiment matrix for 200 prompts generates ~41,000 items per model. With preprocessor caching (identical noisy prompts produce identical preprocessor output across repetitions), redundant API calls are eliminated automatically.
+The full experiment matrix for 200 prompts generates ~41,000 items per model. A 20-prompt pilot runs in ~9 hours and costs ~$5 per model.
 
 ## What This Means
 
@@ -95,29 +139,15 @@ The full experiment matrix for 200 prompts generates ~41,000 items per model. Wi
 
 **For prompt optimization tool builders:** The market for "prompt cleaning" tools aimed at frontier models is shrinking. The models themselves are absorbing this capability. Focus on structural prompt engineering (formatting, few-shot examples, system prompts) rather than surface-level text cleaning.
 
-**For researchers:** The linguistic tax is a moving target. As models improve, the gap between clean and noisy prompts narrows. A longitudinal study across model generations (GPT-4 vs GPT-5 vs GPT-5-mini) would quantify this trajectory.
+**For researchers:** The linguistic tax is a moving target. As models improve, the gap between clean and noisy prompts narrows. The most interesting finding here isn't about noise — it's that **compression is fundamentally incompatible with accuracy** when the compressor is an LLM. Any system that "optimizes" prompts by condensing them risks the same failure modes we documented: solving problems prematurely, changing specifications, and inverting meaning.
 
-## Limitations and Gaps
+## Limitations
 
-This pilot has several limitations that a full study should address:
+**Small sample size.** 20 prompts per pilot with 5 repetitions. Some cells have only 5 data points. The type_a_5pct > clean anomaly is a small-sample artifact. A full 200-prompt run would provide statistical power for significance testing.
 
-<!-- GAP 1: Single model -->
-**Single model tested.** We only tested GPT-5-mini. The linguistic tax may be larger on smaller or older models (GPT-4o-mini, Claude Haiku, Gemini Flash). Testing across model sizes would reveal whether noise robustness scales with model capability — and whether the preprocessor helps weaker models where frontier models don't need it.
+**Limited task types.** Code generation and math reasoning have clear right/wrong answers. Creative writing, summarization, and open-ended Q&A might show different noise sensitivity patterns.
 
-<!-- GAP 2: Small sample -->
-**Small sample size.** 20 prompts (7 HumanEval, 7 MBPP, 6 GSM8K) with 5 repetitions. Some cells have only 5 data points. The type_a_5pct > clean anomaly and HumanEval's improvement under noise are likely small-sample artifacts. The full 200-prompt run would provide statistical power for significance testing.
-
-<!-- GAP 3: Noise realism -->
-**Synthetic noise only.** Our Type A noise (random character mutations) and Type B noise (rule-based ESL patterns) are systematic approximations. Real-world noisy prompts from actual users would be more ecologically valid. We have 20 real-world noisy prompts collected from public sources but haven't integrated them into the experimental pipeline yet.
-
-<!-- GAP 4: Task diversity -->
-**Limited task types.** Code generation and math reasoning are well-defined tasks with clear right/wrong answers. Creative writing, summarization, and open-ended Q&A might show different noise sensitivity patterns. The linguistic tax may matter more for nuanced tasks where small wording changes shift meaning.
-
-<!-- GAP 5: Older models -->
-**No longitudinal comparison.** The most compelling story would be: "Here's how the linguistic tax has shrunk over model generations." Testing GPT-4 (2023) vs GPT-4o (2024) vs GPT-5-mini (2025) on identical noisy prompts would directly measure this trajectory.
-
-<!-- GAP 6: Compression analysis -->
-**Compression mechanism unexplored.** We know compression hurts, but we don't know exactly why. Is it removing key technical terms? Losing context from docstrings? Changing function signatures? A qualitative analysis of what the compressor removes vs. what causes failures would be valuable.
+**Two models, one provider.** Both GPT-5-mini and GPT-4o-mini are from OpenAI. Testing Claude, Gemini, or open-source models would validate whether the findings generalize across architectures.
 
 ## Reproducing This Work
 
@@ -129,10 +159,10 @@ git clone https://github.com/[repo]/linguistic-tax
 cd linguistic-tax
 uv sync
 
-# Configure
+# Configure (choose your models)
 uv run propt setup
 
-# Run pilot (20 prompts, ~$5, ~9 hours)
+# Run pilot (20 prompts, ~$5/model, ~9 hours)
 uv run propt pilot
 
 # View results

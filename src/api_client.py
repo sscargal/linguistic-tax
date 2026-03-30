@@ -76,7 +76,7 @@ def _validate_api_keys(model: str) -> None:
     elif model.startswith("gemini"):
         if not os.environ.get("GOOGLE_API_KEY"):
             raise EnvironmentError("GOOGLE_API_KEY not set")
-    elif model.startswith("gpt"):
+    elif model.startswith(("gpt", "o1", "o3", "o4")):
         if not os.environ.get("OPENAI_API_KEY"):
             raise EnvironmentError("OPENAI_API_KEY not set")
     elif model.startswith("openrouter/"):
@@ -437,7 +437,7 @@ def call_model(
                 result = _call_google(
                     model, system, user_message, max_tokens, temperature
                 )
-            elif model.startswith("gpt"):
+            elif model.startswith(("gpt", "o1", "o3", "o4")):
                 result = _call_openai(
                     model, system, user_message, max_tokens, temperature
                 )
